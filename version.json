@@ -1,7 +1,7 @@
 {
     "cfVersion": 1,
-    "package": "workspace-setup",
-    "name": "Workspace Setup",
+    "package": "cf-workfolder",
+    "name": "Cinnabar Forge Workfolder",
     "major": 0,
     "minor": 0,
     "patch": 0,
