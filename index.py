@@ -52,8 +52,10 @@ config = inquirer.prompt(
 )
 
 
-def form_path(type, project_name):
-    return os.path.join(config["work_folder"], "workspaces", project_name)
+def form_path(type, folder, project_name):
+    return os.path.join(
+        config["work_folder"], "workspaces", folder or "default", project_name
+    )
 
 
 with open(CONFIG_PATH, "w", encoding="utf-8") as file:
@@ -70,12 +72,13 @@ def process_workspaces():
         print("\nNo workspaces found")
         return
     for workspaceIndex, workspace in enumerate(work_config["workspaces"]):
-        workspace_path = form_path("workspace", workspace["name"])
+        workspace_path = form_path("workspace", workspace["folder"], workspace["name"])
         print(
             f"\n{workspaceIndex + 1}. Processing: '{workspace['name']}' ({workspace_path})..."
         )
         pathlib.Path(workspace_path).mkdir(parents=True, exist_ok=True)
         git_repo_url = workspace["gitRepo"]
+        git_repo_production_url = workspace.get("gitProd")
         git_path = os.path.join(workspace_path, ".git")
 
         commands = []
@@ -84,6 +87,10 @@ def process_workspaces():
             print(f"    Init git repo...")
             commands.append(("git", "init"))
             commands.append(("git", "remote", "add", "origin", git_repo_url))
+            if git_repo_production_url:
+                commands.append(
+                    ("git", "remote", "add", "production", git_repo_production_url)
+                )
             commands.append(("git", "pull", "origin", "master"))
         else:
             print(f"    Found git repo")
@@ -97,7 +104,7 @@ def process_projects():
         print("\nNo projects found")
         return
     for projectIndex, project in enumerate(work_config["projects"]):
-        project_path = form_path("project", project["name"])
+        project_path = form_path("project", project["folder"], project["name"])
         print(
             f"\n{projectIndex + 1}. Processing: '{project['name']}' ({project_path})..."
         )
