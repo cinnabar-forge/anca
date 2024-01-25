@@ -95,21 +95,23 @@ def process_workspaces():
             f"\n{workspaceIndex + 1}. Processing: '{workspace['name']}' ({workspace_path})..."
         )
         pathlib.Path(workspace_path).mkdir(parents=True, exist_ok=True)
-        git_repo_url = workspace["gitRepo"]
+        git_repo_url = workspace.get("gitRepo")
         git_repo_production_url = workspace.get("gitProd")
         git_path = os.path.join(workspace_path, ".git")
 
         commands = []
 
         if not os.path.exists(git_path):
-            print(f"    Init git repo...")
-            commands.append(("git", "init"))
-            commands.append(("git", "remote", "add", "origin", git_repo_url))
+            if git_repo_url:
+                print(f"    Clone git repo ({git_repo_url})...")
+                commands.append(("git", "clone", git_repo_url, "."))
+            else:
+                print(f"    Init git repo...")
+                commands.append(("git", "init"))
             if git_repo_production_url:
                 commands.append(
                     ("git", "remote", "add", "production", git_repo_production_url)
                 )
-            commands.append(("git", "pull", "origin", "master"))
         else:
             print(f"    Found git repo")
 
