@@ -1,0 +1,45 @@
+{
+  "name": "@cinnabar-forge/anna",
+  "version": "0.0.0",
+  "description": "Organize your workspace and manage projects fast and easy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cinnabar-forge/anna.git"
+  },
+  "license": "ISC",
+  "author": {
+    "name": "Timur Moziev",
+    "email": "timur.moziev@gmail.com",
+    "url": "https://timurrin.github.io"
+  },
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "anna": "bin/anna"
+  },
+  "files": [
+    "bin",
+    "src",
+    "version.json"
+  ],
+  "scripts": {
+    "format": "npx prettier . --write",
+    "lint": "npx eslint --fix --ext .js,.json .",
+    "test": "mocha",
+    "verify": "npm run lint && npm run format && npm test"
+  },
+  "dependencies": {
+    "ajv": "8.12.0",
+    "blessed": "0.1.81",
+    "commander": "12.0.0",
+    "simple-git": "3.22.0"
+  },
+  "devDependencies": {
+    "@cinnabar-forge/eslint-plugin": "0.3.0",
+    "chai": "5.1.0",
+    "mocha": "10.3.0"
+  },
+  "engines": {
+    "node": ">=10.0.0"
+  }
+}

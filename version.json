@@ -1,10 +1,10 @@
 {
-    "cfVersion": 1,
-    "package": "cf-workfolder",
-    "name": "Cinnabar Forge Workfolder",
-    "major": 0,
-    "minor": 0,
-    "patch": 0,
-    "revision": 0,
-    "timestamp": 0
+  "cfVersion": 1,
+  "package": "@cinnabar-forge/anna",
+  "name": "Cinnabar Forge Anna",
+  "major": 0,
+  "minor": 0,
+  "patch": 0,
+  "revision": 0,
+  "timestamp": 0
 }

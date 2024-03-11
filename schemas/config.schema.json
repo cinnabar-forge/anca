@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cinnabar Forge Anna Configuration",
+  "type": "object",
+  "required": ["annaDataVersion", "workspaces", "projects"],
+  "properties": {
+    "annaDataVersion": {
+      "description": "Data version number, used to control schema changes",
+      "type": "integer"
+    },
+    "workspaces": {
+      "description": "List of workspaces to be verified",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["folder", "name", "stack", "convention"],
+        "properties": {
+          "folder": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "gitRepo": {
+            "type": "string"
+          },
+          "gitProds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "stack": {
+            "type": "string",
+            "enum": [
+              "none",
+              "nodejs",
+              "t2006",
+              "python",
+              "php",
+              "mtasa",
+              "android"
+            ]
+          },
+          "convention": {
+            "type": "string",
+            "enum": ["none", "cinnabar-forge"]
+          }
+        }
+      }
+    },
+    "projects": {
+      "description": "List of production projects",
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  }
+}
