@@ -30,6 +30,9 @@
               "type": "string"
             }
           },
+          "mainBranch": {
+            "type": "string"
+          },
           "stack": {
             "type": "string",
             "enum": [
