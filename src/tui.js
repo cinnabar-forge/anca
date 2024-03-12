@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 import blessed from "blessed";
 
 export class TUI {
@@ -158,25 +159,37 @@ export class TUI {
   showProjectsTable(projects = []) {
     this.hideDashboardAndButtons();
 
-    if (this.projectsTable != null) {
-      this.projectsTable.show();
-      return;
-    }
-
     const headers = ["Name", "Description"];
     const rows = projects.map((project) => [
       project.name,
       project.description || "No description",
     ]);
     const data = [headers, ...rows];
+    
+    this.showTable("projectsTable", "projectsButton", "PROJECTS", data);
+  }
 
-    this.projectsTable = blessed.listtable({
+  showTable(table, button, typeLabel, data) {
+    this.hideDashboardAndButtons();
+
+    const label = `${typeLabel} (${data.length - 1})`;
+
+    if (this[table] != null) {
+      this[table].show();
+      this[table].setData(data);
+      this[table].setLabel(label);
+      this[table].focus();
+      this.screen.render();
+      return;
+    }
+
+    this[table] = blessed.listtable({
       align: "left",
       border: { type: "line" },
       data: data,
       height: "100%-2",
       keys: true,
-      label: "Projects",
+      label: label,
       left: 0,
       mouse: true,
       parent: this.screen,
@@ -189,23 +202,22 @@ export class TUI {
       width: "100%",
     });
 
-    this.projectsTable.focus();
-    this.projectsTable.on("select", (item, index) => {
+    this[table].focus();
+    // eslint-disable-next-line no-unused-vars
+    this[table].on("select", (item, index) => {
       this.showDashboardAndButtons();
-      this.projectsButton.focus();
+      this[button].focus();
     });
 
     this.screen.render();
 
-    this.projectsTable.key(["escape"], () => {
+    this[table].key(["escape"], () => {
       this.showDashboardAndButtons();
-      this.projectsButton.focus();
+      this[button].focus();
     });
   }
 
   showWorkspacesTable(workspaces = []) {
-    this.hideDashboardAndButtons();
-
     const headers = ["Folder", "Name", "Stack", "Version", "Git repo"];
     const rows = workspaces.map((workspace) => [
       workspace.folder,
@@ -219,45 +231,7 @@ export class TUI {
     ]);
     const data = [headers, ...rows];
 
-    if (this.workspacesTable != null) {
-      this.workspacesTable.show();
-      this.workspacesTable.setData(data);
-      this.workspacesTable.focus();
-      this.screen.render();
-      return;
-    }
-
-    this.workspacesTable = blessed.listtable({
-      align: "left",
-      border: { type: "line" },
-      data: data,
-      height: "100%-2",
-      keys: true,
-      label: `Workspaces (${workspaces.length})`,
-      left: 0,
-      mouse: true,
-      parent: this.screen,
-      style: {
-        border: { fg: "yellow" },
-        cell: { fg: "white", selected: { bg: "green" } },
-        header: { bold: true, fg: "green" },
-      },
-      top: 2,
-      width: "100%",
-    });
-
-    this.workspacesTable.focus();
-    this.workspacesTable.on("select", (item, index) => {
-      this.showDashboardAndButtons();
-      this.workspacesButton.focus();
-    });
-
-    this.screen.render();
-
-    this.workspacesTable.key(["escape"], () => {
-      this.showDashboardAndButtons();
-      this.workspacesButton.focus();
-    });
+    this.showTable("workspacesTable", "workspacesButton", "WORKSPACES", data);
   }
 
   updateDashboard(content) {
