@@ -2,12 +2,7 @@ import Ajv from "ajv";
 import fs from "fs";
 import path from "path";
 
-export function loadAndValidateConfig(configPath) {
-  const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
-  const schemaPath = path.join(
-    scriptDirectory,
-    "../schemas/config.schema.json",
-  );
+export function loadAndValidateConfig(workfolderPath, configPath, schemaPath) {
   // eslint-disable-next-line security/detect-non-literal-fs-filename
   const schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"));
   // eslint-disable-next-line security/detect-non-literal-fs-filename
@@ -20,6 +15,11 @@ export function loadAndValidateConfig(configPath) {
     throw new Error(
       `Configuration validation error: ${validate.errors.map((err) => err.message).join(", ")}`,
     );
+  }
+
+  for (const workspace of config.workspaces) {
+    workspace.folderPath = path.resolve(workfolderPath, workspace.folder);
+    workspace.fullPath = path.resolve(workspace.folderPath, workspace.name);
   }
 
   return config;

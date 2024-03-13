@@ -1,11 +1,12 @@
 import path from "path";
 
-import { setupCLI } from "./cli.js";
+import { setupCli } from "./cli.js";
 import { loadAndValidateConfig } from "./config.js";
-import { TUI } from "./tui.js";
+import { GitWorkspaceManager } from "./git.js";
+import { Tui } from "./tui.js";
 
 async function main() {
-  const options = setupCLI();
+  const options = setupCli();
   const configPath = options.config;
   const schemaPath = path.join(
     path.dirname(new URL(import.meta.url).pathname),
@@ -13,27 +14,20 @@ async function main() {
   );
 
   try {
-    const config = loadAndValidateConfig(configPath, schemaPath);
-    const tui = new TUI();
+    const config = loadAndValidateConfig(
+      options.workfolder,
+      configPath,
+      schemaPath,
+    );
 
-    tui.updateDashboard("Initial dashboard content here. Update as needed.");
+    const workspacesManager = new GitWorkspaceManager(config.workspaces);
+    await workspacesManager.createWorkspaceFolders();
+    // await workspacesManager.manageWorkspaces();
 
-    setupUIWithConfig(tui, config);
-
-    tui.screen.render();
+    new Tui(config, workspacesManager);
   } catch (error) {
     throw new Error(`${error.message}`);
   }
-}
-
-function setupUIWithConfig(tui, config) {
-  tui.projectsButton.on("press", () => {
-    tui.showProjectsTable(config.projects);
-  });
-
-  tui.workspacesButton.on("press", () => {
-    tui.showWorkspacesTable(config.workspaces);
-  });
 }
 
 main();

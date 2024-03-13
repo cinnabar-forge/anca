@@ -1,6 +1,6 @@
 import { program } from "commander";
 
-export function setupCLI() {
+export function setupCli() {
   program
     .version("1.0.0")
     .description(
