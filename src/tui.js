@@ -1,6 +1,8 @@
 /* eslint-disable security/detect-object-injection */
 import blessed from "blessed";
 
+import { getDirectoryVersion } from "./check.js";
+
 export class Tui {
   constructor(config, workspacesManager) {
     this.config = config;
@@ -100,7 +102,7 @@ export class Tui {
   createHeader() {
     this.header = blessed.box({
       align: "center",
-      content: "Cinnabar Forge Anna " + this.config.versionella.versionText,
+      content: "Cinnabar Forge Anna " + this.config.version.versionText,
       height: 1,
       left: "center",
       parent: this.screen,
@@ -472,7 +474,7 @@ export class Tui {
         workspace.folder,
         workspace.name,
         workspace.stack || "Unknown",
-        "-",
+        await getDirectoryVersion(workspace.fullPath),
         (await this.workspacesManager.determineWorkspaceStatus(workspace)).join(
           ", ",
         ),

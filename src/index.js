@@ -13,16 +13,16 @@ async function main() {
     "../schemas/config.schema.json",
   );
 
-  const versionella = JSON.parse(
+  const version = JSON.parse(
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     fs.readFileSync(
       path.resolve(scriptDirectory, "..", "version.json"),
       "utf8",
     ),
   );
-  versionella.versionText = `v${versionella.major}.${versionella.minor}.${versionella.patch}`;
+  version.versionText = `v${version.major}.${version.minor}.${version.patch}`;
 
-  const options = setupCli(versionella.versionText);
+  const options = setupCli(version.versionText);
   const configPath = options.config;
 
   try {
@@ -31,7 +31,7 @@ async function main() {
       configPath,
       schemaPath,
     );
-    config.versionella = versionella;
+    config.version = version;
 
     const workspacesManager = new GitWorkspaceManager(config.workspaces);
     await workspacesManager.createWorkspaceFolders();

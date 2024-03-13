@@ -1,6 +1,7 @@
 import fs from "fs";
-import path from "path";
 import simpleGit from "simple-git";
+
+import { checkForDirectory, checkForGit } from "./check.js";
 
 export class GitWorkspaceManager {
   constructor(workspaces) {
@@ -10,7 +11,7 @@ export class GitWorkspaceManager {
 
   async createWorkspaceFolders() {
     for (const workspace of this.workspaces) {
-      if (!(await this.directoryExists(workspace.folderPath))) {
+      if (!(await checkForDirectory(workspace.folderPath))) {
         // eslint-disable-next-line security/detect-non-literal-fs-filename
         await fs.promises.mkdir(workspace.folderPath, { recursive: true });
       }
@@ -18,14 +19,14 @@ export class GitWorkspaceManager {
   }
 
   async determineWorkspaceStatus(workspace) {
-    const exists = await this.directoryExists(workspace.fullPath);
+    const exists = await checkForDirectory(workspace.fullPath);
     if (!exists) {
       return ["-"];
     }
 
     const statuses = [];
 
-    const gitExists = await this.gitExists(workspace.fullPath);
+    const gitExists = await checkForGit(workspace.fullPath);
     if (gitExists) {
       await this.git.cwd(workspace.fullPath);
       const statusSummary = await this.git.status();
@@ -46,24 +47,6 @@ export class GitWorkspaceManager {
     return statuses;
   }
 
-  async directoryExists(directoryPath) {
-    try {
-      await fs.promises.access(directoryPath);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  async gitExists(directoryPath) {
-    try {
-      await fs.promises.access(path.resolve(directoryPath, ".git"));
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
   async manageWorkspaces(specificWorkspaceName = "") {
     const workspacesToProcess = specificWorkspaceName
       ? this.workspaces.filter((ws) => ws.name === specificWorkspaceName)
@@ -78,8 +61,8 @@ export class GitWorkspaceManager {
     if (workspace.gitRepo == null) {
       return;
     }
-    const folderExists = await this.directoryExists(workspace.fullPath);
-    const gitExists = await this.gitExists(workspace.fullPath);
+    const folderExists = await checkForDirectory(workspace.fullPath);
+    const gitExists = await checkForGit(workspace.fullPath);
     if (fetch && folderExists && gitExists) {
       await this.git.cwd(workspace.fullPath).fetch();
     } else if (init && folderExists) {
