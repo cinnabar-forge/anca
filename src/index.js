@@ -1,3 +1,4 @@
+import fs from "fs";
 import path from "path";
 
 import { setupCli } from "./cli.js";
@@ -6,12 +7,23 @@ import { GitWorkspaceManager } from "./git.js";
 import { Tui } from "./tui.js";
 
 async function main() {
-  const options = setupCli();
-  const configPath = options.config;
+  const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
   const schemaPath = path.join(
-    path.dirname(new URL(import.meta.url).pathname),
+    scriptDirectory,
     "../schemas/config.schema.json",
   );
+
+  const versionella = JSON.parse(
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    fs.readFileSync(
+      path.resolve(scriptDirectory, "..", "version.json"),
+      "utf8",
+    ),
+  );
+  versionella.versionText = `v${versionella.major}.${versionella.minor}.${versionella.patch}`;
+
+  const options = setupCli(versionella.versionText);
+  const configPath = options.config;
 
   try {
     const config = loadAndValidateConfig(
@@ -19,6 +31,7 @@ async function main() {
       configPath,
       schemaPath,
     );
+    config.versionella = versionella;
 
     const workspacesManager = new GitWorkspaceManager(config.workspaces);
     await workspacesManager.createWorkspaceFolders();

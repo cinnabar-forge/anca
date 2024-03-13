@@ -1,10 +1,10 @@
 import { program } from "commander";
 
-export function setupCli() {
+export function setupCli(versionText) {
   program
-    .version("1.0.0")
+    .version(versionText, "-v, -V, --version")
     .description(
-      "CLI tool for managing and validating project conventions and Git statuses.",
+      "Organize your workspace and manage projects deploy fast and easy",
     )
     .requiredOption(
       "-c, --config <path>",

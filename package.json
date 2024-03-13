@@ -1,7 +1,7 @@
 {
   "name": "@cinnabar-forge/anna",
   "version": "0.0.0",
-  "description": "Organize your workspace and manage projects fast and easy",
+  "description": "Organize your workspaces and manage projects deploy fast and easy",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cinnabar-forge/anna.git"

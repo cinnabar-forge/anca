@@ -1,6 +1,6 @@
 # Cinnabar Forge Anna
 
-Organize your workspace fast and easy with Anna, Project Manager.
+Organize your workspaces and manage projects deploy fast and easy with Anna, Project Manager.
 
 ## Getting Started
 

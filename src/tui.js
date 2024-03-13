@@ -100,7 +100,7 @@ export class Tui {
   createHeader() {
     this.header = blessed.box({
       align: "center",
-      content: "Cinnabar Forge Anna",
+      content: "Cinnabar Forge Anna " + this.config.versionella.versionText,
       height: 1,
       left: "center",
       parent: this.screen,
