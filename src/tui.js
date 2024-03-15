@@ -118,16 +118,6 @@ export class Tui {
 
   createTables() {}
 
-  devActions(item, index) {
-    const options = [
-      { label: "Option1", name: "option1" },
-      { label: "Option2", name: "option2" },
-    ];
-    const title = `${index}`;
-
-    this.showListPopup(title, options);
-  }
-
   getTextWidth(text, padding) {
     return text.length + (padding?.left || 0) + (padding?.right || 0);
   }
@@ -154,7 +144,7 @@ export class Tui {
     this.workspacesButton.on("focus", () => this.screen.render());
   }
 
-  showConfirmationPopup(parentTitle, message, callback) {
+  showConfirmationPopup(parentTitle, message, cancelFocus, callback) {
     const form = blessed.form({
       border: { type: "line" },
       height: 12,
@@ -213,8 +203,8 @@ export class Tui {
     });
 
     cancelButton.on("press", async () => {
-      await callback("Canceled");
       form.destroy();
+      cancelFocus.focus();
       this.screen.render();
     });
 
@@ -225,15 +215,16 @@ export class Tui {
     });
 
     form.key(["escape"], async () => {
-      await callback("Canceled");
       form.destroy();
+      cancelFocus.focus();
       this.screen.render();
     });
 
     this.screen.render();
   }
 
-  showDashboardAndButtons() {
+  showDashboardAndButtons(focusButton) {
+    focusButton?.focus();
     this.projectsTable?.hide();
     this.workspacesTable?.hide();
     this.dashboard?.show();
@@ -404,19 +395,34 @@ export class Tui {
     this.screen.render();
   }
 
+  showProjectActions(project) {
+    const options = [{ label: "Cancel", name: "cancel" }];
+    const title = project.name;
+
+    this.showListPopup(title, options);
+  }
+
   showProjectsTable() {
     this.hideDashboardAndButtons();
 
-    const headers = ["Name"];
-    const rows = this.config.projects.map((project) => [project.name]);
-    this.projectsData = [headers, ...rows];
+    this.projectsData = [
+      ["Name"],
+      [".."],
+      ...this.config.projects.map((project) => [project.name]),
+    ];
 
     this.showTable(
       "PROJECTS",
       "projectsTable",
       "projectsData",
       "projectsButton",
-      this.devActions,
+      (item, index) => {
+        if (index > 1) {
+          this.showProjectActions(this.config.projects[index - 2]);
+        } else {
+          this.showDashboardAndButtons(this.projectsButton);
+        }
+      },
     );
   }
 
@@ -460,49 +466,14 @@ export class Tui {
     this.screen.render();
 
     this[table].key(["escape"], () => {
-      this.showDashboardAndButtons();
-      this[button].focus();
+      this.showDashboardAndButtons(this[button]);
     });
   }
 
-  async showWorkspacesTable() {
-    const workspacesData = [["Folder", "Name", "Stack", "Version", "Status"]];
-
-    for (const workspace of this.config.workspaces) {
-      const row = [];
-      row.push(
-        workspace.folder,
-        workspace.name,
-        workspace.stack || "Unknown",
-        await getDirectoryVersion(workspace.fullPath),
-        (await this.workspacesManager.determineWorkspaceStatus(workspace)).join(
-          ", ",
-        ),
-      );
-      workspacesData.push(row);
-    }
-
-    this.workspacesData = workspacesData;
-
-    this.showTable(
-      "WORKSPACES",
-      "workspacesTable",
-      "workspacesData",
-      "workspacesButton",
-      (item, index) => {
-        this.workspaceActions(this.config.workspaces[index - 1]);
-      },
-    );
-  }
-
-  updateDashboard(content) {
-    this.dashboard?.setContent(content);
-    this.screen.render();
-  }
-
-  async workspaceActions(workspace) {
-    const title = `${workspace.name}`;
+  async showWorkspaceActions(workspace) {
+    const title = workspace.name;
     const options = [
+      { label: "Cancel", name: "cancel" },
       // {
       //   callback: (option) => {
       //     this.showInputBox(title, option.label, workspace.gitRepo, () => {});
@@ -538,15 +509,20 @@ export class Tui {
         if (workspace.gitRepo != null) {
           options.push({
             callback: (option) => {
-              this.showConfirmationPopup(title, option.label, async () => {
-                await this.workspacesManager.syncWorkspace(
-                  workspace,
-                  false,
-                  false,
-                  true,
-                );
-                this.showWorkspacesTable();
-              });
+              this.showConfirmationPopup(
+                title,
+                option.label,
+                this.workspacesTable,
+                async () => {
+                  await this.workspacesManager.syncWorkspace(
+                    workspace,
+                    false,
+                    false,
+                    true,
+                  );
+                  this.showWorkspacesTable();
+                },
+              );
             },
             label: "Clone git repo",
             name: "cloneGitRepo",
@@ -558,5 +534,47 @@ export class Tui {
     }
 
     this.showListPopup(title, options);
+  }
+
+  async showWorkspacesTable() {
+    const workspacesData = [
+      ["Folder", "Name", "Stack", "Version", "Status"],
+      ["..", "", "", "", ""],
+    ];
+
+    for (const workspace of this.config.workspaces) {
+      const row = [];
+      row.push(
+        workspace.folder,
+        workspace.name,
+        workspace.stack || "Unknown",
+        await getDirectoryVersion(workspace.fullPath),
+        (await this.workspacesManager.determineWorkspaceStatus(workspace)).join(
+          ", ",
+        ),
+      );
+      workspacesData.push(row);
+    }
+
+    this.workspacesData = workspacesData;
+
+    this.showTable(
+      "WORKSPACES",
+      "workspacesTable",
+      "workspacesData",
+      "workspacesButton",
+      (item, index) => {
+        if (index > 1) {
+          this.showWorkspaceActions(this.config.workspaces[index - 2]);
+        } else {
+          this.showDashboardAndButtons(this.workspacesButton);
+        }
+      },
+    );
+  }
+
+  updateDashboard(content) {
+    this.dashboard?.setContent(content);
+    this.screen.render();
   }
 }
