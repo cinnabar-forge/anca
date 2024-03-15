@@ -3,7 +3,7 @@ import path from "path";
 
 import { setupCli } from "./cli.js";
 import { loadAndValidateConfig } from "./config.js";
-import { GitWorkspaceManager } from "./git.js";
+import { GitManager } from "./git.js";
 import { Tui } from "./tui.js";
 
 async function main() {
@@ -33,11 +33,11 @@ async function main() {
     );
     config.version = version;
 
-    const workspacesManager = new GitWorkspaceManager(config.workspaces);
-    await workspacesManager.createWorkspaceFolders();
+    const gitManager = new GitManager(config);
+    await gitManager.createFolders();
     // await workspacesManager.manageWorkspaces();
 
-    new Tui(config, workspacesManager);
+    new Tui(config, gitManager);
   } catch (error) {
     throw new Error(`${error.message}`);
   }

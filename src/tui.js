@@ -4,9 +4,9 @@ import blessed from "blessed";
 import { getDirectoryVersion } from "./check.js";
 
 export class Tui {
-  constructor(config, workspacesManager) {
+  constructor(config, gitManager) {
     this.config = config;
-    this.workspacesManager = workspacesManager;
+    this.workspacesManager = gitManager;
     this.screen = blessed.screen({
       smartCSR: true,
       title: "Cinnabar Forge Anna",
@@ -165,6 +165,24 @@ export class Tui {
       top: 2,
     });
 
+    const loading = blessed.loading({
+      align: "center",
+      border: { type: "line" },
+      bottom: 0,
+      content: "Loading...",
+      height: "shrink",
+      hidden: true,
+      left: "center",
+      parent: form,
+      style: {
+        bg: "black",
+        border: { fg: "yellow" },
+        fg: "white",
+      },
+      valign: "middle",
+      width: "shrink",
+    });
+
     const submitButton = blessed.button({
       bottom: 2,
       content: "[OK]",
@@ -196,11 +214,21 @@ export class Tui {
     });
     cancelButton.focus();
 
-    submitButton.on("press", async () => {
-      await callback();
-      form.destroy();
+    const doAction = async () => {
+      submitButton.hide();
+      cancelButton.hide();
+      loading.show();
       this.screen.render();
-    });
+
+      try {
+        await callback();
+      } finally {
+        form.destroy();
+        this.screen.render();
+      }
+    };
+
+    submitButton.on("press", doAction);
 
     cancelButton.on("press", async () => {
       form.destroy();
@@ -208,11 +236,7 @@ export class Tui {
       this.screen.render();
     });
 
-    form.on("submit", async () => {
-      await callback();
-      form.destroy();
-      this.screen.render();
-    });
+    form.on("submit", doAction);
 
     form.key(["escape"], async () => {
       form.destroy();
@@ -429,7 +453,7 @@ export class Tui {
   showTable(typeLabel, table, data, button, callback) {
     this.hideDashboardAndButtons();
 
-    const label = `${typeLabel} (${this[data].length - 1})`;
+    const label = `${typeLabel} (${this[data].length - 2})`;
 
     if (this[table] != null) {
       this[table].show();

@@ -17,8 +17,21 @@ export function loadAndValidateConfig(workfolderPath, configPath, schemaPath) {
     );
   }
 
+  for (const project of config.projects) {
+    project.folderPath = path.resolve(
+      workfolderPath,
+      "projects",
+      project.folder,
+    );
+    project.fullPath = path.resolve(project.folderPath, project.name);
+  }
+
   for (const workspace of config.workspaces) {
-    workspace.folderPath = path.resolve(workfolderPath, workspace.folder);
+    workspace.folderPath = path.resolve(
+      workfolderPath,
+      "workspaces",
+      workspace.folder,
+    );
     workspace.fullPath = path.resolve(workspace.folderPath, workspace.name);
   }
 

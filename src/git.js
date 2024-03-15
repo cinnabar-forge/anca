@@ -3,14 +3,21 @@ import simpleGit from "simple-git";
 
 import { checkForDirectory, checkForGit } from "./check.js";
 
-export class GitWorkspaceManager {
-  constructor(workspaces) {
-    this.workspaces = workspaces;
+export class GitManager {
+  constructor(config) {
+    this.config = config;
     this.git = simpleGit();
   }
 
-  async createWorkspaceFolders() {
-    for (const workspace of this.workspaces) {
+  async createFolders() {
+    for (const workspace of this.config.projects) {
+      if (!(await checkForDirectory(workspace.folderPath))) {
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
+        await fs.promises.mkdir(workspace.folderPath, { recursive: true });
+      }
+    }
+
+    for (const workspace of this.config.workspaces) {
       if (!(await checkForDirectory(workspace.folderPath))) {
         // eslint-disable-next-line security/detect-non-literal-fs-filename
         await fs.promises.mkdir(workspace.folderPath, { recursive: true });
@@ -49,8 +56,8 @@ export class GitWorkspaceManager {
 
   async manageWorkspaces(specificWorkspaceName = "") {
     const workspacesToProcess = specificWorkspaceName
-      ? this.workspaces.filter((ws) => ws.name === specificWorkspaceName)
-      : this.workspaces;
+      ? this.config.workspaces.filter((ws) => ws.name === specificWorkspaceName)
+      : this.config.workspaces;
 
     for (const workspace of workspacesToProcess) {
       this.syncWorkspace(workspace, false, false, false);
