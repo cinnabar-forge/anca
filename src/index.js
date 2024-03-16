@@ -35,7 +35,6 @@ async function main() {
 
     const gitManager = new GitManager(config);
     await gitManager.createFolders();
-    // await workspacesManager.manageWorkspaces();
 
     new Tui(config, gitManager);
   } catch (error) {

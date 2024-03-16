@@ -25,7 +25,7 @@ export class GitManager {
     }
   }
 
-  async determineWorkspaceStatus(workspace) {
+  async getWorkspaceStatus(workspace) {
     const exists = await checkForDirectory(workspace.fullPath);
     if (!exists) {
       return ["-"];
@@ -41,10 +41,9 @@ export class GitManager {
       if (statusSummary.files.length > 0) {
         statuses.push("edited");
       }
-
       statuses.push(
         statusSummary.behind > 0 || statusSummary.ahead > 0
-          ? "to-be-synced"
+          ? "sync-pending"
           : "synced",
       );
     } else {
@@ -54,13 +53,13 @@ export class GitManager {
     return statuses;
   }
 
-  async manageWorkspaces(specificWorkspaceName = "") {
+  async manageWorkspaces(specificWorkspaceName, fetch) {
     const workspacesToProcess = specificWorkspaceName
       ? this.config.workspaces.filter((ws) => ws.name === specificWorkspaceName)
       : this.config.workspaces;
 
     for (const workspace of workspacesToProcess) {
-      this.syncWorkspace(workspace, false, false, false);
+      await this.syncWorkspace(workspace, fetch, false, false);
     }
   }
 

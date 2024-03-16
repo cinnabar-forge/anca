@@ -6,7 +6,7 @@ import { getDirectoryVersion } from "./check.js";
 export class Tui {
   constructor(config, gitManager) {
     this.config = config;
-    this.workspacesManager = gitManager;
+    this.gitManager = gitManager;
     this.screen = blessed.screen({
       smartCSR: true,
       title: "Cinnabar Forge Anna",
@@ -525,12 +525,11 @@ export class Tui {
       //   name: "changeConvention",
       // },
     ];
-    const statuses =
-      await this.workspacesManager.determineWorkspaceStatus(workspace);
+    const statuses = await this.gitManager.getWorkspaceStatus(workspace);
 
     for (const status of statuses) {
-      if (status === "-") {
-        if (workspace.gitRepo != null) {
+      if (workspace.gitRepo != null) {
+        if (status === "-") {
           options.push({
             callback: (option) => {
               this.showConfirmationPopup(
@@ -538,7 +537,7 @@ export class Tui {
                 option.label,
                 this.workspacesTable,
                 async () => {
-                  await this.workspacesManager.syncWorkspace(
+                  await this.gitManager.syncWorkspace(
                     workspace,
                     false,
                     false,
@@ -548,14 +547,49 @@ export class Tui {
                 },
               );
             },
-            label: "Clone git repo",
+            label: "Clone",
             name: "cloneGitRepo",
           });
-        } else {
-          // options.push({ label: "Create folder", name: "createFolder" });
+        } else if (status === "synced" || status === "sync-pending") {
+          options.push({
+            callback: (option) => {
+              this.showConfirmationPopup(
+                title,
+                option.label,
+                this.workspacesTable,
+                async () => {
+                  await this.gitManager.syncWorkspace(
+                    workspace,
+                    true,
+                    false,
+                    false,
+                  );
+                  this.showWorkspacesTable();
+                },
+              );
+            },
+            label: "Fetch updates",
+            name: "fetchGitRepo",
+          });
         }
       }
     }
+
+    options.push({
+      callback: (option) => {
+        this.showConfirmationPopup(
+          title,
+          option.label,
+          this.workspacesTable,
+          async () => {
+            await this.gitManager.manageWorkspaces(null, true);
+            this.showWorkspacesTable();
+          },
+        );
+      },
+      label: "Fetch updates for all",
+      name: "fetchAllGitRepos",
+    });
 
     this.showListPopup(title, options);
   }
@@ -573,9 +607,7 @@ export class Tui {
         workspace.name,
         workspace.stack || "Unknown",
         await getDirectoryVersion(workspace.fullPath),
-        (await this.workspacesManager.determineWorkspaceStatus(workspace)).join(
-          ", ",
-        ),
+        (await this.gitManager.getWorkspaceStatus(workspace)).join(", "),
       );
       workspacesData.push(row);
     }
