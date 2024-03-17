@@ -498,6 +498,13 @@ export class Tui {
     const title = workspace.name;
     const options = [
       { label: "Cancel", name: "cancel" },
+      {
+        callback: () => {
+          this.showWorkspacesTable();
+        },
+        label: "Refresh list",
+        name: "refresh",
+      },
       // {
       //   callback: (option) => {
       //     this.showInputBox(title, option.label, workspace.gitRepo, () => {});
