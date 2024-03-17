@@ -38,14 +38,15 @@ export class GitManager {
       await this.git.cwd(workspace.fullPath);
       const statusSummary = await this.git.status();
 
-      if (statusSummary.files.length > 0) {
-        statuses.push("edited");
-      }
       statuses.push(
         statusSummary.behind > 0 || statusSummary.ahead > 0
           ? "sync-pending"
           : "synced",
       );
+
+      if (statusSummary.files.length > 0) {
+        statuses.push("edited");
+      }
     } else {
       statuses.push("non-git");
     }
