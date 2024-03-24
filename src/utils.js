@@ -1,9 +1,9 @@
 import fs from "fs";
 import path from "path";
 
-export async function checkForDirectory(directoryPath) {
+export async function checkExistence(filePath) {
   try {
-    await fs.promises.access(directoryPath);
+    await fs.promises.access(filePath);
     return true;
   } catch {
     return false;
@@ -62,17 +62,17 @@ async function checkForVersionJson(directoryPath) {
 }
 
 export async function getDirectoryVersion(directoryPath) {
-  let prefix = ""
+  let prefix = "";
   let version = await checkForCinnabarJson(directoryPath);
 
   if (version == null) {
     version = await checkForVersionJson(directoryPath);
-    prefix = " (cf-v)"
+    prefix = " (cf-v)";
   }
 
   if (version == null) {
     version = await checkForPackageJson(directoryPath);
-    prefix = " (npm)"
+    prefix = " (npm)";
   }
 
   if (version == null) {
@@ -81,4 +81,30 @@ export async function getDirectoryVersion(directoryPath) {
   }
 
   return version + prefix;
+}
+
+export async function checkForConvention(workspace, requestIssues = false) {
+  if (workspace.convention == null) {
+    return !requestIssues ? true : [];
+  }
+  const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
+  const conventionPath = path.resolve(
+    path.join(
+      scriptDirectory,
+      "..",
+      "conventions",
+      workspace.convention + ".js",
+    ),
+  );
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  if (fs.existsSync(conventionPath)) {
+    // eslint-disable-next-line node/no-unsupported-features/es-syntax
+    const { checkConventionAdherence } = await import(conventionPath);
+    return await checkConventionAdherence(
+      workspace,
+      path.dirname(conventionPath),
+      requestIssues,
+    );
+  }
+  return !requestIssues ? true : [];
 }

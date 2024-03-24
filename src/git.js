@@ -1,7 +1,8 @@
 import fs from "fs";
+import path from "path";
 import simpleGit from "simple-git";
 
-import { checkForDirectory, checkForGit } from "./check.js";
+import { checkExistence, checkForGit } from "./utils.js";
 
 export class GitManager {
   constructor(config) {
@@ -11,14 +12,14 @@ export class GitManager {
 
   async createFolders() {
     for (const workspace of this.config.projects) {
-      if (!(await checkForDirectory(workspace.folderPath))) {
+      if (!(await checkExistence(workspace.folderPath))) {
         // eslint-disable-next-line security/detect-non-literal-fs-filename
         await fs.promises.mkdir(workspace.folderPath, { recursive: true });
       }
     }
 
     for (const workspace of this.config.workspaces) {
-      if (!(await checkForDirectory(workspace.folderPath))) {
+      if (!(await checkExistence(workspace.folderPath))) {
         // eslint-disable-next-line security/detect-non-literal-fs-filename
         await fs.promises.mkdir(workspace.folderPath, { recursive: true });
       }
@@ -26,7 +27,7 @@ export class GitManager {
   }
 
   async getWorkspaceStatus(workspace) {
-    const exists = await checkForDirectory(workspace.fullPath);
+    const exists = await checkExistence(workspace.fullPath);
     if (!exists) {
       return ["-"];
     }
@@ -51,6 +52,31 @@ export class GitManager {
       statuses.push("non-git");
     }
 
+    if (workspace.convention != null) {
+      const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
+      const conventionPath = path.resolve(
+        path.join(
+          scriptDirectory,
+          "..",
+          "conventions",
+          workspace.convention + ".js",
+        ),
+      );
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      if (fs.existsSync(conventionPath)) {
+        // eslint-disable-next-line node/no-unsupported-features/es-syntax
+        const { checkConventionAdherence } = await import(conventionPath);
+        if (
+          !(await checkConventionAdherence(
+            workspace,
+            path.dirname(conventionPath),
+          ))
+        ) {
+          statuses.push("convention-broke");
+        }
+      }
+    }
+
     return statuses;
   }
 
@@ -68,7 +94,7 @@ export class GitManager {
     if (workspace.gitRepo == null) {
       return;
     }
-    const folderExists = await checkForDirectory(workspace.fullPath);
+    const folderExists = await checkExistence(workspace.fullPath);
     const gitExists = await checkForGit(workspace.fullPath);
     if (fetch && folderExists && gitExists) {
       await this.git.cwd(workspace.fullPath).fetch();

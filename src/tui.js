@@ -1,8 +1,8 @@
 /* eslint-disable security/detect-object-injection */
 import blessed from "blessed";
 
-import { getDirectoryVersion } from "./check.js";
 import cinnabarData from "./cinnabar.js";
+import { checkForConvention, getDirectoryVersion } from "./utils.js";
 
 export class Tui {
   constructor(config, gitManager) {
@@ -400,7 +400,7 @@ export class Tui {
       },
       top: "center",
       vi: true,
-      width: "25%",
+      width: "90%",
     });
 
     listPopup.on("select", (item, index) => {
@@ -408,6 +408,9 @@ export class Tui {
       this.screen.render();
       if (options[index]?.callback != null) {
         options[index].callback(options[index]);
+      }
+      if (options[index].refreshTable) {
+        this.showWorkspacesTable();
       }
     });
 
@@ -500,11 +503,9 @@ export class Tui {
     const options = [
       { label: "Cancel", name: "cancel" },
       {
-        callback: () => {
-          this.showWorkspacesTable();
-        },
         label: "Refresh list",
         name: "refresh",
+        refreshTable: true,
       },
       // {
       //   callback: (option) => {
@@ -551,12 +552,12 @@ export class Tui {
                     false,
                     true,
                   );
-                  this.showWorkspacesTable();
                 },
               );
             },
             label: "Clone",
             name: "cloneGitRepo",
+            refreshTable: true,
           });
         } else if (status === "synced" || status === "sync-pending") {
           options.push({
@@ -572,12 +573,12 @@ export class Tui {
                     false,
                     false,
                   );
-                  this.showWorkspacesTable();
                 },
               );
             },
             label: "Fetch updates",
             name: "fetchGitRepo",
+            refreshTable: true,
           });
         }
       }
@@ -591,15 +592,17 @@ export class Tui {
           this.workspacesTable,
           async () => {
             await this.gitManager.manageWorkspaces(null, true);
-            this.showWorkspacesTable();
           },
         );
       },
       label: "Fetch updates for all",
       name: "fetchAllGitRepos",
+      refreshTable: true,
     });
 
-    this.showListPopup(title, options);
+    const issues = await checkForConvention(workspace, true);
+
+    this.showListPopup(title, [...options, ...issues]);
   }
 
   async showWorkspacesTable() {
@@ -613,7 +616,7 @@ export class Tui {
       row.push(
         workspace.folder,
         workspace.name,
-        workspace.stack || "Unknown",
+        `${workspace.stack || "-"} (${workspace.convention || "-"})`,
         await getDirectoryVersion(workspace.fullPath),
         (await this.gitManager.getWorkspaceStatus(workspace)).join(", "),
       );
