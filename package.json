@@ -15,16 +15,17 @@
   "type": "module",
   "main": "src/index.js",
   "bin": {
-    "anna": "bin/anna"
+    "anna": "bin/anna.js"
   },
   "files": [
     "bin",
-    "src",
-    "version.json"
+    "conventions",
+    "schemas",
+    "src"
   ],
   "scripts": {
     "format": "npx prettier . --write",
-    "lint": "npx eslint --fix --ext .js,.json .",
+    "lint": "npx eslint --fix .",
     "test": "mocha",
     "verify": "npm run lint && npm run format && npm test"
   },

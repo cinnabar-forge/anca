@@ -1,8 +1,12 @@
+# General
 **/.git
 **/.svn
 **/.hg
+
+# Node.js
 **/node_modules
 package-lock.json
-.eslintrc.json
+
+# Cinnabar Forge
+**/cinnabar.js
 cinnabar.json
-src/cinnabar.js
