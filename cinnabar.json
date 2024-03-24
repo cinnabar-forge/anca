@@ -1,0 +1,22 @@
+{
+  "cinnabarMetaVersion": 1,
+  "description": "Organize your workspaces and manage projects deploy fast and easy",
+  "name": "Cinnabar Forge Anna",
+  "version": {
+    "major": 0,
+    "minor": 0,
+    "patch": 0,
+    "revision": 0,
+    "text": "0.0.0",
+    "timestamp": 0
+  },
+  "stack": {
+    "nodejs": {
+      "outputFile": [
+        "src",
+        "cinnabar.js"
+      ],
+      "package": "@cinnabar-forge/anna"
+    }
+  }
+}

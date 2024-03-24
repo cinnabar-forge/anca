@@ -1,6 +1,6 @@
-import fs from "fs";
 import path from "path";
 
+import cinnabarData from "./cinnabar.js";
 import { setupCli } from "./cli.js";
 import { loadAndValidateConfig } from "./config.js";
 import { GitManager } from "./git.js";
@@ -13,16 +13,7 @@ async function main() {
     "../schemas/config.schema.json",
   );
 
-  const version = JSON.parse(
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
-    fs.readFileSync(
-      path.resolve(scriptDirectory, "..", "version.json"),
-      "utf8",
-    ),
-  );
-  version.versionText = `v${version.major}.${version.minor}.${version.patch}`;
-
-  const options = setupCli(version.versionText);
+  const options = setupCli(cinnabarData.version.text);
   const configPath = options.config;
 
   try {
@@ -31,7 +22,6 @@ async function main() {
       configPath,
       schemaPath,
     );
-    config.version = version;
 
     const gitManager = new GitManager(config);
     await gitManager.createFolders();

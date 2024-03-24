@@ -33,6 +33,20 @@ async function checkForPackageJson(directoryPath) {
     });
 }
 
+async function checkForCinnabarJson(directoryPath) {
+  const filePath = path.resolve(directoryPath, "cinnabar.json");
+  return await fs.promises
+    .access(filePath)
+    .then(() => {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      const cinnabarJson = JSON.parse(fs.readFileSync(filePath, "utf8"));
+      return `v${cinnabarJson.version.text}`;
+    })
+    .catch(() => {
+      return null;
+    });
+}
+
 async function checkForVersionJson(directoryPath) {
   const filePath = path.resolve(directoryPath, "version.json");
   return await fs.promises
@@ -48,15 +62,23 @@ async function checkForVersionJson(directoryPath) {
 }
 
 export async function getDirectoryVersion(directoryPath) {
-  let version = await checkForVersionJson(directoryPath);
+  let prefix = ""
+  let version = await checkForCinnabarJson(directoryPath);
+
+  if (version == null) {
+    version = await checkForVersionJson(directoryPath);
+    prefix = " (cf-v)"
+  }
 
   if (version == null) {
     version = await checkForPackageJson(directoryPath);
+    prefix = " (npm)"
   }
 
   if (version == null) {
     version = "-";
+    prefix = "";
   }
 
-  return version;
+  return version + prefix;
 }

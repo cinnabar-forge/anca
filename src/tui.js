@@ -2,6 +2,7 @@
 import blessed from "blessed";
 
 import { getDirectoryVersion } from "./check.js";
+import cinnabarData from "./cinnabar.js";
 
 export class Tui {
   constructor(config, gitManager) {
@@ -102,7 +103,7 @@ export class Tui {
   createHeader() {
     this.header = blessed.box({
       align: "center",
-      content: "Cinnabar Forge Anna " + this.config.version.versionText,
+      content: "Cinnabar Forge Anna " + cinnabarData.version.text,
       height: 1,
       left: "center",
       parent: this.screen,
