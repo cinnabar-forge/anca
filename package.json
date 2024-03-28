@@ -33,12 +33,12 @@
     "ajv": "8.12.0",
     "blessed": "0.1.81",
     "commander": "12.0.0",
-    "simple-git": "3.22.0"
+    "simple-git": "3.23.0"
   },
   "devDependencies": {
-    "@cinnabar-forge/eslint-plugin": "0.3.0",
+    "@cinnabar-forge/eslint-plugin": "0.4.0",
     "chai": "5.1.0",
-    "mocha": "10.3.0"
+    "mocha": "10.4.0"
   },
   "engines": {
     "node": ">=14.0.0"
