@@ -3,9 +3,7 @@ import fs from "fs";
 import path from "path";
 
 export function loadAndValidateConfig(workfolderPath, configPath, schemaPath) {
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
   const schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"));
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
   const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
 
   const ajv = new Ajv();

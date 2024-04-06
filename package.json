@@ -30,9 +30,11 @@
     "verify": "npm run lint && npm run format && npm test"
   },
   "dependencies": {
+    "@cinnabar-forge/markup": "file:../markup",
     "ajv": "8.12.0",
     "blessed": "0.1.81",
     "commander": "12.0.0",
+    "markdown-it": "14.1.0",
     "simple-git": "3.23.0"
   },
   "devDependencies": {

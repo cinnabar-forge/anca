@@ -1,4 +1,3 @@
-/* eslint-disable security/detect-object-injection */
 import blessed from "blessed";
 
 import cinnabarData from "./cinnabar.js";
@@ -488,7 +487,6 @@ export class Tui {
     });
 
     this[table].focus();
-    // eslint-disable-next-line no-unused-vars
     this[table].on("select", callback);
 
     this.screen.render();
@@ -617,7 +615,7 @@ export class Tui {
         workspace.folder,
         workspace.name,
         `${workspace.stack || "-"} (${workspace.convention || "-"})`,
-        await getDirectoryVersion(workspace.fullPath),
+        await getDirectoryVersion(workspace, workspace.fullPath),
         (await this.gitManager.getWorkspaceStatus(workspace)).join(", "),
       );
       workspacesData.push(row);

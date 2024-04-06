@@ -53,3 +53,9 @@ config.json
 # Data
 /data
 /public/assets
+
+# Cinnabar Forge Anna
+README.md.json
+README.md.1.cfm.json
+README.md.2.cfm.json
+*.local

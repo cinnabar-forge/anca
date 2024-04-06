@@ -13,14 +13,12 @@ export class GitManager {
   async createFolders() {
     for (const workspace of this.config.projects) {
       if (!(await checkExistence(workspace.folderPath))) {
-        // eslint-disable-next-line security/detect-non-literal-fs-filename
         await fs.promises.mkdir(workspace.folderPath, { recursive: true });
       }
     }
 
     for (const workspace of this.config.workspaces) {
       if (!(await checkExistence(workspace.folderPath))) {
-        // eslint-disable-next-line security/detect-non-literal-fs-filename
         await fs.promises.mkdir(workspace.folderPath, { recursive: true });
       }
     }
@@ -62,7 +60,6 @@ export class GitManager {
           workspace.convention + ".js",
         ),
       );
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       if (fs.existsSync(conventionPath)) {
         // eslint-disable-next-line node/no-unsupported-features/es-syntax
         const { checkConventionAdherence } = await import(conventionPath);
