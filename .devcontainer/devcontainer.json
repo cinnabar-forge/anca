@@ -1,0 +1,15 @@
+{
+  "name": "Cinnabar Anna",
+  "build": {
+    "context": ".",
+    "dockerfile": "./Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}
