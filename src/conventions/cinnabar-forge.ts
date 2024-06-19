@@ -1,4 +1,4 @@
-import { CinnabarMarkupBuilder } from "@cinnabar-forge/markup";
+import { CftmBuilder } from "cftm";
 import fs from "fs";
 import MarkdownIt from "markdown-it";
 import path from "path";
@@ -8,7 +8,78 @@ import {
   compareIgnoreFiles,
   compareJsonFiles,
   convertMarkdownItTokenToCinnabarMarkup,
-} from "../src/utils.js";
+} from "../utils.js";
+
+// # Logs
+// logs
+// *.log
+// npm-debug.log*
+// yarn-debug.log*
+// yarn-error.log*
+// pnpm-debug.log*
+// lerna-debug.log*
+// report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+// # Dependency directories
+// node_modules/
+// jspm_packages/
+// .yarn/cache
+// .yarn/unplugged
+// .yarn/build-state.yml
+// .yarn/install-state.gz
+// .pnp.*
+// .yarn-integrity
+
+// # Runtime data
+// pids
+// *.pid
+// *.seed
+// *.pid.lock
+
+// # Editor directories and files
+// .idea
+// .DS_Store
+// *.suo
+// *.ntvs*
+// *.njsproj
+// *.sln
+// *.sw?
+// .vscode
+
+// # Built sources
+// /dist
+// /build
+// *.spec
+
+// # Output of 'npm pack'
+// *.tgz
+
+// # Local settings
+// .env
+// .env.development.local
+// .env.test.local
+// .env.production.local
+// .env.local
+// config.json
+
+// # Data
+// /data
+// /public/assets
+
+// # General
+// **/.git
+// **/.svn
+// **/.hg
+
+// # Node.js
+// **/node_modules
+// package-lock.json
+
+// # Cinnabar Forge
+// **/cinnabar.js
+// cinnabar.json
+
+
 
 const nodejsFiles = [
   ".eslintignore",
@@ -46,12 +117,12 @@ async function checkPackageJson(issues, requestIssues, filePath) {
 
 /**
  *
- * @param workspace
+ * @param development
  * @param issues
  * @param requestIssues
  * @param filePath
  */
-async function checkReadmeMd(workspace, issues, requestIssues, filePath) {
+async function checkReadmeMd(development, issues, requestIssues, filePath) {
   const content = await fs.promises.readFile(filePath, "utf-8");
 
   const md = new MarkdownIt();
@@ -67,48 +138,38 @@ async function checkReadmeMd(workspace, issues, requestIssues, filePath) {
     }
     return false;
   }
-  const workspaceMarkup = await convertMarkdownItTokenToCinnabarMarkup(
+  const developmentMarkup = await convertMarkdownItTokenToCinnabarMarkup(
     md.parse(content),
   );
 
-  const etalonMarkupBuilder = new CinnabarMarkupBuilder();
+  const etalonMarkupBuilder = new CftmBuilder();
 
-  if (workspace.stack === "nodejs") {
-    checkReadmeMdNodeJs(workspace, etalonMarkupBuilder);
+  if (development.stack === "nodejs") {
+    checkReadmeMdNodeJs(development, etalonMarkupBuilder);
   }
 
   const etalonMarkup = etalonMarkupBuilder.build();
-
-  if (workspace.name === "anna") {
-    await fs.promises.writeFile(
-      filePath + ".1.cfm.json",
-      JSON.stringify(workspaceMarkup),
-    );
-    await fs.promises.writeFile(
-      filePath + ".2.cfm.json",
-      JSON.stringify(etalonMarkup),
-    );
-  }
 
   return true;
 }
 
 /**
  *
- * @param workspace
+ * @param development
  * @param markup
+ * @param markupBuilder
  */
-function checkReadmeMdNodeJs(workspace, markupBuilder) {
+function checkReadmeMdNodeJs(development, markupBuilder) {
   const name =
-    workspace.cinnabarJson?.name ??
-    workspace.packageJson?.name ??
-    workspace.versionJson?.name ??
-    workspace.name;
+    development.cinnabarJson?.name ??
+    development.packageJson?.name ??
+    development.versionJson?.name ??
+    development.name;
 
   markupBuilder.h1(name);
 
   // const description =
-  //   workspace.cinnabarJson?.description ?? workspace.packageJson?.description;
+  //   development.cinnabarJson?.description ?? development.packageJson?.description;
   // if (description != null) {
   //   markupBuilder.p(description);
   // }
@@ -131,7 +192,7 @@ function checkReadmeMdNodeJs(workspace, markupBuilder) {
  * @param createFileCallback
  * @param fileName
  * @param etalonFilePath
- * @param workspaceFilePath
+ * @param developmentFilePath
  */
 async function checkFiles(
   issues,
@@ -139,12 +200,12 @@ async function checkFiles(
   createFileCallback,
   fileName,
   etalonFilePath,
-  workspaceFilePath,
+  developmentFilePath,
 ) {
   const adherence =
     fileName.endsWith(".json") || fileName === ".prettierrc"
-      ? await compareJsonFiles(etalonFilePath, workspaceFilePath)
-      : await compareIgnoreFiles(etalonFilePath, workspaceFilePath);
+      ? await compareJsonFiles(etalonFilePath, developmentFilePath)
+      : await compareIgnoreFiles(etalonFilePath, developmentFilePath);
 
   if (!adherence) {
     if (requestIssues) {
@@ -162,22 +223,22 @@ async function checkFiles(
 
 /**
  *
- * @param workspace
+ * @param development
  * @param conventionsPath
  * @param requestIssues
  */
 export async function checkConventionAdherence(
-  workspace,
+  development,
   conventionsPath,
   requestIssues = false,
 ) {
   const issues = [];
 
-  if (workspace.stack === "nodejs") {
+  if (development.stack === "nodejs") {
     for (const fileName of specialNodejsFiles) {
-      const workspaceFilePath = path.resolve(workspace.fullPath, fileName);
+      const developmentFilePath = path.resolve(development.fullPath, fileName);
 
-      if (!(await checkExistence(workspaceFilePath))) {
+      if (!(await checkExistence(developmentFilePath))) {
         if (requestIssues) {
           issues.push({
             label: `${fileName} is not presented`,
@@ -191,13 +252,13 @@ export async function checkConventionAdherence(
       }
 
       if (fileName === "package.json") {
-        await checkPackageJson(issues, requestIssues, workspaceFilePath);
+        await checkPackageJson(issues, requestIssues, developmentFilePath);
       } else if (fileName === "README.md") {
         await checkReadmeMd(
-          workspace,
+          development,
           issues,
           requestIssues,
-          workspaceFilePath,
+          developmentFilePath,
         );
       }
     }
@@ -210,13 +271,13 @@ export async function checkConventionAdherence(
         "cinnabar-forge",
         etalonName,
       );
-      const workspaceFilePath = path.resolve(workspace.fullPath, fileName);
+      const developmentFilePath = path.resolve(development.fullPath, fileName);
 
       const createFileCallback = async () => {
-        await fs.promises.copyFile(etalonFilePath, workspaceFilePath);
+        await fs.promises.copyFile(etalonFilePath, developmentFilePath);
       };
 
-      if (!(await checkExistence(workspaceFilePath))) {
+      if (!(await checkExistence(developmentFilePath))) {
         if (requestIssues) {
           issues.push({
             callback: createFileCallback,
@@ -236,7 +297,7 @@ export async function checkConventionAdherence(
         createFileCallback,
         fileName,
         etalonFilePath,
-        workspaceFilePath,
+        developmentFilePath,
       );
     }
   }

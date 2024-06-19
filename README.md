@@ -1,40 +1,44 @@
-# Cinnabar Forge Anna
+# Anca
 
-Organize your workspaces and manage projects deploy fast and easy with Anna, Project Manager.
+_By Cinnabar Forge_
+
+Organize your workspaces and manage projects deploy fast and easy with Anca, Project Manager.
 
 ## Getting Started
 
 ### Installation
 
-Install anna globally using npm:
+Install globally using npm:
 
 ```bash
-npm install -g @cinnabar-forge/anna
+npm install -g anca
 ```
 
-This will make the `anna` command available in your terminal.
+This will make the `anca` command available in your terminal.
 
 ### Usage
 
 ```bash
-anna
+npx anca
 ```
 
 ## Contributing
 
 Contributions are welcome! If you find any issues or have suggestions for improvements, feel free to open an issue or create a pull request.
 
-Clone the repository and install dependencies:
+You need Node.js installed on your device.
+
+You can also develop in the Devcontainer mode.
+
+After preparations, install:
 
 ```bash
-git clone git@github.com:cinnabar-forge/anna.git
-cd anna
-npm install
+npm ci
 ```
 
 ## License
 
-Cinnabar Forge Anna is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
+Anca is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
 
 ## Authors
 

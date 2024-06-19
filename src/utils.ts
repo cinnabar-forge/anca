@@ -1,4 +1,4 @@
-import { CinnabarMarkupBuilder } from "@cinnabar-forge/markup";
+import { CftmBuilder } from "cftm";
 import fs from "fs";
 import path from "path";
 
@@ -78,13 +78,13 @@ async function getVersionJson(directoryPath) {
 
 /**
  *
- * @param workspace
+ * @param development
  * @param directoryPath
  */
-export async function getDirectoryVersion(workspace, directoryPath) {
+export async function getDirectoryVersion(development, directoryPath) {
   let prefix = "";
   const cinnabarJson = await getCinnabarJson(directoryPath);
-  workspace.cinnabarJson = cinnabarJson;
+  development.cinnabarJson = cinnabarJson;
 
   let version;
 
@@ -93,7 +93,7 @@ export async function getDirectoryVersion(workspace, directoryPath) {
   }
 
   const versionJson = await getVersionJson(directoryPath);
-  workspace.versionJson = versionJson;
+  development.versionJson = versionJson;
 
   if (version == null && versionJson != null) {
     version = `v${versionJson.major}.${versionJson.minor}.${versionJson.patch}`;
@@ -101,7 +101,7 @@ export async function getDirectoryVersion(workspace, directoryPath) {
   }
 
   const packageJson = await getPackageJson(directoryPath);
-  workspace.packageJson = packageJson;
+  development.packageJson = packageJson;
 
   if (version == null && packageJson != null) {
     version = `v${packageJson.version}`;
@@ -118,11 +118,11 @@ export async function getDirectoryVersion(workspace, directoryPath) {
 
 /**
  *
- * @param workspace
+ * @param development
  * @param requestIssues
  */
-export async function checkForConvention(workspace, requestIssues = false) {
-  if (workspace.convention == null) {
+export async function checkForConvention(development, requestIssues = false) {
+  if (development.convention == null) {
     return !requestIssues ? true : [];
   }
   const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
@@ -131,14 +131,14 @@ export async function checkForConvention(workspace, requestIssues = false) {
       scriptDirectory,
       "..",
       "conventions",
-      workspace.convention + ".js",
+      development.convention + ".js",
     ),
   );
   if (fs.existsSync(conventionPath)) {
     // eslint-disable-next-line node/no-unsupported-features/es-syntax
     const { checkConventionAdherence } = await import(conventionPath);
     return await checkConventionAdherence(
-      workspace,
+      development,
       path.dirname(conventionPath),
       requestIssues,
     );
@@ -205,17 +205,18 @@ export async function compareIgnoreFiles(originalPath, foreignPath) {
 }
 
 /**
- * Convert Markdown It tokens into Cinnabar Forge Simple Text Schema
- * @param {import("markdown-it").Token[]} markdownItTokens An array of Markdown It Token objects
+ *
+ * @param markdownItTokens
  */
 export async function convertMarkdownItTokenToCinnabarMarkup(markdownItTokens) {
-  const markup = new CinnabarMarkupBuilder();
+  const markup = new CftmBuilder();
 
   let lastTag = "";
 
   for (const token of markdownItTokens) {
     if (token.type === "inline" && lastTag !== "") {
-      markup.add(lastTag, token.content);
+      console.log(lastTag, token.content);
+      // markup.add(lastTag, token.content);
     }
     lastTag = token.tag;
   }

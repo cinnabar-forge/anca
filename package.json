@@ -1,5 +1,5 @@
 {
-  "name": "@cinnabar-forge/anna",
+  "name": "anca",
   "version": "0.0.0",
   "description": "Organize your workspaces and manage projects deploy fast and easy",
   "repository": {
@@ -13,36 +13,47 @@
     "url": "https://timurrin.github.io"
   },
   "type": "module",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "bin": {
-    "anna": "bin/anna.js"
+    "anca": "bin/anca.js"
   },
   "files": [
     "bin",
-    "conventions",
-    "schemas",
-    "src"
+    "dist"
   ],
   "scripts": {
-    "format": "npx prettier . --write",
-    "lint": "npx eslint --fix .",
-    "test": "mocha",
-    "verify": "npm run lint && npm run format && npm test"
+    "build": "tsc",
+    "build:app": "npm test && tsc -p tsconfig.app.json && pkg ./build/app/index.js -t node18",
+    "build:dist": "tsc -p tsconfig.dist.json",
+    "dev": "tsc-watch",
+    "format": "prettier . --write",
+    "lint": "eslint --fix .",
+    "test": "eslint --max-warnings 0 . && tsc && mocha './build/main/test'"
   },
   "dependencies": {
-    "@cinnabar-forge/markup": "file:../markup",
-    "ajv": "8.12.0",
-    "blessed": "0.1.81",
-    "commander": "12.0.0",
+    "ajv": "8.16.0",
+    "cftm": "0.1.0",
+    "clivo": "0.3.1",
     "markdown-it": "14.1.0",
-    "simple-git": "3.23.0"
+    "picocolors": "1.0.1",
+    "simple-git": "3.25.0"
   },
   "devDependencies": {
-    "@cinnabar-forge/eslint-plugin": "0.4.0",
-    "chai": "5.1.0",
-    "mocha": "10.4.0"
+    "@cinnabar-forge/eslint-plugin": "0.5.0",
+    "@cinnabar-forge/meta": "0.1.2",
+    "@types/node": "20.14.5",
+    "chai": "5.1.1",
+    "mocha": "10.4.0",
+    "pkg": "5.8.1",
+    "pre-commit": "1.2.2",
+    "tsc-watch": "6.2.0",
+    "typescript": "5.4.5"
   },
   "engines": {
     "node": ">=14.0.0"
-  }
+  },
+  "pre-commit": [
+    "format",
+    "test"
+  ]
 }

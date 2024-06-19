@@ -3,7 +3,7 @@
 export default {
   "cinnabarMetaVersion": 1,
   "description": "Organize your workspaces and manage projects deploy fast and easy",
-  "name": "Cinnabar Forge Anna",
+  "name": "Anca",
   "version": {
     "major": 0,
     "minor": 0,
@@ -18,7 +18,7 @@ export default {
         "src",
         "cinnabar.js"
       ],
-      "package": "@cinnabar-forge/anna"
+      "package": "anca"
     }
   }
 };
