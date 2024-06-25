@@ -1,12 +1,11 @@
-import fs from "fs";
+import { promptMenu, promptOptions } from "clivo";
 import path from "path";
 import pc from "picocolors";
 
-import { promptMenu, promptOptions } from "clivo";
 import { getState } from "./config.js";
+import { getGit, syncDevelopment } from "./git.js";
 import { AncaDevelopmentState } from "./schema.js";
 import { checkExistence, checkForGit } from "./utils.js";
-import { getGit, syncDevelopment } from "./git.js";
 
 // async function showDevelopmentActions(development) {
 //   const title = development.name;
@@ -115,14 +114,22 @@ import { getGit, syncDevelopment } from "./git.js";
 //   this.showListPopup(title, [...options, ...issues]);
 // }
 
+/**
+ *
+ * @param development
+ */
 function getDevelopmentDisplayName(development: AncaDevelopmentState): string {
   return `${development.data.name}${pc.dim("@" + development.data.folder)}`;
 }
 
+/**
+ *
+ * @param development
+ */
 async function getDevelopmentStatus(development: AncaDevelopmentState) {
   const exists = await checkExistence(development.fullPath);
   if (!exists) {
-    return ["-"];
+    return [pc.bgRed("not presented locally")];
   }
 
   const statuses = [];
@@ -134,62 +141,69 @@ async function getDevelopmentStatus(development: AncaDevelopmentState) {
 
     statuses.push(
       statusSummary.behind > 0 || statusSummary.ahead > 0
-        ? "sync-pending"
-        : "synced",
+        ? pc.bgYellow("sync-pending")
+        : pc.bgGreen("synced"),
     );
 
     if (statusSummary.files.length > 0) {
-      statuses.push("edited");
+      statuses.push(pc.bgCyan("edited"));
     }
   } else {
     statuses.push("non-git");
   }
 
-  if (development.convention != null) {
-    const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
-    const conventionPath = path.resolve(
-      path.join(
-        scriptDirectory,
-        "..",
-        "conventions",
-        development.convention + ".js",
-      ),
-    );
-    if (fs.existsSync(conventionPath)) {
-      const { checkConventionAdherence } = await import(conventionPath);
-      if (
-        !(await checkConventionAdherence(
-          development,
-          path.dirname(conventionPath),
-        ))
-      ) {
-        statuses.push("convention-broke");
-      }
-    }
-  }
+  // if (development.convention != null) {
+  //   const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
+  //   const conventionPath = path.resolve(
+  //     path.join(
+  //       scriptDirectory,
+  //       "..",
+  //       "conventions",
+  //       development.convention + ".js",
+  //     ),
+  //   );
+  //   if (fs.existsSync(conventionPath)) {
+  //     const { checkConventionAdherence } = await import(conventionPath);
+  //     if (
+  //       !(await checkConventionAdherence(
+  //         development,
+  //         path.dirname(conventionPath),
+  //       ))
+  //     ) {
+  //       statuses.push("convention-broke");
+  //     }
+  //   }
+  // }
 
   return statuses;
 }
 
+/**
+ *
+ */
 async function dynamicOptions() {
   const options = [
-    { name: "opt1", label: "Option 1" },
-    { name: "opt2", label: "Option 2" },
-    { name: "opt3", label: "Option 3" },
+    { label: "Option 1", name: "opt1" },
+    { label: "Option 2", name: "opt2" },
+    { label: "Option 3", name: "opt3" },
+    { label: "Donkey", name: "donkey" },
   ];
   const choice = await promptOptions("PLACEHOLDER OPTIONS:", options);
   console.log(`You chose: ${choice.label}`);
 }
 
+/**
+ *
+ */
 async function showAllProjects() {
-  const options = [{ name: "Back", action: showDevelopmentsMenu }];
+  const options = [{ action: showDevelopmentsMenu, label: "Back" }];
 
   const state = getState();
 
   for (const development of state.developments) {
     options.push({
-      name: `${getDevelopmentDisplayName(development)} (${(await getDevelopmentStatus(development)).join(", ")})`,
       action: dynamicOptions,
+      label: `${getDevelopmentDisplayName(development)} (${(await getDevelopmentStatus(development)).join(", ")})`,
     });
   }
 
@@ -197,8 +211,11 @@ async function showAllProjects() {
   showAllProjects();
 }
 
+/**
+ *
+ */
 async function showNotHavingAncaJson() {
-  const options = [{ name: "Back", action: showDevelopmentsMenu }];
+  const options = [{ action: showDevelopmentsMenu, label: "Back" }];
 
   const state = getState();
 
@@ -208,8 +225,8 @@ async function showNotHavingAncaJson() {
       !(await checkExistence(path.join(development.fullPath, "anca.json")))
     ) {
       options.push({
-        name: getDevelopmentDisplayName(development),
         action: dynamicOptions,
+        label: getDevelopmentDisplayName(development),
       });
     }
   }
@@ -218,16 +235,19 @@ async function showNotHavingAncaJson() {
   showNotHavingAncaJson();
 }
 
+/**
+ *
+ */
 async function showPresentedLocally() {
-  const options = [{ name: "Back", action: showDevelopmentsMenu }];
+  const options = [{ action: showDevelopmentsMenu, label: "Back" }];
 
   const state = getState();
 
   for (const development of state.developments) {
     if (await checkExistence(development.fullPath)) {
       options.push({
-        name: `${getDevelopmentDisplayName(development)} (${(await getDevelopmentStatus(development)).join(", ")})`,
         action: dynamicOptions,
+        label: `${getDevelopmentDisplayName(development)} (${(await getDevelopmentStatus(development)).join(", ")})`,
       });
     }
   }
@@ -236,18 +256,21 @@ async function showPresentedLocally() {
   showPresentedLocally();
 }
 
+/**
+ *
+ */
 async function showNotPresentedLocally() {
-  const options = [{ name: "Back", action: showDevelopmentsMenu }];
+  const options = [{ action: showDevelopmentsMenu, label: "Back" }];
 
   const state = getState();
 
   for (const development of state.developments) {
     if (!(await checkExistence(development.fullPath))) {
       options.push({
-        name: getDevelopmentDisplayName(development),
         action: async () => {
           await syncDevelopment(development, false, false, true);
         },
+        label: getDevelopmentDisplayName(development),
       });
     }
   }
@@ -256,32 +279,38 @@ async function showNotPresentedLocally() {
   showNotPresentedLocally();
 }
 
+/**
+ *
+ */
 async function showDevelopmentsMenu() {
   await promptMenu("Developments Menu", [
-    { name: "Back", action: showMainMenu },
-    { name: "List of issues", action: dynamicOptions },
-    { name: "List of not having anca.json", action: showNotHavingAncaJson },
-    { name: "List of presented locally", action: showPresentedLocally },
-    { name: "List of not presented locally", action: showNotPresentedLocally },
-    { name: "List of all projects", action: showAllProjects },
+    { action: showMainMenu, label: "Back" },
+    { action: dynamicOptions, label: "List of issues" },
+    { action: showNotHavingAncaJson, label: "List of not having anca.json" },
+    { action: showPresentedLocally, label: "List of presented locally" },
+    { action: showNotPresentedLocally, label: "List of not presented locally" },
+    { action: showAllProjects, label: "List of all projects" },
   ]);
 }
 
+/**
+ *
+ */
 export async function showMainMenu() {
   await promptMenu("Main Menu", [
     {
-      name: "Quit",
       action: async () => {
         console.log("Bye.");
       },
+      label: "Quit",
     },
     {
-      name: "Deployments",
       action: async () => {
         console.log("Deployments selected");
         showMainMenu();
       },
+      label: "Deployments",
     },
-    { name: "Developments", action: showDevelopmentsMenu },
+    { action: showDevelopmentsMenu, label: "Developments" },
   ]);
 }

@@ -22,32 +22,32 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
-    "build:app": "npm test && tsc -p tsconfig.app.json && pkg ./build/app/index.js -t node18",
-    "build:dist": "tsc -p tsconfig.dist.json",
+    "build": "node esbuild.js",
+    "build:dev": "tsc",
+    "build:sea": "node sea.esbuild.js && mkdir -p ./build/sea && node --experimental-sea-config sea.config.json && cp $(command -v node) ./build/sea/anca && npx postject ./build/sea/anca NODE_SEA_BLOB ./build/sea/prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2",
     "dev": "tsc-watch",
     "format": "prettier . --write",
     "lint": "eslint --fix .",
-    "test": "eslint --max-warnings 0 . && tsc && mocha './build/main/test'"
+    "test": "eslint --max-warnings 0 . && tsc && mocha './build/dev/test'"
   },
   "dependencies": {
     "ajv": "8.16.0",
     "cftm": "0.1.0",
-    "clivo": "0.3.1",
+    "clivo": "0.4.0",
     "markdown-it": "14.1.0",
     "picocolors": "1.0.1",
     "simple-git": "3.25.0"
   },
   "devDependencies": {
-    "@cinnabar-forge/eslint-plugin": "0.5.0",
+    "@cinnabar-forge/eslint-plugin": "0.6.0",
     "@cinnabar-forge/meta": "0.1.2",
-    "@types/node": "20.14.5",
+    "@types/node": "20.14.8",
     "chai": "5.1.1",
-    "mocha": "10.4.0",
-    "pkg": "5.8.1",
+    "esbuild": "0.21.5",
+    "mocha": "10.5.1",
     "pre-commit": "1.2.2",
     "tsc-watch": "6.2.0",
-    "typescript": "5.4.5"
+    "typescript": "5.5.2"
   },
   "engines": {
     "node": ">=14.0.0"

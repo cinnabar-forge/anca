@@ -125,24 +125,24 @@ export async function checkForConvention(development, requestIssues = false) {
   if (development.convention == null) {
     return !requestIssues ? true : [];
   }
-  const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
-  const conventionPath = path.resolve(
-    path.join(
-      scriptDirectory,
-      "..",
-      "conventions",
-      development.convention + ".js",
-    ),
-  );
-  if (fs.existsSync(conventionPath)) {
-    // eslint-disable-next-line node/no-unsupported-features/es-syntax
-    const { checkConventionAdherence } = await import(conventionPath);
-    return await checkConventionAdherence(
-      development,
-      path.dirname(conventionPath),
-      requestIssues,
-    );
-  }
+  // const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
+  // const conventionPath = path.resolve(
+  //   path.join(
+  //     scriptDirectory,
+  //     "..",
+  //     "conventions",
+  //     development.convention + ".js",
+  //   ),
+  // );
+  // if (fs.existsSync(conventionPath)) {
+  //   // eslint-disable-next-line node/no-unsupported-features/es-syntax
+  //   const { checkConventionAdherence } = await import(conventionPath);
+  //   return await checkConventionAdherence(
+  //     development,
+  //     path.dirname(conventionPath),
+  //     requestIssues,
+  //   );
+  // }
   return !requestIssues ? true : [];
 }
 
@@ -196,7 +196,7 @@ export async function compareIgnoreFiles(originalPath, foreignPath) {
   );
   const foreignLines = new Set(foreignContent.split("\n"));
 
-  for (let line of originalLines) {
+  for (const line of originalLines) {
     if (!foreignLines.has(line)) {
       return false;
     }

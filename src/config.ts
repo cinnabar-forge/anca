@@ -1,6 +1,7 @@
 import Ajv from "ajv";
 import fs from "fs";
 import path from "path";
+
 import {
   ANCA_CONFIG_SCHEMA,
   AncaConfig,
@@ -11,6 +12,9 @@ import {
 
 let state: AncaState;
 
+/**
+ *
+ */
 export function getState(): AncaState {
   return state;
 }
@@ -18,10 +22,11 @@ export function getState(): AncaState {
 /**
  *
  * @param {string} workfolderPath
+ * @param configsPath
  */
 export function loadAndValidateConfig(
   workfolderPath: string,
-  configsPath: Array<string>,
+  configsPath: string[],
 ) {
   const config: AncaConfig = JSON.parse(
     fs.readFileSync(configsPath[0], "utf-8"),

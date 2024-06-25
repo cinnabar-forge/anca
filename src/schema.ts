@@ -1,46 +1,43 @@
-export type AncaDeployment = {
+export interface AncaDeployment {
   folder: string;
-  name: string;
   gitOrigin?: string;
-};
+  name: string;
+}
 
-export type AncaDeploymentState = {
+export interface AncaDeploymentState {
   data: AncaDeployment;
   folderPath?: string;
   fullPath?: string;
-};
+}
 
-export type AncaDevelopment = {
+export interface AncaDevelopment {
   folder: string;
-  name: string;
   gitOrigin?: string;
   gitProds?: string[];
-};
+  name: string;
+}
 
-export type AncaDevelopmentState = {
+export interface AncaDevelopmentState {
+  convention?: string;
   data: AncaDevelopment;
   folderPath?: string;
   fullPath?: string;
   stack?: string;
-  convention?: string;
-};
+}
 
-export type AncaConfig = {
+export interface AncaConfig {
   ancaDataVersion: 0;
-  deployments: Array<AncaDeployment>;
-  developments: Array<AncaDevelopment>;
-};
+  deployments: AncaDeployment[];
+  developments: AncaDevelopment[];
+}
 
-export type AncaState = {
-  deployments: Array<AncaDeploymentState>;
-  developments: Array<AncaDevelopmentState>;
-};
+export interface AncaState {
+  deployments: AncaDeploymentState[];
+  developments: AncaDevelopmentState[];
+}
 
 export const ANCA_CONFIG_SCHEMA = {
   $schema: "http://json-schema.org/draft-07/schema#",
-  title: "Anca Configuration",
-  type: "object",
-  required: ["ancaDataVersion", "deployments", "developments"],
   properties: {
     ancaDataVersion: {
       description: "Data version number, used to control schema changes",
@@ -48,38 +45,41 @@ export const ANCA_CONFIG_SCHEMA = {
     },
     deployments: {
       description: "List of deployment projects",
-      type: "array",
       items: {
         type: "object",
       },
+      type: "array",
     },
     developments: {
       description: "List of development projects",
-      type: "array",
       items: {
-        type: "object",
-        required: ["folder", "name"],
         properties: {
           folder: {
-            type: "string",
-          },
-          name: {
             type: "string",
           },
           gitOrigin: {
             type: "string",
           },
           gitProds: {
-            type: "array",
             items: {
               type: "string",
             },
+            type: "array",
           },
           mainBranch: {
             type: "string",
           },
+          name: {
+            type: "string",
+          },
         },
+        required: ["folder", "name"],
+        type: "object",
       },
+      type: "array",
     },
   },
+  required: ["ancaDataVersion", "deployments", "developments"],
+  title: "Anca Configuration",
+  type: "object",
 };

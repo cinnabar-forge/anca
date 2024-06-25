@@ -1,4 +1,4 @@
-import { CftmBuilder } from "cftm";
+// import { CftmBuilder } from "cftm";
 import fs from "fs";
 import MarkdownIt from "markdown-it";
 import path from "path";
@@ -7,7 +7,6 @@ import {
   checkExistence,
   compareIgnoreFiles,
   compareJsonFiles,
-  convertMarkdownItTokenToCinnabarMarkup,
 } from "../utils.js";
 
 // # Logs
@@ -79,8 +78,6 @@ import {
 // **/cinnabar.js
 // cinnabar.json
 
-
-
 const nodejsFiles = [
   ".eslintignore",
   ".eslintrc.json",
@@ -138,17 +135,17 @@ async function checkReadmeMd(development, issues, requestIssues, filePath) {
     }
     return false;
   }
-  const developmentMarkup = await convertMarkdownItTokenToCinnabarMarkup(
-    md.parse(content),
-  );
+  // const developmentMarkup = await convertMarkdownItTokenToCinnabarMarkup(
+  //   md.parse(content),
+  // );
 
-  const etalonMarkupBuilder = new CftmBuilder();
+  // const etalonMarkupBuilder = new CftmBuilder();
 
   if (development.stack === "nodejs") {
-    checkReadmeMdNodeJs(development, etalonMarkupBuilder);
+    // checkReadmeMdNodeJs(development, etalonMarkupBuilder);
   }
 
-  const etalonMarkup = etalonMarkupBuilder.build();
+  // const etalonMarkup = etalonMarkupBuilder.build();
 
   return true;
 }

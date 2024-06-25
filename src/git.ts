@@ -1,16 +1,22 @@
 import fs from "fs";
 import simpleGit, { SimpleGit } from "simple-git";
 
-import { checkExistence, checkForGit } from "./utils.js";
-import { AncaDevelopmentState, AncaState } from "./schema.js";
 import { getState } from "./config.js";
+import { AncaDevelopmentState } from "./schema.js";
+import { checkExistence, checkForGit } from "./utils.js";
 
 const git = simpleGit();
 
+/**
+ *
+ */
 export function getGit(): SimpleGit {
   return git;
 }
 
+/**
+ *
+ */
 export async function createFolders() {
   for (const deployment of getState().deployments) {
     if (!(await checkExistence(deployment.folderPath))) {
@@ -25,6 +31,11 @@ export async function createFolders() {
   }
 }
 
+/**
+ *
+ * @param specificDevelopmentName
+ * @param fetch
+ */
 export async function manageDevelopments(
   specificDevelopmentName,
   fetch: boolean,
@@ -40,6 +51,13 @@ export async function manageDevelopments(
   }
 }
 
+/**
+ *
+ * @param development
+ * @param fetch
+ * @param init
+ * @param clone
+ */
 export async function syncDevelopment(
   development: AncaDevelopmentState,
   fetch: boolean,

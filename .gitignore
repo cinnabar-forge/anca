@@ -50,6 +50,10 @@ pids
 .env.local
 config.json
 
+# Node SEA
+sea-prep.blob
+/anca
+
 # Data
 /data
 /public/assets

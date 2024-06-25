@@ -1,0 +1,29 @@
+name: Release
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    name: "Publish package to npm registry"
+    steps:
+      - uses: actions/checkout@v4
+        name: "Checkout repo"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org/
+        name: "Install Node.js"
+      - run: npm ci
+        name: "Install dependencies"
+      - run: npm test
+        name: "Run tests"
+      - run: npm run build
+        name: "Build distribution bundle"
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+        name: "Publish to registry"
