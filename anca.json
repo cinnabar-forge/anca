@@ -1,0 +1,11 @@
+{
+  "project-type": "app",
+  "cinnabar-meta": true,
+  "ignore": {
+
+  },
+  "nodejs": "cinnabar",
+  "nodejs-eslint": "cinnabar",
+  "nodejs-prettier": "cinnabar",
+  "readme": "cinnabar"
+}

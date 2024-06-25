@@ -179,17 +179,17 @@ async function getDevelopmentStatus(development: AncaDevelopmentState) {
 }
 
 /**
- *
+ * 
  */
-async function dynamicOptions() {
+async function placeholderOptions() {
   const options = [
-    { label: "Option 1", name: "opt1" },
-    { label: "Option 2", name: "opt2" },
-    { label: "Option 3", name: "opt3" },
+    { label: "Shrek", name: "shrek" },
+    { label: "Fiona", name: "fiona" },
     { label: "Donkey", name: "donkey" },
   ];
-  const choice = await promptOptions("PLACEHOLDER OPTIONS:", options);
+  const choice = await promptOptions("Play as:", options);
   console.log(`You chose: ${choice.label}`);
+  showMainMenu();
 }
 
 /**
@@ -202,13 +202,12 @@ async function showAllProjects() {
 
   for (const development of state.developments) {
     options.push({
-      action: dynamicOptions,
+      action: placeholderOptions,
       label: `${getDevelopmentDisplayName(development)} (${(await getDevelopmentStatus(development)).join(", ")})`,
     });
   }
 
   await promptMenu("Select a project:", options);
-  showAllProjects();
 }
 
 /**
@@ -225,14 +224,13 @@ async function showNotHavingAncaJson() {
       !(await checkExistence(path.join(development.fullPath, "anca.json")))
     ) {
       options.push({
-        action: dynamicOptions,
+        action: placeholderOptions,
         label: getDevelopmentDisplayName(development),
       });
     }
   }
 
   await promptMenu("Select to create anca.json:", options);
-  showNotHavingAncaJson();
 }
 
 /**
@@ -246,14 +244,13 @@ async function showPresentedLocally() {
   for (const development of state.developments) {
     if (await checkExistence(development.fullPath)) {
       options.push({
-        action: dynamicOptions,
+        action: placeholderOptions,
         label: `${getDevelopmentDisplayName(development)} (${(await getDevelopmentStatus(development)).join(", ")})`,
       });
     }
   }
 
   await promptMenu("Select:", options);
-  showPresentedLocally();
 }
 
 /**
@@ -276,16 +273,15 @@ async function showNotPresentedLocally() {
   }
 
   await promptMenu("Select to clone:", options);
-  showNotPresentedLocally();
 }
 
 /**
  *
  */
 async function showDevelopmentsMenu() {
-  await promptMenu("Developments Menu", [
+  await promptMenu("\n[DEVELOPMENTS]", [
     { action: showMainMenu, label: "Back" },
-    { action: dynamicOptions, label: "List of issues" },
+    { action: placeholderOptions, label: "List of issues" },
     { action: showNotHavingAncaJson, label: "List of not having anca.json" },
     { action: showPresentedLocally, label: "List of presented locally" },
     { action: showNotPresentedLocally, label: "List of not presented locally" },
@@ -297,7 +293,7 @@ async function showDevelopmentsMenu() {
  *
  */
 export async function showMainMenu() {
-  await promptMenu("Main Menu", [
+  await promptMenu("\n[MAIN MENU]", [
     {
       action: async () => {
         console.log("Bye.");
