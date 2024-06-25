@@ -1,11 +1,11 @@
 {
-  "project-type": "app",
+  "changelog": "keepachangelog.com",
   "cinnabar-meta": true,
-  "ignore": {
-
-  },
+  "git-ignore": "cinnabar",
+  "license": true,
   "nodejs": "cinnabar",
   "nodejs-eslint": "cinnabar",
   "nodejs-prettier": "cinnabar",
-  "readme": "cinnabar"
+  "readme": "cinnabar",
+  "type": "app"
 }

@@ -129,8 +129,12 @@ function getDevelopmentDisplayName(development: AncaDevelopmentState): string {
 async function getDevelopmentStatus(development: AncaDevelopmentState) {
   const exists = await checkExistence(development.fullPath);
   if (!exists) {
-    return [pc.bgRed("not presented locally")];
+    return [pc.bgRed("remote")];
   }
+
+  const hasAncaJson =
+    (await checkExistence(development.fullPath)) &&
+    (await checkExistence(path.join(development.fullPath, "anca.json")));
 
   const statuses = [];
 
@@ -146,40 +150,58 @@ async function getDevelopmentStatus(development: AncaDevelopmentState) {
     );
 
     if (statusSummary.files.length > 0) {
-      statuses.push(pc.bgCyan("edited"));
+      statuses.push(pc.bgMagenta("edited"));
     }
   } else {
     statuses.push("non-git");
   }
 
-  // if (development.convention != null) {
-  //   const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
-  //   const conventionPath = path.resolve(
-  //     path.join(
-  //       scriptDirectory,
-  //       "..",
-  //       "conventions",
-  //       development.convention + ".js",
-  //     ),
-  //   );
-  //   if (fs.existsSync(conventionPath)) {
-  //     const { checkConventionAdherence } = await import(conventionPath);
-  //     if (
-  //       !(await checkConventionAdherence(
-  //         development,
-  //         path.dirname(conventionPath),
-  //       ))
-  //     ) {
-  //       statuses.push("convention-broke");
-  //     }
-  //   }
-  // }
+  if (!hasAncaJson) {
+    statuses.push(pc.bgCyan("non-anca"));
+  }
 
   return statuses;
 }
 
 /**
- * 
+ *
+ * @param development
+ */
+async function getDevelopmentActions(
+  development: AncaDevelopmentState,
+  previousMenu: () => Promise<void>,
+) {
+  const exists = await checkExistence(development.fullPath);
+  if (!exists) {
+    return [
+      {
+        action: async () => {
+          await syncDevelopment(development, false, false, true);
+          await showDevelopmentAction(development, previousMenu);
+        },
+        label: "Clone",
+      },
+    ];
+  }
+
+  const hasAncaJson =
+    (await checkExistence(development.fullPath)) &&
+    (await checkExistence(path.join(development.fullPath, "anca.json")));
+
+  const actions = [];
+
+  if (!hasAncaJson) {
+    actions.push({
+      action: placeholderOptions,
+      label: "Create anca.json",
+    });
+  }
+
+  return actions;
+}
+
+/**
+ *
  */
 async function placeholderOptions() {
   const options = [
@@ -187,56 +209,53 @@ async function placeholderOptions() {
     { label: "Fiona", name: "fiona" },
     { label: "Donkey", name: "donkey" },
   ];
-  const choice = await promptOptions("Play as:", options);
+  const choice = await promptOptions("[SHREK CHARACTERS]", options);
   console.log(`You chose: ${choice.label}`);
   showMainMenu();
 }
 
 /**
  *
+ * @param development
  */
-async function showAllProjects() {
+async function showDevelopmentAction(
+  development: AncaDevelopmentState,
+  previousMenu: () => Promise<void>,
+) {
+  const actions = [{ action: previousMenu, label: "Back" }];
+
+  actions.push(...(await getDevelopmentActions(development, previousMenu)));
+
+  await promptMenu(
+    `\n[${development.data.name.toUpperCase()} at ${development.data.folder.toUpperCase()}]`,
+    actions,
+  );
+}
+
+/**
+ *
+ */
+async function showAllDevelopments() {
   const options = [{ action: showDevelopmentsMenu, label: "Back" }];
 
   const state = getState();
 
   for (const development of state.developments) {
     options.push({
-      action: placeholderOptions,
+      action: async () => {
+        showDevelopmentAction(development, showAllDevelopments);
+      },
       label: `${getDevelopmentDisplayName(development)} (${(await getDevelopmentStatus(development)).join(", ")})`,
     });
   }
 
-  await promptMenu("Select a project:", options);
+  await promptMenu("[ALL DEVELOPMENTS]", options);
 }
 
 /**
  *
  */
-async function showNotHavingAncaJson() {
-  const options = [{ action: showDevelopmentsMenu, label: "Back" }];
-
-  const state = getState();
-
-  for (const development of state.developments) {
-    if (
-      (await checkExistence(development.fullPath)) &&
-      !(await checkExistence(path.join(development.fullPath, "anca.json")))
-    ) {
-      options.push({
-        action: placeholderOptions,
-        label: getDevelopmentDisplayName(development),
-      });
-    }
-  }
-
-  await promptMenu("Select to create anca.json:", options);
-}
-
-/**
- *
- */
-async function showPresentedLocally() {
+async function showLocalDevelopments() {
   const options = [{ action: showDevelopmentsMenu, label: "Back" }];
 
   const state = getState();
@@ -244,35 +263,15 @@ async function showPresentedLocally() {
   for (const development of state.developments) {
     if (await checkExistence(development.fullPath)) {
       options.push({
-        action: placeholderOptions,
+        action: async () => {
+          showDevelopmentAction(development, showLocalDevelopments);
+        },
         label: `${getDevelopmentDisplayName(development)} (${(await getDevelopmentStatus(development)).join(", ")})`,
       });
     }
   }
 
-  await promptMenu("Select:", options);
-}
-
-/**
- *
- */
-async function showNotPresentedLocally() {
-  const options = [{ action: showDevelopmentsMenu, label: "Back" }];
-
-  const state = getState();
-
-  for (const development of state.developments) {
-    if (!(await checkExistence(development.fullPath))) {
-      options.push({
-        action: async () => {
-          await syncDevelopment(development, false, false, true);
-        },
-        label: getDevelopmentDisplayName(development),
-      });
-    }
-  }
-
-  await promptMenu("Select to clone:", options);
+  await promptMenu("[LOCAL DEVELOPMENTS]", options);
 }
 
 /**
@@ -282,10 +281,8 @@ async function showDevelopmentsMenu() {
   await promptMenu("\n[DEVELOPMENTS]", [
     { action: showMainMenu, label: "Back" },
     { action: placeholderOptions, label: "List of issues" },
-    { action: showNotHavingAncaJson, label: "List of not having anca.json" },
-    { action: showPresentedLocally, label: "List of presented locally" },
-    { action: showNotPresentedLocally, label: "List of not presented locally" },
-    { action: showAllProjects, label: "List of all projects" },
+    { action: showLocalDevelopments, label: "List of local developments" },
+    { action: showAllDevelopments, label: "List of all developments" },
   ]);
 }
 
@@ -301,10 +298,7 @@ export async function showMainMenu() {
       label: "Quit",
     },
     {
-      action: async () => {
-        console.log("Deployments selected");
-        showMainMenu();
-      },
+      action: placeholderOptions,
       label: "Deployments",
     },
     { action: showDevelopmentsMenu, label: "Developments" },
