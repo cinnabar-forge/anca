@@ -15,8 +15,9 @@ async function main() {
     await createFolders();
 
     showMainMenu();
-  } catch (error) {
-    throw new Error(`${error.message}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    throw new Error(`Failed to start Anca: ${error.message}`);
   }
 }
 

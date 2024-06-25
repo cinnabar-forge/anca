@@ -1,7 +1,8 @@
 import { parseCli } from "clivo";
 
 /**
- *
+ * Parses cli arguments
+ * @returns Parsed arguments
  */
 export function setupCli() {
   return parseCli({

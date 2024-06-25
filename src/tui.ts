@@ -7,115 +7,8 @@ import { getGit, syncDevelopment } from "./git.js";
 import { AncaDevelopmentState } from "./schema.js";
 import { checkExistence, checkForGit } from "./utils.js";
 
-// async function showDevelopmentActions(development) {
-//   const title = development.name;
-//   const options = [
-//     { label: "Cancel", name: "cancel" },
-//     {
-//       label: "Refresh list",
-//       name: "refresh",
-//       refreshTable: true,
-//     },
-//     // {
-//     //   callback: (option) => {
-//     //     this.showInputBox(title, option.label, development.gitRepo, () => {});
-//     //   },
-//     //   label: "Change git repo",
-//     //   name: "changeGitRepo",
-//     // },
-//     // {
-//     //   callback: (option) => {
-//     //     this.showInputBox(title, option.label, development.stack, () => {});
-//     //   },
-//     //   label: "Change stack",
-//     //   name: "changeStack",
-//     // },
-//     // {
-//     //   callback: (option) => {
-//     //     this.showInputBox(
-//     //       title,
-//     //       option.label,
-//     //       development.convention,
-//     //       () => {},
-//     //     );
-//     //   },
-//     //   label: "Change convention",
-//     //   name: "changeConvention",
-//     // },
-//   ];
-//   const statuses = await this.gitManager.getDevelopmentStatus(development);
-
-//   for (const status of statuses) {
-//     if (development.gitRepo != null) {
-//       if (status === "-") {
-//         options.push({
-//           callback: (option) => {
-//             this.showConfirmationPopup(
-//               title,
-//               option.label,
-//               this.developmentsTable,
-//               async () => {
-//                 await this.gitManager.syncDevelopment(
-//                   development,
-//                   false,
-//                   false,
-//                   true,
-//                 );
-//               },
-//             );
-//           },
-//           label: "Clone",
-//           name: "cloneGitRepo",
-//           refreshTable: true,
-//         });
-//       } else if (status === "synced" || status === "sync-pending") {
-//         options.push({
-//           callback: (option) => {
-//             this.showConfirmationPopup(
-//               title,
-//               option.label,
-//               this.developmentsTable,
-//               async () => {
-//                 await this.gitManager.syncDevelopment(
-//                   development,
-//                   true,
-//                   false,
-//                   false,
-//                 );
-//               },
-//             );
-//           },
-//           label: "Fetch updates",
-//           name: "fetchGitRepo",
-//           refreshTable: true,
-//         });
-//       }
-//     }
-//   }
-
-//   options.push({
-//     callback: (option) => {
-//       this.showConfirmationPopup(
-//         title,
-//         option.label,
-//         this.developmentsTable,
-//         async () => {
-//           await this.gitManager.manageDevelopments(null, true);
-//         },
-//       );
-//     },
-//     label: "Fetch updates for all",
-//     name: "fetchAllGitRepos",
-//     refreshTable: true,
-//   });
-
-//   const issues = await checkForConvention(development, true);
-
-//   this.showListPopup(title, [...options, ...issues]);
-// }
-
 /**
- *
+ * Gets development display name
  * @param development
  */
 function getDevelopmentDisplayName(development: AncaDevelopmentState): string {
@@ -164,8 +57,9 @@ async function getDevelopmentStatus(development: AncaDevelopmentState) {
 }
 
 /**
- *
+ * Gets development actions
  * @param development
+ * @param previousMenu
  */
 async function getDevelopmentActions(
   development: AncaDevelopmentState,
@@ -176,7 +70,7 @@ async function getDevelopmentActions(
     return [
       {
         action: async () => {
-          await syncDevelopment(development, false, false, true);
+          await syncDevelopment(development);
           await showDevelopmentAction(development, previousMenu);
         },
         label: "Clone",
@@ -215,8 +109,9 @@ async function placeholderOptions() {
 }
 
 /**
- *
+ * Shows Clivo menu with development actions
  * @param development
+ * @param previousMenu
  */
 async function showDevelopmentAction(
   development: AncaDevelopmentState,

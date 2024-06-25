@@ -150,37 +150,36 @@ async function checkReadmeMd(development, issues, requestIssues, filePath) {
   return true;
 }
 
-/**
- *
- * @param development
- * @param markup
- * @param markupBuilder
- */
-function checkReadmeMdNodeJs(development, markupBuilder) {
-  const name =
-    development.cinnabarJson?.name ??
-    development.packageJson?.name ??
-    development.versionJson?.name ??
-    development.name;
+// /**
+//  *
+//  * @param development
+//  * @param markupBuilder
+//  */
+// function checkReadmeMdNodeJs(development, markupBuilder) {
+//   const name =
+//     development.cinnabarJson?.name ??
+//     development.packageJson?.name ??
+//     development.versionJson?.name ??
+//     development.name;
 
-  markupBuilder.h1(name);
+//   markupBuilder.h1(name);
 
-  // const description =
-  //   development.cinnabarJson?.description ?? development.packageJson?.description;
-  // if (description != null) {
-  //   markupBuilder.p(description);
-  // }
+//   // const description =
+//   //   development.cinnabarJson?.description ?? development.packageJson?.description;
+//   // if (description != null) {
+//   //   markupBuilder.p(description);
+//   // }
 
-  markupBuilder.h2("Getting Started");
+//   markupBuilder.h2("Getting Started");
 
-  markupBuilder.h2("Contributing");
+//   markupBuilder.h2("Contributing");
 
-  markupBuilder.h2("License").p("Install anna globally using npm:");
+//   markupBuilder.h2("License").p("Install anna globally using npm:");
 
-  markupBuilder.h2("Authors");
+//   markupBuilder.h2("Authors");
 
-  return markupBuilder.build();
-}
+//   return markupBuilder.build();
+// }
 
 /**
  *

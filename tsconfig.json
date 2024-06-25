@@ -6,7 +6,10 @@
     "outDir": "./build/dev",
     "rootDir": "./",
     "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["./src/**/*", "./test/**/*"]
 }

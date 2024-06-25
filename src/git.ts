@@ -8,14 +8,15 @@ import { checkExistence, checkForGit } from "./utils.js";
 const git = simpleGit();
 
 /**
- *
+ * Gets SimpleGit singleton instance
+ * @returns {SimpleGit} SimpleGit instance
  */
 export function getGit(): SimpleGit {
   return git;
 }
 
 /**
- *
+ * Creates folders in the workfolder
  */
 export async function createFolders() {
   for (const deployment of getState().deployments) {
@@ -32,48 +33,20 @@ export async function createFolders() {
 }
 
 /**
- *
- * @param specificDevelopmentName
- * @param fetch
+ * Performs specified git operations on the repo
+ * @param {AncaDevelopmentState} development
  */
-export async function manageDevelopments(
-  specificDevelopmentName,
-  fetch: boolean,
-) {
-  const developmentsToProcess = specificDevelopmentName
-    ? getState().developments.filter(
-        (ws: AncaDevelopmentState) => ws.data.name === specificDevelopmentName,
-      )
-    : getState().developments;
-
-  for (const development of developmentsToProcess) {
-    await syncDevelopment(development, fetch, false, false);
-  }
-}
-
-/**
- *
- * @param development
- * @param fetch
- * @param init
- * @param clone
- */
-export async function syncDevelopment(
-  development: AncaDevelopmentState,
-  fetch: boolean,
-  init: boolean,
-  clone: boolean,
-) {
+export async function syncDevelopment(development: AncaDevelopmentState) {
   if (development.data.gitOrigin == null) {
     return;
   }
   const folderExists = await checkExistence(development.fullPath);
   const gitExists = await checkForGit(development.fullPath);
-  if (fetch && folderExists && gitExists) {
+  if (folderExists && gitExists) {
     await git.cwd(development.fullPath).fetch();
-  } else if (init && folderExists) {
+  } else if (folderExists) {
     await git.cwd(development.fullPath).init();
-  } else if (clone) {
+  } else {
     await git.clone(development.data.gitOrigin, development.fullPath);
   }
 }

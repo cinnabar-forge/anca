@@ -13,16 +13,17 @@ import {
 let state: AncaState;
 
 /**
- *
+ * Gets current Anca state
+ * @returns Anca state
  */
 export function getState(): AncaState {
   return state;
 }
 
 /**
- *
- * @param {string} workfolderPath
- * @param configsPath
+ * Loads and validates config
+ * @param {string} workfolderPath path to work folder
+ * @param {string[]} configsPath paths to config files
  */
 export function loadAndValidateConfig(
   workfolderPath: string,
@@ -37,7 +38,7 @@ export function loadAndValidateConfig(
 
   if (!validate(config)) {
     throw new Error(
-      `Configuration validation error: ${validate.errors.map((err) => err.message).join(", ")}`,
+      `Configuration validation error: ${validate.errors?.map((err) => err.message).join(", ")}`,
     );
   }
 
@@ -63,18 +64,17 @@ export function loadAndValidateConfig(
   }
 
   for (const development of config.developments) {
-    const developmentState: AncaDevelopmentState = {
-      data: development,
-    };
-    developmentState.folderPath = path.resolve(
+    const folderPath = path.resolve(
       workfolderPath,
       "developments",
       development.folder,
     );
-    developmentState.fullPath = path.resolve(
-      developmentState.folderPath,
-      development.name,
-    );
+    const fullPath = path.resolve(folderPath, development.name);
+    const developmentState: AncaDevelopmentState = {
+      data: development,
+      folderPath,
+      fullPath,
+    };
     state.developments.push(developmentState);
   }
 }

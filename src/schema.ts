@@ -6,8 +6,8 @@ export interface AncaDeployment {
 
 export interface AncaDeploymentState {
   data: AncaDeployment;
-  folderPath?: string;
-  fullPath?: string;
+  folderPath: string;
+  fullPath: string;
 }
 
 export interface AncaDevelopment {
@@ -20,9 +20,8 @@ export interface AncaDevelopment {
 export interface AncaDevelopmentState {
   convention?: string;
   data: AncaDevelopment;
-  folderPath?: string;
-  fullPath?: string;
-  stack?: string;
+  folderPath: string;
+  fullPath: string;
 }
 
 export interface AncaConfig {
