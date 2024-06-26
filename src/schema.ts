@@ -17,18 +17,6 @@ export interface AncaDevelopment {
   name: string;
 }
 
-export interface AncaDevelopmentActions {
-  ancaJsonCreate?: boolean;
-  gitClone?: boolean;
-  gitIgnoreCreate?: boolean;
-  license?: boolean;
-  nodejsEslintCreate?: boolean;
-  nodejsPrettierIgnoreCreate?: boolean;
-  nodejsPrettierRcCreate?: boolean;
-  packageJsonKeywords?: boolean;
-  readmeCreate?: boolean;
-}
-
 export interface AncaDevelopmentState {
   data: AncaDevelopment;
   folderPath: string;

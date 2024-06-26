@@ -6,7 +6,6 @@ import {
   AncaConfig,
   AncaConfigStack,
   AncaConfigType,
-  AncaDevelopmentActions,
   AncaDevelopmentState,
 } from "./schema.js";
 import {
@@ -15,6 +14,25 @@ import {
   readFolderJson,
   writeFolderFile,
 } from "./utils.js";
+
+const actionsCache: Map<string, string[]> = new Map<string, string[]>();
+
+/**
+ *
+ */
+export function clearDevelopmentsActionsCache() {
+  actionsCache.clear();
+}
+
+/**
+ *
+ * @param development
+ */
+export function clearDevelopmentActionsCache(
+  development: AncaDevelopmentState,
+) {
+  actionsCache.delete(development.fullPath);
+}
 
 /**
  *
@@ -39,7 +57,7 @@ export async function getDevelopmentStatus(development: AncaDevelopmentState) {
 
     statuses.push(
       statusSummary.behind > 0 || statusSummary.ahead > 0
-        ? pc.bgYellow("sync-pending")
+        ? pc.bgYellow("sync pending")
         : pc.bgGreen("synced"),
     );
 
@@ -52,6 +70,16 @@ export async function getDevelopmentStatus(development: AncaDevelopmentState) {
 
   if (!hasAncaJson) {
     statuses.push(pc.bgCyan("non-anca"));
+  }
+
+  const actions = await getDevelopmentActions(development);
+
+  if (
+    actions != null &&
+    actions[0] !== "gitClone" &&
+    actions[0] !== "ancaJsonCreate"
+  ) {
+    statuses.push(pc.bgRed("issues: " + actions.length));
   }
 
   return statuses;
@@ -92,13 +120,18 @@ export function getDevelopmentDisplayName(
  */
 export async function getDevelopmentActions(
   development: AncaDevelopmentState,
-): Promise<AncaDevelopmentActions> {
+): Promise<string[]> {
+  const cache = actionsCache.get(development.fullPath);
+  if (cache != null) {
+    return cache;
+  }
   const exists = await checkExistence(development.fullPath);
 
-  const actions: AncaDevelopmentActions = {};
+  const actions: string[] = [];
 
   if (!exists) {
-    actions.gitClone = true;
+    actions.push("gitClone");
+    actionsCache.set(development.fullPath, actions);
     return actions;
   }
 
@@ -108,7 +141,8 @@ export async function getDevelopmentActions(
   );
 
   if (ancaJsonContent == null) {
-    actions.ancaJsonCreate = true;
+    actions.push("ancaJsonCreate");
+    actionsCache.set(development.fullPath, actions);
     return actions;
   }
 
@@ -142,38 +176,40 @@ export async function getDevelopmentActions(
   );
 
   if (gitIgnoreContent == null) {
-    actions.gitIgnoreCreate = true;
+    actions.push("gitIgnoreCreate");
   }
 
   if (licenseContent == null) {
-    actions.license = true;
+    actions.push("licenseCreate");
   }
 
   if (readmeContent == null) {
-    actions.readmeCreate = true;
+    actions.push("readmeCreate");
   }
 
   if (packageJsonContent != null && packageJsonContent.keywords != null) {
-    actions.packageJsonKeywords = true;
+    actions.push("packageJsonKeywordsUpdate");
   }
 
   if (eslintContent == null) {
-    actions.nodejsEslintCreate = true;
+    actions.push("nodejsEslintCreate");
   }
 
   if (prettierRcContent == null) {
-    actions.nodejsPrettierRcCreate = true;
+    actions.push("nodejsPrettierRcCreate");
   }
 
   if (prettierIgnoreContent == null) {
-    actions.nodejsPrettierIgnoreCreate = true;
+    actions.push("nodejsPrettierIgnoreCreate");
   }
+
+  actionsCache.set(development.fullPath, actions);
 
   return actions;
 }
 
 /**
- * 
+ *
  * @param development
  * @param type
  * @param stack

@@ -15,8 +15,13 @@ import {
 } from "./schema.js";
 import { checkExistence } from "./utils.js";
 
+interface ActionMapping {
+  action: () => Promise<void>;
+  label: string;
+}
+
 /**
- * Shows Clivo menu with development actions
+ *
  * @param development
  * @param previousMenu
  */
@@ -32,16 +37,16 @@ async function showDevelopmentActions(
 
   const actionCodes = await getDevelopmentActions(development);
 
-  if (actionCodes.ancaJsonCreate) {
-    menu.push({
+  const actionMappings: Record<string, ActionMapping> = {
+    ancaJsonCreate: {
       action: async () => {
-        const projectType = await promptOptions("Choose project type:", [
+        const projectType = await promptOptions("\nChoose project type:", [
           { label: "App", name: "app" },
           { label: "Library", name: "library" },
           { label: "Other", name: "other" },
         ]);
 
-        const projectStack = await promptOptions("Choose project stack:", [
+        const projectStack = await promptOptions("\nChoose project stack:", [
           { label: "Nodejs", name: "nodejs" },
           { label: "Python", name: "python" },
           { label: "Other", name: "other" },
@@ -55,91 +60,77 @@ async function showDevelopmentActions(
         await backHere();
       },
       label: "[anca.json] Create",
-    });
-  }
-
-  if (actionCodes.gitClone) {
-    menu.push({
+    },
+    gitClone: {
       action: async () => {
         await syncDevelopment(development);
         await backHere();
       },
       label: "[git] Clone",
-    });
-  }
-
-  if (actionCodes.gitIgnoreCreate) {
-    menu.push({
+    },
+    gitIgnoreCreate: {
       action: async () => {
-        console.log("off");
+        // Implementation for creating .gitignore
         await backHere();
       },
       label: "[.gitignore] Create",
-    });
-  }
-
-  if (actionCodes.license) {
-    menu.push({
+    },
+    licenseCreate: {
       action: async () => {
-        console.log("off");
+        // Implementation for creating LICENSE file
         await backHere();
       },
       label: "[LICENSE] Create",
-    });
-  }
-
-  if (actionCodes.nodejsEslintCreate) {
-    menu.push({
+    },
+    nodejsEslintCreate: {
       action: async () => {
-        console.log("off");
+        // Implementation for creating ESLint config for Node.js projects
         await backHere();
       },
-      label: "[eslint.config.js] Create",
-    });
-  }
-
-  if (actionCodes.nodejsPrettierIgnoreCreate) {
-    menu.push({
+      label: "[Node.js] Create ESLint Config",
+    },
+    nodejsPrettierIgnoreCreate: {
       action: async () => {
-        console.log("off");
+        // Implementation for creating .prettierignore for Node.js projects
         await backHere();
       },
-      label: "[.prettierignore] Create",
-    });
-  }
-
-  if (actionCodes.nodejsPrettierRcCreate) {
-    menu.push({
+      label: "[Node.js] Create Prettier Ignore",
+    },
+    nodejsPrettierRcCreate: {
       action: async () => {
-        console.log("off");
+        // Implementation for creating Prettier config for Node.js projects
         await backHere();
       },
-      label: "[.prettierrc] Create",
-    });
-  }
-
-  if (actionCodes.packageJsonKeywords) {
-    menu.push({
+      label: "[Node.js] Create Prettier Config",
+    },
+    packageJsonKeywordsUpdate: {
       action: async () => {
-        console.log("off");
+        // Implementation for updating keywords in package.json
         await backHere();
       },
-      label: "[package.json] Add 'keywords'",
-    });
-  }
-
-  if (actionCodes.readmeCreate) {
-    menu.push({
+      label: "[package.json] Update Keywords",
+    },
+    readmeCreate: {
       action: async () => {
-        console.log("off");
+        // Implementation for creating README.md
         await backHere();
       },
       label: "[README.md] Create",
-    });
-  }
+    },
+  };
+
+  actionCodes.forEach((code) => {
+    const mapping = actionMappings[code];
+    if (mapping) {
+      menu.push({
+        action: mapping.action,
+        label: mapping.label,
+      });
+    }
+  });
 
   await promptMenu(
-    `\n[${development.data.name.toUpperCase()} at ${development.data.folder.toUpperCase()}]`,
+    `\n[${development.data.name.toUpperCase()} at ${development.data.folder.toUpperCase()}] (${(await getDevelopmentStatus(development)).join(", ")})`,
     menu,
   );
 }
