@@ -3,12 +3,13 @@ import fs from "fs";
 import path from "path";
 
 import {
-  ANCA_CONFIG_SCHEMA,
-  AncaConfig,
+  ANCA_WORKFOLDER_SCHEMA,
   AncaDeploymentState,
   AncaDevelopmentState,
   AncaState,
+  AncaWorkfolder,
 } from "./schema.js";
+import { checkExistence } from "./utils.js";
 
 let state: AncaState;
 
@@ -29,12 +30,12 @@ export function loadAndValidateConfig(
   workfolderPath: string,
   configsPath: string[],
 ) {
-  const config: AncaConfig = JSON.parse(
+  const config: AncaWorkfolder = JSON.parse(
     fs.readFileSync(configsPath[0], "utf-8"),
   );
 
   const ajv = new Ajv();
-  const validate = ajv.compile(ANCA_CONFIG_SCHEMA);
+  const validate = ajv.compile(ANCA_WORKFOLDER_SCHEMA);
 
   if (!validate(config)) {
     throw new Error(
@@ -48,18 +49,17 @@ export function loadAndValidateConfig(
   };
 
   for (const deployment of config.deployments) {
-    const deploymentState: AncaDeploymentState = {
-      data: deployment,
-    };
-    deploymentState.folderPath = path.resolve(
+    const folderPath = path.resolve(
       workfolderPath,
       "deployments",
       deployment.folder,
     );
-    deploymentState.fullPath = path.resolve(
-      deploymentState.folderPath,
-      deployment.name,
-    );
+    const fullPath = path.resolve(folderPath, deployment.name);
+    const deploymentState: AncaDeploymentState = {
+      data: deployment,
+      folderPath,
+      fullPath,
+    };
     state.deployments.push(deploymentState);
   }
 
@@ -76,5 +76,22 @@ export function loadAndValidateConfig(
       fullPath,
     };
     state.developments.push(developmentState);
+  }
+}
+
+/**
+ * Creates folders in the workfolder
+ */
+export async function createFolders() {
+  for (const deployment of getState().deployments) {
+    if (!(await checkExistence(deployment.folderPath))) {
+      await fs.promises.mkdir(deployment.folderPath, { recursive: true });
+    }
+  }
+
+  for (const development of getState().developments) {
+    if (!(await checkExistence(development.folderPath))) {
+      await fs.promises.mkdir(development.folderPath, { recursive: true });
+    }
   }
 }

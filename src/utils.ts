@@ -1,12 +1,13 @@
 import { CftmBuilder } from "cftm";
 import fs from "fs";
+import MarkdownIt from "markdown-it";
 import path from "path";
 
 /**
- *
+ * Checks if file/directory path exists
  * @param filePath
  */
-export async function checkExistence(filePath) {
+export async function checkExistence(filePath: string) {
   try {
     await fs.promises.access(filePath);
     return true;
@@ -17,148 +18,85 @@ export async function checkExistence(filePath) {
 
 /**
  *
- * @param directoryPath
+ * @param jsonPath
  */
-export async function checkForGit(directoryPath) {
+export async function readJson(jsonPath: string): Promise<any> {
   try {
-    await fs.promises.access(path.resolve(directoryPath, ".git"));
-    return true;
+    return JSON.parse(await fs.promises.readFile(jsonPath, "utf-8"));
   } catch {
-    return false;
+    return null;
   }
 }
 
 /**
  *
- * @param directoryPath
+ * @param folder
+ * @param jsonPath
  */
-async function getPackageJson(directoryPath) {
-  const filePath = path.resolve(directoryPath, "package.json");
-  return await fs.promises
-    .access(filePath)
-    .then(() => {
-      return JSON.parse(fs.readFileSync(filePath, "utf8"));
-    })
-    .catch(() => {
-      return null;
-    });
+export async function readFolderFile(
+  folder: string,
+  filePath: string,
+): Promise<any> {
+  try {
+    return await fs.promises.readFile(path.resolve(folder, filePath), "utf-8");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Writes data to a file within a specified folder. If the file does not exist, it will be created.
+ * @param folder - The folder where the file will be written.
+ * @param filePath - The path of the file within the folder.
+ * @param data - The data to write to the file.
+ */
+export async function writeFolderFile(
+  folder: string,
+  filePath: string,
+  data: string,
+): Promise<void> {
+  try {
+    await fs.promises.writeFile(path.resolve(folder, filePath), data, "utf-8");
+  } catch (error) {
+    console.error(
+      `Failed to write file at ${path.resolve(folder, filePath)}:`,
+      error,
+    );
+    throw error;
+  }
 }
 
 /**
  *
- * @param directoryPath
+ * @param folder
+ * @param jsonPath
  */
-async function getCinnabarJson(directoryPath) {
-  const filePath = path.resolve(directoryPath, "cinnabar.json");
-  return await fs.promises
-    .access(filePath)
-    .then(() => {
-      return JSON.parse(fs.readFileSync(filePath, "utf8"));
-    })
-    .catch(() => {
-      return null;
-    });
+export async function readFolderJson(
+  folder: string,
+  jsonPath: string,
+): Promise<any> {
+  try {
+    return JSON.parse(
+      await fs.promises.readFile(path.resolve(folder, jsonPath), "utf-8"),
+    );
+  } catch {
+    return null;
+  }
 }
 
 /**
- *
- * @param directoryPath
+ * Compares if second object extends first one
+ * @param first
+ * @param second
  */
-async function getVersionJson(directoryPath) {
-  const filePath = path.resolve(directoryPath, "version.json");
-  return await fs.promises
-    .access(filePath)
-    .then(() => {
-      return JSON.parse(fs.readFileSync(filePath, "utf8"));
-    })
-    .catch(() => {
-      return null;
-    });
-}
-
-/**
- *
- * @param development
- * @param directoryPath
- */
-export async function getDirectoryVersion(development, directoryPath) {
-  let prefix = "";
-  const cinnabarJson = await getCinnabarJson(directoryPath);
-  development.cinnabarJson = cinnabarJson;
-
-  let version;
-
-  if (cinnabarJson != null) {
-    version = `v${cinnabarJson.version.text}`;
-  }
-
-  const versionJson = await getVersionJson(directoryPath);
-  development.versionJson = versionJson;
-
-  if (version == null && versionJson != null) {
-    version = `v${versionJson.major}.${versionJson.minor}.${versionJson.patch}`;
-    prefix = " (cf-v)";
-  }
-
-  const packageJson = await getPackageJson(directoryPath);
-  development.packageJson = packageJson;
-
-  if (version == null && packageJson != null) {
-    version = `v${packageJson.version}`;
-    prefix = " (npm)";
-  }
-
-  if (version == null) {
-    version = "-";
-    prefix = "";
-  }
-
-  return version + prefix;
-}
-
-/**
- *
- * @param development
- * @param requestIssues
- */
-export async function checkForConvention(development, requestIssues = false) {
-  if (development.convention == null) {
-    return !requestIssues ? true : [];
-  }
-  // const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
-  // const conventionPath = path.resolve(
-  //   path.join(
-  //     scriptDirectory,
-  //     "..",
-  //     "conventions",
-  //     development.convention + ".js",
-  //   ),
-  // );
-  // if (fs.existsSync(conventionPath)) {
-  //   // eslint-disable-next-line node/no-unsupported-features/es-syntax
-  //   const { checkConventionAdherence } = await import(conventionPath);
-  //   return await checkConventionAdherence(
-  //     development,
-  //     path.dirname(conventionPath),
-  //     requestIssues,
-  //   );
-  // }
-  return !requestIssues ? true : [];
-}
-
-/**
- *
- * @param original
- * @param foreign
- */
-export function isSubset(original, foreign) {
-  for (const key of Object.keys(original)) {
-    if (typeof original[key] === "object" && original[key] !== null) {
-      if (!isSubset(original[key], foreign[key])) {
+export function isSubset(first: any, second: any): boolean {
+  for (const key of Object.keys(first)) {
+    if (typeof first[key] === "object" && first[key] !== null) {
+      if (!isSubset(first[key], second[key])) {
         return false;
       }
     } else {
-      if (!(key in foreign) || original[key] !== foreign[key]) {
+      if (!(key in second) || first[key] !== second[key]) {
         return false;
       }
     }
@@ -167,37 +105,39 @@ export function isSubset(original, foreign) {
 }
 
 /**
- *
- * @param originalPath
- * @param foreignPath
+ * Compares if second JSON file extends first one
+ * @param firstPath
+ * @param secondPath
  */
-export async function compareJsonFiles(originalPath, foreignPath) {
-  const originalContent = JSON.parse(
-    await fs.promises.readFile(originalPath, "utf-8"),
-  );
-  const foreignContent = JSON.parse(
-    await fs.promises.readFile(foreignPath, "utf-8"),
-  );
+export async function isJsonFileSubset(firstPath: string, secondPath: string) {
+  const firstContent = await readJson(firstPath);
+  const secondContent = await readJson(secondPath);
 
-  return isSubset(originalContent, foreignContent);
+  return firstContent && secondContent && isSubset(firstContent, secondContent);
 }
 
 /**
- *
- * @param originalPath
- * @param foreignPath
+ * Compares if second file has all lines from first one
+ * @param firstPath
+ * @param secondPath
  */
-export async function compareIgnoreFiles(originalPath, foreignPath) {
-  const originalContent = await fs.promises.readFile(originalPath, "utf-8");
-  const foreignContent = await fs.promises.readFile(foreignPath, "utf-8");
+export async function isFileSubset(firstPath: string, secondPath: string) {
+  const firstContent = await fs.promises.readFile(firstPath, "utf-8");
+  const secondContent = await fs.promises.readFile(secondPath, "utf-8");
 
-  const originalLines = new Set(
-    originalContent.split("\n").filter((line) => line.trim()),
+  if (firstContent == null || secondContent == null) {
+    return null;
+  }
+
+  const firstLines = new Set(
+    firstContent.split("\n").filter((line) => line.trim()),
   );
-  const foreignLines = new Set(foreignContent.split("\n"));
+  const secondLines = new Set(
+    secondContent.split("\n").filter((line) => line.trim()),
+  );
 
-  for (const line of originalLines) {
-    if (!foreignLines.has(line)) {
+  for (const line of firstLines) {
+    if (!secondLines.has(line)) {
       return false;
     }
   }
@@ -208,7 +148,9 @@ export async function compareIgnoreFiles(originalPath, foreignPath) {
  *
  * @param markdownItTokens
  */
-export async function convertMarkdownItTokenToCinnabarMarkup(markdownItTokens) {
+export async function convertMarkdownItTokenToCinnabarMarkup(
+  markdownItTokens: MarkdownIt.Token[],
+) {
   const markup = new CftmBuilder();
 
   let lastTag = "";

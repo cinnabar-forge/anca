@@ -41,6 +41,7 @@
   "devDependencies": {
     "@cinnabar-forge/eslint-plugin": "0.6.0",
     "@cinnabar-forge/meta": "0.1.2",
+    "@types/markdown-it": "14.1.1",
     "@types/node": "20.14.8",
     "chai": "5.1.1",
     "esbuild": "0.21.5",

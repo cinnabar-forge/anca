@@ -1,6 +1,5 @@
 import { setupCli } from "./cli.js";
-import { loadAndValidateConfig } from "./config.js";
-import { createFolders } from "./git.js";
+import { createFolders, loadAndValidateConfig } from "./config.js";
 import { showMainMenu } from "./tui.js";
 
 /**

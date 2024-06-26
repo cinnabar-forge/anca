@@ -90,30 +90,6 @@ const specialNodejsFiles = ["README.md", "package.json"];
 
 /**
  *
- * @param issues
- * @param requestIssues
- * @param filePath
- */
-async function checkPackageJson(issues, requestIssues, filePath) {
-  const content = JSON.parse(await fs.promises.readFile(filePath, "utf-8"));
-
-  if (!content.keywords) {
-    if (requestIssues) {
-      issues.push({
-        label: `[package.json] Add 'keywords'`,
-        name: "no-" + issues.length,
-        refreshTable: true,
-      });
-    } else {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-/**
- *
  * @param development
  * @param issues
  * @param requestIssues

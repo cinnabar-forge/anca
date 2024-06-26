@@ -9,7 +9,7 @@ export function setupCli() {
     args: process.argv,
     options: [
       {
-        label: "Specify the path to the configuration file",
+        label: "Specify the path to the workfolder files",
         letter: "c",
         name: "config",
       },

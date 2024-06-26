@@ -1,129 +1,138 @@
-import { promptMenu, promptOptions } from "clivo";
-import path from "path";
-import pc from "picocolors";
+import { promptMenu, promptOptions, promptWorkflow } from "clivo";
 
 import { getState } from "./config.js";
-import { getGit, syncDevelopment } from "./git.js";
+import {
+  createAncaJson,
+  getDevelopmentActions,
+  getDevelopmentDisplayName,
+  getDevelopmentStatus,
+  syncDevelopment,
+} from "./developments.js";
 import { AncaDevelopmentState } from "./schema.js";
-import { checkExistence, checkForGit } from "./utils.js";
-
-/**
- * Gets development display name
- * @param development
- */
-function getDevelopmentDisplayName(development: AncaDevelopmentState): string {
-  return `${development.data.name}${pc.dim("@" + development.data.folder)}`;
-}
-
-/**
- *
- * @param development
- */
-async function getDevelopmentStatus(development: AncaDevelopmentState) {
-  const exists = await checkExistence(development.fullPath);
-  if (!exists) {
-    return [pc.bgRed("remote")];
-  }
-
-  const hasAncaJson =
-    (await checkExistence(development.fullPath)) &&
-    (await checkExistence(path.join(development.fullPath, "anca.json")));
-
-  const statuses = [];
-
-  const gitExists = await checkForGit(development.fullPath);
-  if (gitExists) {
-    await getGit().cwd(development.fullPath);
-    const statusSummary = await getGit().status();
-
-    statuses.push(
-      statusSummary.behind > 0 || statusSummary.ahead > 0
-        ? pc.bgYellow("sync-pending")
-        : pc.bgGreen("synced"),
-    );
-
-    if (statusSummary.files.length > 0) {
-      statuses.push(pc.bgMagenta("edited"));
-    }
-  } else {
-    statuses.push("non-git");
-  }
-
-  if (!hasAncaJson) {
-    statuses.push(pc.bgCyan("non-anca"));
-  }
-
-  return statuses;
-}
-
-/**
- * Gets development actions
- * @param development
- * @param previousMenu
- */
-async function getDevelopmentActions(
-  development: AncaDevelopmentState,
-  previousMenu: () => Promise<void>,
-) {
-  const exists = await checkExistence(development.fullPath);
-  if (!exists) {
-    return [
-      {
-        action: async () => {
-          await syncDevelopment(development);
-          await showDevelopmentAction(development, previousMenu);
-        },
-        label: "Clone",
-      },
-    ];
-  }
-
-  const hasAncaJson =
-    (await checkExistence(development.fullPath)) &&
-    (await checkExistence(path.join(development.fullPath, "anca.json")));
-
-  const actions = [];
-
-  if (!hasAncaJson) {
-    actions.push({
-      action: placeholderOptions,
-      label: "Create anca.json",
-    });
-  }
-
-  return actions;
-}
-
-/**
- *
- */
-async function placeholderOptions() {
-  const options = [
-    { label: "Shrek", name: "shrek" },
-    { label: "Fiona", name: "fiona" },
-    { label: "Donkey", name: "donkey" },
-  ];
-  const choice = await promptOptions("[SHREK CHARACTERS]", options);
-  console.log(`You chose: ${choice.label}`);
-  showMainMenu();
-}
+import { checkExistence } from "./utils.js";
 
 /**
  * Shows Clivo menu with development actions
  * @param development
  * @param previousMenu
  */
-async function showDevelopmentAction(
+async function showDevelopmentActions(
   development: AncaDevelopmentState,
   previousMenu: () => Promise<void>,
 ) {
-  const actions = [{ action: previousMenu, label: "Back" }];
+  const menu = [{ action: previousMenu, label: "Back" }];
 
-  actions.push(...(await getDevelopmentActions(development, previousMenu)));
+  const backHere = async () => {
+    await showDevelopmentActions(development, previousMenu);
+  };
+
+  const actionCodes = await getDevelopmentActions(development);
+
+  if (actionCodes.ancaJsonCreate) {
+    menu.push({
+      action: async () => {
+        const projectType = await promptOptions("Choose project type:", [
+          { label: "App", name: "app" },
+          { label: "Library", name: "library" },
+          { label: "Other", name: "other" },
+        ]);
+
+        const projectStack = await promptOptions("Choose project stack:", [
+          { label: "Nodejs", name: "nodejs" },
+          { label: "Python", name: "python" },
+          { label: "Other", name: "other" },
+        ]);
+
+        await createAncaJson(development, projectType.name, projectStack.name);
+        await backHere();
+      },
+      label: "[anca.json] Create",
+    });
+  }
+
+  if (actionCodes.gitClone) {
+    menu.push({
+      action: async () => {
+        await syncDevelopment(development);
+        await backHere();
+      },
+      label: "[git] Clone",
+    });
+  }
+
+  if (actionCodes.gitIgnoreCreate) {
+    menu.push({
+      action: async () => {
+        console.log("off");
+        await backHere();
+      },
+      label: "[.gitignore] Create",
+    });
+  }
+
+  if (actionCodes.license) {
+    menu.push({
+      action: async () => {
+        console.log("off");
+        await backHere();
+      },
+      label: "[LICENSE] Create",
+    });
+  }
+
+  if (actionCodes.nodejsEslintCreate) {
+    menu.push({
+      action: async () => {
+        console.log("off");
+        await backHere();
+      },
+      label: "[eslint.config.js] Create",
+    });
+  }
+
+  if (actionCodes.nodejsPrettierIgnoreCreate) {
+    menu.push({
+      action: async () => {
+        console.log("off");
+        await backHere();
+      },
+      label: "[.prettierignore] Create",
+    });
+  }
+
+  if (actionCodes.nodejsPrettierRcCreate) {
+    menu.push({
+      action: async () => {
+        console.log("off");
+        await backHere();
+      },
+      label: "[.prettierrc] Create",
+    });
+  }
+
+  if (actionCodes.packageJsonKeywords) {
+    menu.push({
+      action: async () => {
+        console.log("off");
+        await backHere();
+      },
+      label: "[package.json] Add 'keywords'",
+    });
+  }
+
+  if (actionCodes.readmeCreate) {
+    menu.push({
+      action: async () => {
+        console.log("off");
+        await backHere();
+      },
+      label: "[README.md] Create",
+    });
+  }
 
   await promptMenu(
     `\n[${development.data.name.toUpperCase()} at ${development.data.folder.toUpperCase()}]`,
-    actions,
+    menu,
   );
 }
 
@@ -138,13 +147,13 @@ async function showAllDevelopments() {
   for (const development of state.developments) {
     options.push({
       action: async () => {
-        showDevelopmentAction(development, showAllDevelopments);
+        showDevelopmentActions(development, showAllDevelopments);
       },
       label: `${getDevelopmentDisplayName(development)} (${(await getDevelopmentStatus(development)).join(", ")})`,
     });
   }
 
-  await promptMenu("[ALL DEVELOPMENTS]", options);
+  await promptMenu("\n[ALL DEVELOPMENTS]", options);
 }
 
 /**
@@ -159,14 +168,14 @@ async function showLocalDevelopments() {
     if (await checkExistence(development.fullPath)) {
       options.push({
         action: async () => {
-          showDevelopmentAction(development, showLocalDevelopments);
+          showDevelopmentActions(development, showLocalDevelopments);
         },
         label: `${getDevelopmentDisplayName(development)} (${(await getDevelopmentStatus(development)).join(", ")})`,
       });
     }
   }
 
-  await promptMenu("[LOCAL DEVELOPMENTS]", options);
+  await promptMenu("\n[LOCAL DEVELOPMENTS]", options);
 }
 
 /**
@@ -175,7 +184,12 @@ async function showLocalDevelopments() {
 async function showDevelopmentsMenu() {
   await promptMenu("\n[DEVELOPMENTS]", [
     { action: showMainMenu, label: "Back" },
-    { action: placeholderOptions, label: "List of issues" },
+    {
+      action: async () => {
+        console.log("off");
+      },
+      label: "List of issues",
+    },
     { action: showLocalDevelopments, label: "List of local developments" },
     { action: showAllDevelopments, label: "List of all developments" },
   ]);
@@ -193,7 +207,9 @@ export async function showMainMenu() {
       label: "Quit",
     },
     {
-      action: placeholderOptions,
+      action: async () => {
+        console.log("off");
+      },
       label: "Deployments",
     },
     { action: showDevelopmentsMenu, label: "Developments" },

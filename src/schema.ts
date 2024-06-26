@@ -17,17 +17,22 @@ export interface AncaDevelopment {
   name: string;
 }
 
+export interface AncaDevelopmentActions {
+  ancaJsonCreate?: boolean;
+  gitClone?: boolean;
+  gitIgnoreCreate?: boolean;
+  license?: boolean;
+  nodejsEslintCreate?: boolean;
+  nodejsPrettierIgnoreCreate?: boolean;
+  nodejsPrettierRcCreate?: boolean;
+  packageJsonKeywords?: boolean;
+  readmeCreate?: boolean;
+}
+
 export interface AncaDevelopmentState {
-  convention?: string;
   data: AncaDevelopment;
   folderPath: string;
   fullPath: string;
-}
-
-export interface AncaConfig {
-  ancaDataVersion: 0;
-  deployments: AncaDeployment[];
-  developments: AncaDevelopment[];
 }
 
 export interface AncaState {
@@ -35,7 +40,38 @@ export interface AncaState {
   developments: AncaDevelopmentState[];
 }
 
-export const ANCA_CONFIG_SCHEMA = {
+export interface AncaWorkfolder {
+  ancaDataVersion: 0;
+  deployments: AncaDeployment[];
+  developments: AncaDevelopment[];
+}
+
+export type AncaConfigStack = "nodejs" | "other" | "python";
+export type AncaConfigType = "app" | "library" | "other";
+
+export interface AncaConfig {
+  deployment: DeploymentConfig;
+  development: DevelopmentConfig;
+  stack?: AncaConfigStack;
+  type?: AncaConfigType;
+}
+
+export interface DeploymentConfig {
+  preparation: string[];
+  start: string[];
+}
+
+export interface DevelopmentConfig {
+  cinnabarMeta?: boolean;
+  gitIgnore?: string; // Consider replacing 'string' with a specific type if there are a limited set of possible values.
+  license?: boolean;
+  nodejs?: string; // Consider replacing 'string' with a specific type if there are a limited set of possible values.
+  nodejsEslint?: string; // Consider replacing 'string' with a specific type if there are a limited set of possible values.
+  nodejsPrettier?: string; // Consider replacing 'string' with a specific type if there are a limited set of possible values.
+  readme?: string; // Consider replacing 'string' with a specific type if there are a limited set of possible values.
+}
+
+export const ANCA_WORKFOLDER_SCHEMA = {
   $schema: "http://json-schema.org/draft-07/schema#",
   properties: {
     ancaDataVersion: {
@@ -45,6 +81,12 @@ export const ANCA_CONFIG_SCHEMA = {
     deployments: {
       description: "List of deployment projects",
       items: {
+        properties: {
+          code: {
+            type: "string",
+          },
+        },
+        required: ["code"],
         type: "object",
       },
       type: "array",
@@ -79,6 +121,54 @@ export const ANCA_CONFIG_SCHEMA = {
     },
   },
   required: ["ancaDataVersion", "deployments", "developments"],
-  title: "Anca Configuration",
+  title: "Anca Workfolder",
+  type: "object",
+};
+
+export const ANCA_CONFIG_SCHEMA = {
+  $schema: "http://json-schema.org/draft-07/schema#",
+  additionalProperties: false,
+  properties: {
+    deployment: {
+      properties: {
+        preparation: {
+          items: {
+            type: "string",
+          },
+          type: "array",
+        },
+        start: {
+          items: {
+            type: "string",
+          },
+          type: "array",
+        },
+      },
+      required: ["preparation", "start"],
+      type: "object",
+    },
+    development: {
+      additionalProperties: false,
+      properties: {
+        cinnabarMeta: { type: "boolean" },
+        gitIgnore: { type: "string" },
+        license: { type: "boolean" },
+        nodejs: { type: "string" },
+        nodejsEslint: { type: "string" },
+        nodejsPrettier: { type: "string" },
+        readme: { type: "string" },
+      },
+      type: "object",
+    },
+    stack: {
+      enum: ["nodejs", "python", "other"],
+      type: "string",
+    },
+    type: {
+      enum: ["app", "library", "other"],
+      type: "string",
+    },
+  },
+  required: ["deployment", "development", "type"],
   type: "object",
 };

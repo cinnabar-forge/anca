@@ -1,11 +1,16 @@
 {
-  "changelog": "keepachangelog.com",
-  "cinnabar-meta": true,
-  "git-ignore": "cinnabar",
-  "license": true,
-  "nodejs": "cinnabar",
-  "nodejs-eslint": "cinnabar",
-  "nodejs-prettier": "cinnabar",
-  "readme": "cinnabar",
+  "deployment": {
+    "preparation": ["npm ci", "npm run build"],
+    "start": ["node ./dist/index.js"]
+  },
+  "development": {
+    "cinnabarMeta": true,
+    "gitIgnore": "cinnabar",
+    "license": true,
+    "nodejsEslint": "cinnabar",
+    "nodejsPrettier": "cinnabar",
+    "readme": "cinnabar"
+  },
+  "stack": "nodejs",
   "type": "app"
 }
