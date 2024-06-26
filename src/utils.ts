@@ -31,7 +31,7 @@ export async function readJson(jsonPath: string): Promise<any> {
 /**
  *
  * @param folder
- * @param jsonPath
+ * @param filePath
  */
 export async function readFolderFile(
   folder: string,

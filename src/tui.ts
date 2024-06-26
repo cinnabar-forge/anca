@@ -1,4 +1,4 @@
-import { promptMenu, promptOptions, promptWorkflow } from "clivo";
+import { promptMenu, promptOptions } from "clivo";
 
 import { getState } from "./config.js";
 import {
@@ -8,7 +8,11 @@ import {
   getDevelopmentStatus,
   syncDevelopment,
 } from "./developments.js";
-import { AncaDevelopmentState } from "./schema.js";
+import {
+  AncaConfigStack,
+  AncaConfigType,
+  AncaDevelopmentState,
+} from "./schema.js";
 import { checkExistence } from "./utils.js";
 
 /**
@@ -43,7 +47,11 @@ async function showDevelopmentActions(
           { label: "Other", name: "other" },
         ]);
 
-        await createAncaJson(development, projectType.name, projectStack.name);
+        await createAncaJson(
+          development,
+          projectType.name as AncaConfigType,
+          projectStack.name as AncaConfigStack,
+        );
         await backHere();
       },
       label: "[anca.json] Create",

@@ -173,12 +173,15 @@ export async function getDevelopmentActions(
 }
 
 /**
- *
+ * 
+ * @param development
+ * @param type
+ * @param stack
  */
 export async function createAncaJson(
   development: AncaDevelopmentState,
-  stack: AncaConfigStack,
   type: AncaConfigType,
+  stack: AncaConfigStack,
 ) {
   const ancaJsonContent: AncaConfig = {
     deployment: {
