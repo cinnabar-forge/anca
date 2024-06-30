@@ -16,6 +16,10 @@ import {
 } from "./utils.js";
 
 const actionsCache: Map<string, string[]> = new Map<string, string[]>();
+const projectTypeCache: Map<string, { stack: string; type: string }> = new Map<
+  string,
+  { stack: string; type: string }
+>();
 
 /**
  *
@@ -83,6 +87,12 @@ export async function getDevelopmentStatus(development: AncaDevelopmentState) {
     statuses.push(pc.bgRed("issues: " + actions.length));
   }
 
+  const ancaType = projectTypeCache.get(development.fullPath);
+
+  if (ancaType != null) {
+    statuses.unshift(`${ancaType.stack} ${ancaType.type}`);
+  }
+
   return statuses;
 }
 
@@ -145,6 +155,11 @@ export async function getDevelopmentActions(
     actions.push("ancaJsonCreate");
     actionsCache.set(development.fullPath, actions);
     return actions;
+  } else {
+    projectTypeCache.set(development.fullPath, {
+      stack: ancaJsonContent.stack,
+      type: ancaJsonContent.type,
+    });
   }
 
   const packageJsonContent = await readFolderJson(

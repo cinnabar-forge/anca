@@ -2,6 +2,7 @@ import { promptMenu, promptOptions } from "clivo";
 
 import { getState } from "./config.js";
 import {
+  clearDevelopmentActionsCache,
   createAncaJson,
   getDevelopmentActions,
   getDevelopmentDisplayName,
@@ -32,6 +33,7 @@ async function showDevelopmentActions(
   const menu = [{ action: previousMenu, label: "Back" }];
 
   const backHere = async () => {
+    clearDevelopmentActionsCache(development);
     await showDevelopmentActions(development, previousMenu);
   };
 
@@ -126,6 +128,8 @@ async function showDevelopmentActions(
         action: mapping.action,
         label: mapping.label,
       });
+    } else {
+      console.log("[WARNING] No action mapping found for code:", code);
     }
   });
 
