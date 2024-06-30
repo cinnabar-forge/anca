@@ -1,12 +1,10 @@
 export interface AncaDeployment {
-  folder: string;
+  code: string;
   gitOrigin?: string;
-  name: string;
 }
 
 export interface AncaDeploymentState {
   data: AncaDeployment;
-  folderPath: string;
   fullPath: string;
 }
 

@@ -45,13 +45,13 @@ async function showDevelopmentActions(
         const projectType = await promptOptions("\nChoose project type:", [
           { label: "App", name: "app" },
           { label: "Library", name: "library" },
-          { label: "Other", name: "other" },
+          { label: "Other", name: "project" },
         ]);
 
         const projectStack = await promptOptions("\nChoose project stack:", [
           { label: "Nodejs", name: "nodejs" },
           { label: "Python", name: "python" },
-          { label: "Other", name: "other" },
+          { label: "Other", name: "unsupported" },
         ]);
 
         await createAncaJson(

@@ -49,15 +49,13 @@ export function loadAndValidateConfig(
   };
 
   for (const deployment of config.deployments) {
-    const folderPath = path.resolve(
+    const fullPath = path.resolve(
       workfolderPath,
       "deployments",
-      deployment.folder,
+      deployment.code,
     );
-    const fullPath = path.resolve(folderPath, deployment.name);
     const deploymentState: AncaDeploymentState = {
       data: deployment,
-      folderPath,
       fullPath,
     };
     state.deployments.push(deploymentState);
@@ -81,12 +79,12 @@ export function loadAndValidateConfig(
 
 /**
  * Creates folders in the workfolder
+ * @param workfolderPath
  */
-export async function createFolders() {
-  for (const deployment of getState().deployments) {
-    if (!(await checkExistence(deployment.folderPath))) {
-      await fs.promises.mkdir(deployment.folderPath, { recursive: true });
-    }
+export async function createFolders(workfolderPath: string) {
+  const deploymentsPath = path.resolve(workfolderPath, "deployments");
+  if (!(await checkExistence(deploymentsPath))) {
+    await fs.promises.mkdir(deploymentsPath, { recursive: true });
   }
 
   for (const development of getState().developments) {

@@ -11,7 +11,7 @@ async function main() {
   try {
     loadAndValidateConfig(options.workfolder[0], options.config);
 
-    await createFolders();
+    await createFolders(options.workfolder[0]);
 
     showMainMenu();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
