@@ -77,7 +77,8 @@ export async function getDevelopmentStatus(development: AncaDevelopmentState) {
   if (
     actions != null &&
     actions[0] !== "gitClone" &&
-    actions[0] !== "ancaJsonCreate"
+    actions[0] !== "ancaJsonCreate" &&
+    actions.length > 0
   ) {
     statuses.push(pc.bgRed("issues: " + actions.length));
   }

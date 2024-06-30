@@ -183,12 +183,6 @@ async function showLocalDevelopments() {
 async function showDevelopmentsMenu() {
   await promptMenu("\n[DEVELOPMENTS]", [
     { action: showMainMenu, label: "Back" },
-    {
-      action: async () => {
-        console.log("off");
-      },
-      label: "List of issues",
-    },
     { action: showLocalDevelopments, label: "List of local developments" },
     { action: showAllDevelopments, label: "List of all developments" },
   ]);
