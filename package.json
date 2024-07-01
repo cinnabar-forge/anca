@@ -24,7 +24,7 @@
   "scripts": {
     "build": "node esbuild.js",
     "build:dev": "tsc",
-    "build:sea": "node sea.esbuild.js && mkdir -p ./build/sea && node --experimental-sea-config sea.config.json && cp $(command -v node) ./build/sea/anca && npx postject ./build/sea/anca NODE_SEA_BLOB ./build/sea/prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2",
+    "build:sea": "node sea.build.js",
     "dev": "tsc-watch",
     "format": "prettier . --write",
     "lint": "eslint --fix .",
