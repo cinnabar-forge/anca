@@ -5,7 +5,7 @@ import { parseCli } from "clivo";
  * @returns Parsed arguments
  */
 export function setupCli() {
-  return parseCli({
+  const cli = parseCli({
     args: process.argv,
     options: [
       {
@@ -20,4 +20,18 @@ export function setupCli() {
       },
     ],
   });
+
+  if (cli.config == null) {
+    throw new Error(
+      "Please specify the path to the workfolder files (--config)",
+    );
+  }
+
+  if (cli.workfolder == null) {
+    throw new Error(
+      "Please specify the path to the main workfolder (--workfolder)",
+    );
+  }
+
+  return cli;
 }

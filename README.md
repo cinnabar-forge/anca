@@ -2,7 +2,7 @@
 
 _By Cinnabar Forge_
 
-Organize your workspaces and manage projects deploy fast and easy with Anca, Project Manager.
+Organize workspaces and manage projects deployment fast and easy with Anca, Project Manager.
 
 ## Getting Started
 
@@ -14,12 +14,14 @@ Install globally using npm:
 npm install -g anca
 ```
 
-This will make the `anca` command available in your terminal.
-
 ### Usage
 
+`--config` option specifies lists of your deployments and developments
+
+`--workfolder` option specifies a directory on your system where projects will be cloned and deployed
+
 ```bash
-npx anca
+npx anca --config "/path/to/anca-config.json" --workfolder "/path/to/main/workfolder"
 ```
 
 ## Contributing
