@@ -1,12 +1,15 @@
 import cinnabarPlugin from "@cinnabar-forge/eslint-plugin";
 
+const files = ["src/**/*.ts"];
+const ignores = ["bin/**/*", "build/**/*", "dist/**/*"];
+
 export default [
   ...cinnabarPlugin.default.map((config) => ({
     ...config,
-    files: ["src/**/*.ts"],
+    files,
   })),
   {
-    files: ["src/**/*.ts"],
+    files,
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "jsdoc/require-param-description": "off",
@@ -18,6 +21,6 @@ export default [
     },
   },
   {
-    ignores: ["bin/**/*", "build/**/*", "dist/**/*"],
+    ignores,
   },
 ];
