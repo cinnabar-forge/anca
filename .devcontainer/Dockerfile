@@ -1,7 +1,7 @@
 FROM docker.io/ubuntu:22.04
 
-ENV NODE_VERSION 22.2.0
-ENV NODE_CHECKSUM sha256:2c6eaf8bfd0f886ed8764ffce19c795e909639105e4056b1d9f8f917bad12cf1
+ENV NODE_VERSION 22.3.0
+ENV NODE_CHECKSUM sha256:a6d4fbf4306a883b8e1d235a8a890be84b9d95d2d39b929520bed64da41ce540
 
 RUN apt-get update \
   && apt-get install -y git tar gnupg2 \
