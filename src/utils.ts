@@ -1,3 +1,4 @@
+import Ajv from "ajv";
 import { CftmBuilder } from "cftm";
 import fs from "fs";
 import MarkdownIt from "markdown-it";
@@ -164,4 +165,29 @@ export async function convertMarkdownItTokenToCinnabarMarkup(
   }
 
   return markup.build();
+}
+
+/**
+ *
+ * @param schema
+ * @param data
+ */
+export function verifyAjv(schema: any, data: any) {
+  const validate = new Ajv().compile(schema);
+
+  if (!validate(data)) {
+    throw new Error(
+      `Configuration validation error: ${validate.errors?.map((err) => err.message).join(", ")}`,
+    );
+  }
+}
+
+/**
+ *
+ * @param schema
+ * @param data
+ */
+export function isAjvValid(schema: any, data: any) {
+  const validate = new Ajv().compile(schema);
+  return validate(data);
 }

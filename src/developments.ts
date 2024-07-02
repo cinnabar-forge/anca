@@ -1,13 +1,9 @@
 import path from "path";
 import pc from "picocolors";
 
+import { checkAnca } from "./actions/anca.js";
 import { checkForGit, getGit } from "./git.js";
-import {
-  AncaConfig,
-  AncaConfigStack,
-  AncaConfigType,
-  AncaDevelopmentState,
-} from "./schema.js";
+import { AncaConfig, AncaDevelopmentState } from "./schema.js";
 import {
   checkExistence,
   readFolderFile,
@@ -15,7 +11,17 @@ import {
   writeFolderFile,
 } from "./utils.js";
 
-const actionsCache: Map<string, string[]> = new Map<string, string[]>();
+export interface DevelopmentPack {
+  actions: string[];
+  files: Record<string, string>;
+  issues: string[];
+  jsons: Record<string, object>;
+}
+
+const developmentCache: Map<string, DevelopmentPack> = new Map<
+  string,
+  DevelopmentPack
+>();
 const projectTypeCache: Map<string, { stack: string; type: string }> = new Map<
   string,
   { stack: string; type: string }
@@ -24,18 +30,18 @@ const projectTypeCache: Map<string, { stack: string; type: string }> = new Map<
 /**
  *
  */
-export function clearDevelopmentsActionsCache() {
-  actionsCache.clear();
+export function clearDevelopmentsDevelopmentCache() {
+  developmentCache.clear();
 }
 
 /**
  *
  * @param development
  */
-export function clearDevelopmentActionsCache(
+export function clearDevelopmentDevelopmentCache(
   development: AncaDevelopmentState,
 ) {
-  actionsCache.delete(development.fullPath);
+  developmentCache.delete(development.fullPath);
 }
 
 /**
@@ -76,15 +82,10 @@ export async function getDevelopmentStatus(development: AncaDevelopmentState) {
     statuses.push(pc.bgCyan("non-anca"));
   }
 
-  const actions = await getDevelopmentActions(development);
+  const pack = await getDevelopmentPack(development);
 
-  if (
-    actions != null &&
-    actions[0] !== "gitClone" &&
-    actions[0] !== "ancaJsonCreate" &&
-    actions.length > 0
-  ) {
-    statuses.push(pc.bgRed("issues: " + actions.length));
+  if (pack != null && pack.issues != null && pack.issues.length > 0) {
+    statuses.push(pc.bgRed("issues: " + pack.issues.length));
   }
 
   const ancaType = projectTypeCache.get(development.fullPath);
@@ -129,32 +130,46 @@ export function getDevelopmentDisplayName(
  * Gets development actions
  * @param development
  */
-export async function getDevelopmentActions(
+export async function getDevelopmentPack(
   development: AncaDevelopmentState,
-): Promise<string[]> {
-  const cache = actionsCache.get(development.fullPath);
+): Promise<DevelopmentPack> {
+  const cache = developmentCache.get(development.fullPath);
   if (cache != null) {
     return cache;
   }
   const exists = await checkExistence(development.fullPath);
 
   const actions: string[] = [];
+  const files: Record<string, string> = {};
+  const issues: string[] = [];
+  const jsons: Record<string, object> = {};
+
+  const pack: DevelopmentPack = {
+    actions,
+    files,
+    issues,
+    jsons,
+  };
+
+  developmentCache.set(development.fullPath, pack);
 
   if (!exists) {
     actions.push("gitClone");
-    actionsCache.set(development.fullPath, actions);
-    return actions;
+    return pack;
   }
 
   const ancaJsonContent = await readFolderJson(
     development.fullPath,
     "anca.json",
   );
+  jsons["anca.json"] = ancaJsonContent;
 
   if (ancaJsonContent == null) {
     actions.push("ancaJsonCreate");
-    actionsCache.set(development.fullPath, actions);
-    return actions;
+    return pack;
+  } else if (!checkAnca(ancaJsonContent)) {
+    issues.push("ancaJsonFix");
+    return pack;
   } else {
     projectTypeCache.set(development.fullPath, {
       stack: ancaJsonContent.stack,
@@ -166,95 +181,81 @@ export async function getDevelopmentActions(
     development.fullPath,
     "package.json",
   );
+  jsons["package.json"] = packageJsonContent;
 
   const gitIgnoreContent = await readFolderFile(
     development.fullPath,
     ".gitignore",
   );
+  files[".gitignore"] = gitIgnoreContent;
 
   const licenseContent = await readFolderFile(development.fullPath, "LICENSE");
+  files["LICENSE"] = licenseContent;
 
   const readmeContent = await readFolderFile(development.fullPath, "README.md");
+  files["README.md"] = readmeContent;
 
   const eslintContent = await readFolderFile(
     development.fullPath,
     "eslint.config.js",
   );
+  files["eslint.config.js"] = eslintContent;
 
   const prettierRcContent = await readFolderFile(
     development.fullPath,
     ".prettierrc",
   );
+  files[".prettierrc"] = prettierRcContent;
 
   const prettierIgnoreContent = await readFolderFile(
     development.fullPath,
     ".prettierignore",
   );
+  files[".prettierignore"] = prettierIgnoreContent;
 
   if (gitIgnoreContent == null) {
-    actions.push("gitIgnoreCreate");
+    issues.push("gitIgnoreCreate");
   }
 
   if (licenseContent == null) {
-    actions.push("licenseCreate");
+    issues.push("licenseCreate");
   }
 
   if (readmeContent == null) {
-    actions.push("readmeCreate");
+    issues.push("readmeCreate");
   }
 
   if (packageJsonContent != null && packageJsonContent.keywords != null) {
-    actions.push("packageJsonKeywordsUpdate");
+    issues.push("packageJsonKeywordsUpdate");
   }
 
   if (eslintContent == null) {
-    actions.push("nodejsEslintCreate");
+    issues.push("nodejsEslintCreate");
   }
 
   if (prettierRcContent == null) {
-    actions.push("nodejsPrettierRcCreate");
+    issues.push("nodejsPrettierRcCreate");
   }
 
   if (prettierIgnoreContent == null) {
-    actions.push("nodejsPrettierIgnoreCreate");
+    issues.push("nodejsPrettierIgnoreCreate");
   }
 
-  actionsCache.set(development.fullPath, actions);
-
-  return actions;
+  return pack;
 }
 
 /**
- *
+ * Creates anca.json file
  * @param development
- * @param type
- * @param stack
+ * @param config
  */
 export async function createAncaJson(
   development: AncaDevelopmentState,
-  type: AncaConfigType,
-  stack: AncaConfigStack,
+  config: AncaConfig,
 ) {
-  const ancaJsonContent: AncaConfig = {
-    deployment: {
-      preparation: [],
-      start: [],
-    },
-    development: {
-      cinnabarMeta: true,
-      gitIgnore: "cinnabar",
-      license: true,
-      nodejs: "cinnabar",
-      nodejsEslint: "cinnabar",
-      nodejsPrettier: "cinnabar",
-      readme: "cinnabar",
-    },
-    stack,
-    type,
-  };
   await writeFolderFile(
     development.fullPath,
     "anca.json",
-    JSON.stringify(ancaJsonContent),
+    JSON.stringify(config),
   );
 }

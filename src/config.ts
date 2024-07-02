@@ -1,4 +1,3 @@
-import Ajv from "ajv";
 import fs from "fs";
 import path from "path";
 
@@ -9,7 +8,7 @@ import {
   AncaState,
   AncaWorkfolder,
 } from "./schema.js";
-import { checkExistence } from "./utils.js";
+import { checkExistence, verifyAjv } from "./utils.js";
 
 let state: AncaState;
 
@@ -30,25 +29,18 @@ export function loadAndValidateConfig(
   workfolderPath: string,
   configsPath: string[],
 ) {
-  const config: AncaWorkfolder = JSON.parse(
+  const configContents: AncaWorkfolder = JSON.parse(
     fs.readFileSync(configsPath[0], "utf-8"),
   );
 
-  const ajv = new Ajv();
-  const validate = ajv.compile(ANCA_WORKFOLDER_SCHEMA);
-
-  if (!validate(config)) {
-    throw new Error(
-      `Configuration validation error: ${validate.errors?.map((err) => err.message).join(", ")}`,
-    );
-  }
+  verifyAjv(ANCA_WORKFOLDER_SCHEMA, configContents);
 
   state = {
     deployments: [],
     developments: [],
   };
 
-  for (const deployment of config.deployments) {
+  for (const deployment of configContents.deployments) {
     const fullPath = path.resolve(
       workfolderPath,
       "deployments",
@@ -61,7 +53,7 @@ export function loadAndValidateConfig(
     state.deployments.push(deploymentState);
   }
 
-  for (const development of config.developments) {
+  for (const development of configContents.developments) {
     const folderPath = path.resolve(
       workfolderPath,
       "developments",

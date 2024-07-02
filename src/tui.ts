@@ -1,22 +1,19 @@
-import { promptMenu, promptOptions } from "clivo";
+import { promptMenu } from "clivo";
 
+import { fixAncaConfig } from "./actions/anca.js";
 import { getState } from "./config.js";
 import {
-  clearDevelopmentActionsCache,
+  clearDevelopmentDevelopmentCache,
   createAncaJson,
-  getDevelopmentActions,
   getDevelopmentDisplayName,
+  getDevelopmentPack,
   getDevelopmentStatus,
   syncDevelopment,
 } from "./developments.js";
-import {
-  AncaConfigStack,
-  AncaConfigType,
-  AncaDevelopmentState,
-} from "./schema.js";
+import { AncaDevelopmentState } from "./schema.js";
 import { checkExistence } from "./utils.js";
 
-interface ActionMapping {
+interface ClivoAction {
   action: () => Promise<void>;
   label: string;
 }
@@ -33,35 +30,30 @@ async function showDevelopmentActions(
   const menu = [{ action: previousMenu, label: "Back" }];
 
   const backHere = async () => {
-    clearDevelopmentActionsCache(development);
+    clearDevelopmentDevelopmentCache(development);
     await showDevelopmentActions(development, previousMenu);
   };
 
-  const actionCodes = await getDevelopmentActions(development);
+  const pack = await getDevelopmentPack(development);
 
-  const actionMappings: Record<string, ActionMapping> = {
+  const mappings: Record<string, ClivoAction> = {
     ancaJsonCreate: {
       action: async () => {
-        const projectType = await promptOptions("\nChoose project type:", [
-          { label: "App", name: "app" },
-          { label: "Library", name: "library" },
-          { label: "Other", name: "project" },
-        ]);
-
-        const projectStack = await promptOptions("\nChoose project stack:", [
-          { label: "Nodejs", name: "nodejs" },
-          { label: "Python", name: "python" },
-          { label: "Other", name: "unsupported" },
-        ]);
-
-        await createAncaJson(
-          development,
-          projectType.name as AncaConfigType,
-          projectStack.name as AncaConfigStack,
-        );
+        const ancaConfig = {};
+        await fixAncaConfig(ancaConfig);
+        await createAncaJson(development, ancaConfig);
         await backHere();
       },
       label: "[anca.json] Create",
+    },
+    ancaJsonFix: {
+      action: async () => {
+        const ancaConfig = pack.jsons["anca.json"];
+        await fixAncaConfig(ancaConfig);
+        await createAncaJson(development, ancaConfig);
+        await backHere();
+      },
+      label: "[anca.json] Fix",
     },
     gitClone: {
       action: async () => {
@@ -121,17 +113,20 @@ async function showDevelopmentActions(
     },
   };
 
-  actionCodes.forEach((code) => {
-    const mapping = actionMappings[code];
+  const map = (code: string) => {
+    const mapping = mappings[code];
     if (mapping) {
       menu.push({
         action: mapping.action,
         label: mapping.label,
       });
     } else {
-      console.log("[WARNING] No action mapping found for code:", code);
+      console.log("[WARNING] No mapping found for code:", code);
     }
-  });
+  };
+
+  pack.issues.forEach(map);
+  pack.actions.forEach(map);
 
   await promptMenu(
     `\n[${development.data.name.toUpperCase()} at ${development.data.folder.toUpperCase()}] (${(await getDevelopmentStatus(development)).join(", ")})`,

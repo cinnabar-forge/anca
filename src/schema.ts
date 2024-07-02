@@ -32,12 +32,21 @@ export interface AncaWorkfolder {
   developments: AncaDevelopment[];
 }
 
-export type AncaConfigStack = "nodejs" | "other" | "python";
-export type AncaConfigType = "app" | "library" | "other";
+export enum AncaConfigStack {
+  nodejs = "nodejs",
+  python = "python",
+  unsupported = "unsupported",
+}
+
+export enum AncaConfigType {
+  app = "app",
+  library = "library",
+  project = "project",
+}
 
 export interface AncaConfig {
-  deployment: DeploymentConfig;
-  development: DevelopmentConfig;
+  deployment?: DeploymentConfig;
+  development?: DevelopmentConfig;
   stack?: AncaConfigStack;
   type?: AncaConfigType;
 }
@@ -147,14 +156,14 @@ export const ANCA_CONFIG_SCHEMA = {
       type: "object",
     },
     stack: {
-      enum: ["nodejs", "python", "other"],
+      enum: ["nodejs", "python", "unsupported"],
       type: "string",
     },
     type: {
-      enum: ["app", "library", "other"],
+      enum: ["app", "library", "project"],
       type: "string",
     },
   },
-  required: ["deployment", "development", "type"],
+  required: ["stack", "type"],
   type: "object",
 };
