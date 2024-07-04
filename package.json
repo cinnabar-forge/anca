@@ -1,6 +1,7 @@
 {
   "name": "anca",
   "version": "0.0.0",
+  "private": true,
   "description": "Organize your workspaces and manage projects deploy fast and easy",
   "repository": {
     "type": "git",

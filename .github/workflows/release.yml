@@ -43,13 +43,18 @@ jobs:
         name: Install dependencies
       - run: npm run build:sea
         name: Build executables
-      - id: set-repo-name
-        run: echo "REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)" >> $GITHUB_ENV
-        name: Set repository name
+      - run: |
+          EXT=""
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            EXT=".exe"
+          fi
+          mv /build/sea/app${EXT} /build/sea/${{ github.event.repository.name }}-${{ github.ref_name }}-${{ runner.arch }}${EXT}
+        shell: bash
+        name: Rename executable
       - uses: softprops/action-gh-release@v1
         with:
           files: |
-            build/sea/${{ env.REPO_NAME }}-${{ github.ref_name }}-${{ runner.arch }}${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+            build/sea/${{ github.event.repository.name }}-${{ github.ref_name }}-${{ runner.arch }}${{ matrix.os == 'windows-latest' && '.exe' || '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         name: Attach executables to release
