@@ -48,7 +48,7 @@ jobs:
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
             EXT=".exe"
           fi
-          mv /build/sea/app${EXT} /build/sea/${{ github.event.repository.name }}-${{ github.ref_name }}-${{ runner.arch }}${EXT}
+          mv build/sea/app${EXT} build/sea/${{ github.event.repository.name }}-${{ github.ref_name }}-${{ runner.arch }}${EXT}
         shell: bash
         name: Rename executable
       - uses: softprops/action-gh-release@v1
