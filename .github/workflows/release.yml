@@ -3,7 +3,6 @@ name: Release
 on:
   release:
     types: [created]
-  workflow_dispatch:
 
 jobs:
   publish-npm:
@@ -27,3 +26,30 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
         name: "Publish to registry"
+  build-executables:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    name: Build executables on ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout repo
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+        name: Install Node.js
+      - run: npm ci
+        name: Install dependencies
+      - run: npm run build:sea
+        name: Build executables
+      - id: set-repo-name
+        run: echo "REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)" >> $GITHUB_ENV
+        name: Set repository name
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/sea/${{ env.REPO_NAME }}-${{ github.ref_name }}-${{ runner.arch }}${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        name: Attach executables to release

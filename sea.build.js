@@ -14,7 +14,8 @@ const buildCrossPlatform = function () {
   execSync(configCommand, { stdio: "inherit" });
 
   const nodeBinaryPath = process.execPath;
-  const destinationPath = path.join(BUILD_DIR, isWindows ? "anca.exe" : "anca");
+  const baseName = "app";
+  const destinationPath = path.join(BUILD_DIR, isWindows ? `${baseName}.exe` : baseName);
   fs.copyFileSync(nodeBinaryPath, destinationPath);
 
   const postjectCommandBase = `npx postject ${destinationPath} NODE_SEA_BLOB ${path.join(BUILD_DIR, "prep.blob")} --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2`;

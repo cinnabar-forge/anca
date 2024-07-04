@@ -1,5 +1,4 @@
 {
-  "name": "Anca",
   "build": {
     "context": ".",
     "dockerfile": "./Dockerfile"
@@ -12,5 +11,6 @@
         "streetsidesoftware.code-spell-checker"
       ]
     }
-  }
+  },
+  "name": "Node.js 22"
 }
