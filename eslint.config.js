@@ -1,7 +1,7 @@
 import cinnabarPlugin from "@cinnabar-forge/eslint-plugin";
 
 const files = ["src/**/*.ts"];
-const ignores = ["bin/**/*", "build/**/*", "dist/**/*"];
+const ignores = ["bin/**/*", "build/**/*", "dist/**/*", "src/cinnabar.ts"];
 
 export default [
   ...cinnabarPlugin.default.map((config) => ({

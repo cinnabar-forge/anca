@@ -2,15 +2,16 @@
 
 export default {
   "cinnabarMetaVersion": 1,
-  "description": "Organize your workspaces and manage projects deploy fast and easy",
+  "description": "Organize workspaces and manage projects deployment fast and easy",
   "name": "Anca",
   "version": {
     "major": 0,
-    "minor": 0,
+    "minor": 1,
     "patch": 0,
+    "prefix": "dev",
     "revision": 0,
-    "text": "0.0.0",
-    "timestamp": 0
+    "text": "0.1.0-dev",
+    "timestamp": 1720199005
   },
   "stack": {
     "nodejs": {

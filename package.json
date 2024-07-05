@@ -1,11 +1,10 @@
 {
   "name": "anca",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0-dev",
   "description": "Organize your workspaces and manage projects deploy fast and easy",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cinnabar-forge/anna.git"
+    "url": "git+https://github.com/cinnabar-forge/anca.git"
   },
   "license": "ISC",
   "author": {

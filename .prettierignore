@@ -9,4 +9,5 @@ package-lock.json
 
 # Cinnabar Forge
 **/cinnabar.js
+**/cinnabar.ts
 cinnabar.json

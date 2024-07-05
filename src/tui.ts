@@ -1,6 +1,7 @@
 import { promptMenu } from "clivo";
 
 import { fixAncaConfig } from "./actions/anca.js";
+import cinnabarData from "./cinnabar.js";
 import { getState } from "./config.js";
 import {
   clearDevelopmentDevelopmentCache,
@@ -17,6 +18,8 @@ interface ClivoAction {
   action: () => Promise<void>;
   label: string;
 }
+
+const APP_NAME_AND_VERSION = `${cinnabarData.name.toLocaleUpperCase()} v${cinnabarData.version.text}`;
 
 /**
  *
@@ -191,7 +194,7 @@ async function showDevelopmentsMenu() {
  *
  */
 export async function showMainMenu() {
-  await promptMenu("\n[MAIN MENU]", [
+  await promptMenu(`\n[${APP_NAME_AND_VERSION}]`, [
     {
       action: async () => {
         console.log("Bye.");
