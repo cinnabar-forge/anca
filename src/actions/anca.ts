@@ -36,7 +36,6 @@ export async function fixAncaConfig(contents: AncaConfig) {
     contents.stack = (
       await promptOptions("\nChoose project stack:", [
         { label: "Nodejs", name: "nodejs" },
-        { label: "Python", name: "python" },
         { label: "Unsupported (other)", name: "unsupported" },
       ])
     ).name as AncaConfigStack;
