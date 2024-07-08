@@ -6,6 +6,11 @@ import {
   checkDevcontainerDockerfile,
   checkDevcontainerJson,
 } from "./actions/devcontainers.js";
+import {
+  checkGithubActionsOtherFiles,
+  checkGithubActionsRelease,
+  checkGithubActionsTest,
+} from "./actions/github-actions.js";
 import { checkForGit, getGit } from "./git.js";
 import {
   AncaConfig,
@@ -18,6 +23,10 @@ import {
   readFolderJsonFile,
   writeFolderFile,
 } from "./utils.js";
+
+interface PackageJson {
+  keywords?: string[];
+}
 
 const developmentCache: Map<string, AncaDevelopmentPack> = new Map<
   string,
@@ -138,7 +147,7 @@ export async function getDevelopmentPack(
 
   const pack: AncaDevelopmentPack = {
     actions: [],
-    config: await readFolderJsonFile(development.fullPath, "anca.json"),
+    config: (await readFolderJsonFile(development.fullPath, "anca.json")) || {},
     files: {},
     issues: [],
     jsonFiles: {},
@@ -163,6 +172,8 @@ export async function getDevelopmentPack(
 
   await addDevcontainersToDevelopmentPack(development, pack);
 
+  await addGithubActionsToDevelopmentPack(development, pack);
+
   if (pack.config.stack === "nodejs") {
     await addNodeJsToDevelopmentPack(development, pack);
   }
@@ -182,7 +193,9 @@ async function addFileToPack(
   file: string,
 ) {
   const contents = await readFolderFile(development.fullPath, file);
-  pack.files[file] = contents;
+  if (contents != null) {
+    pack.files[file] = contents;
+  }
   return contents;
 }
 
@@ -198,7 +211,9 @@ async function addJsonFileToPack(
   file: string,
 ) {
   const contents = await readFolderJsonFile(development.fullPath, file);
-  pack.files[file] = contents;
+  if (contents != null) {
+    pack.jsonFiles[file] = contents;
+  }
   return contents;
 }
 
@@ -268,11 +283,47 @@ async function addDevcontainersToDevelopmentPack(
  * @param development
  * @param pack
  */
+async function addGithubActionsToDevelopmentPack(
+  development: AncaDevelopmentState,
+  pack: AncaDevelopmentPack,
+) {
+  if (pack.config.stack !== "nodejs") {
+    return;
+  }
+  const releaseContent = await addFileToPack(
+    development,
+    pack,
+    ".github/workflows/release.yml",
+  );
+  const testContent = await addFileToPack(
+    development,
+    pack,
+    ".github/workflows/test.yml",
+  );
+
+  if (releaseContent == null || !checkGithubActionsRelease(releaseContent)) {
+    pack.issues.push("githubActionsReleaseSetToDefault");
+  }
+
+  if (testContent == null || !checkGithubActionsTest(testContent)) {
+    pack.issues.push("githubActionsTestSetToDefault");
+  }
+
+  if (!(await checkGithubActionsOtherFiles(development))) {
+    pack.issues.push("githubActionsOtherFilesRemove");
+  }
+}
+
+/**
+ *
+ * @param development
+ * @param pack
+ */
 async function addNodeJsToDevelopmentPack(
   development: AncaDevelopmentState,
   pack: AncaDevelopmentPack,
 ) {
-  const packageJsonContent = await addJsonFileToPack(
+  const packageJsonContent: PackageJson | null = await addJsonFileToPack(
     development,
     pack,
     "package.json",

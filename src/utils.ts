@@ -1,4 +1,4 @@
-import Ajv from "ajv";
+import Ajv, { AnySchema } from "ajv";
 import { CftmBuilder } from "cftm";
 import fs from "fs";
 import MarkdownIt from "markdown-it";
@@ -21,7 +21,7 @@ export async function checkExistence(filePath: string) {
  *
  * @param jsonPath
  */
-export async function readJsonFile(jsonPath: string): Promise<any> {
+export async function readJsonFile(jsonPath: string): Promise<null | object> {
   try {
     return JSON.parse(await fs.promises.readFile(jsonPath, "utf-8"));
   } catch {
@@ -37,7 +37,7 @@ export async function readJsonFile(jsonPath: string): Promise<any> {
 export async function readFolderFile(
   folder: string,
   filePath: string,
-): Promise<any> {
+): Promise<null | string> {
   try {
     return await fs.promises.readFile(path.resolve(folder, filePath), "utf-8");
   } catch {
@@ -75,7 +75,7 @@ export async function writeFolderFile(
 export async function readFolderJsonFile(
   folder: string,
   jsonPath: string,
-): Promise<any> {
+): Promise<null | object> {
   try {
     return JSON.parse(
       await fs.promises.readFile(path.resolve(folder, jsonPath), "utf-8"),
@@ -90,6 +90,7 @@ export async function readFolderJsonFile(
  * @param first
  * @param second
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isSubset(first: any, second: any): boolean {
   for (const key of Object.keys(first)) {
     if (typeof first[key] === "object" && first[key] !== null) {
@@ -172,7 +173,7 @@ export async function convertMarkdownItTokenToCinnabarMarkup(
  * @param schema
  * @param data
  */
-export function verifyAjv(schema: any, data: any) {
+export function verifyAjv(schema: AnySchema, data: unknown) {
   const validate = new Ajv().compile(schema);
 
   if (!validate(data)) {
@@ -187,7 +188,7 @@ export function verifyAjv(schema: any, data: any) {
  * @param schema
  * @param data
  */
-export function isAjvValid(schema: any, data: any) {
+export function isAjvValid(schema: AnySchema, data: unknown) {
   const validate = new Ajv().compile(schema);
   return validate(data);
 }

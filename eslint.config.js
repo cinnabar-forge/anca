@@ -11,7 +11,6 @@ export default [
   {
     files,
     rules: {
-      "@typescript-eslint/no-explicit-any": "off",
       "jsdoc/require-param-description": "off",
       "jsdoc/require-param-type": "off",
       "jsdoc/require-returns": "off",

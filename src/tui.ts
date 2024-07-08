@@ -5,6 +5,11 @@ import {
   fixDevcontainerDockerfile,
   fixDevcontainerJson,
 } from "./actions/devcontainers.js";
+import {
+  fixGithubActionsOtherFiles,
+  fixGithubActionsRelease,
+  fixGithubActionsTest,
+} from "./actions/github-actions.js";
 import cinnabarData from "./cinnabar.js";
 import { getState } from "./config.js";
 import {
@@ -88,6 +93,27 @@ async function showDevelopmentActions(
         await backHere();
       },
       label: "[.gitignore] Create",
+    },
+    githubActionsOtherFilesRemove: {
+      action: async () => {
+        await fixGithubActionsOtherFiles(development);
+        await backHere();
+      },
+      label: "[.github/workflows] Remove other files",
+    },
+    githubActionsReleaseSetToDefault: {
+      action: async () => {
+        await fixGithubActionsRelease(development);
+        await backHere();
+      },
+      label: "[.github/workflows/release.yml] Set to default",
+    },
+    githubActionsTestSetToDefault: {
+      action: async () => {
+        await fixGithubActionsTest(development);
+        await backHere();
+      },
+      label: "[.github/workflows/test.yml] Set to default",
     },
     licenseCreate: {
       action: async () => {
