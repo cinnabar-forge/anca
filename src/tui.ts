@@ -103,7 +103,7 @@ async function showDevelopmentActions(
     },
     githubActionsReleaseSetToDefault: {
       action: async () => {
-        await fixGithubActionsRelease(development);
+        await fixGithubActionsRelease(development, pack);
         await backHere();
       },
       label: "[.github/workflows/release.yml] Set to default",

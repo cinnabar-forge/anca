@@ -1,9 +1,38 @@
 import fs from "fs";
 import path from "path";
 
-import { AncaDevelopmentState } from "../schema.js";
+import { AncaDevelopmentPack, AncaDevelopmentState } from "../schema.js";
 
 const RELEASE_NODEJS = `name: Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    name: "Publish package to npm registry"
+    steps:
+      - uses: actions/checkout@v4
+        name: "Checkout repo"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org/
+        name: "Install Node.js"
+      - run: npm ci
+        name: "Install dependencies"
+      - run: npm test
+        name: "Run tests"
+      - run: npm run build
+        name: "Build distribution bundle"
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: \${{secrets.npm_token}}
+        name: "Publish to registry"`;
+
+const RELEASE_NODEJS_APP = `name: Release
 
 on:
   release:
@@ -102,10 +131,17 @@ async function createGithubActionsFolders(fullPath: string) {
 
 /**
  *
+ * @param pack
  * @param contents
  */
-export function checkGithubActionsRelease(contents: string) {
-  return contents === RELEASE_NODEJS;
+export function checkGithubActionsRelease(
+  pack: AncaDevelopmentPack,
+  contents: string,
+) {
+  return (
+    contents ===
+    (pack.config.type === "app" ? RELEASE_NODEJS_APP : RELEASE_NODEJS)
+  );
 }
 
 /**
@@ -136,14 +172,16 @@ export async function checkGithubActionsOtherFiles(
 /**
  *
  * @param development
+ * @param pack
  */
 export async function fixGithubActionsRelease(
   development: AncaDevelopmentState,
+  pack: AncaDevelopmentPack,
 ) {
   await createGithubActionsFolders(development.fullPath);
   fs.writeFileSync(
     path.join(development.fullPath, ".github/workflows/release.yml"),
-    RELEASE_NODEJS,
+    pack.config.type === "app" ? RELEASE_NODEJS_APP : RELEASE_NODEJS,
   );
 }
 
@@ -171,6 +209,8 @@ export async function fixGithubActionsOtherFiles(
     path.join(development.fullPath, ".github", "workflows"),
   );
   files.forEach(async (file) => {
-    fs.rmSync(path.join(development.fullPath, ".github", "workflows", file));
+    if (file !== "release.yml" && file !== "test.yml") {
+      fs.rmSync(path.join(development.fullPath, ".github", "workflows", file));
+    }
   });
 }

@@ -145,9 +145,11 @@ export async function getDevelopmentPack(
   }
   const exists = await checkExistence(development.fullPath);
 
+  const config = await readFolderJsonFile(development.fullPath, "anca.json");
+
   const pack: AncaDevelopmentPack = {
     actions: [],
-    config: (await readFolderJsonFile(development.fullPath, "anca.json")) || {},
+    config: config || {},
     files: {},
     issues: [],
     jsonFiles: {},
@@ -160,7 +162,7 @@ export async function getDevelopmentPack(
     return pack;
   }
 
-  if (pack.config == null) {
+  if (config == null) {
     pack.actions.push("ancaJsonCreate");
     return pack;
   } else if (!checkAnca(pack.config)) {
@@ -301,7 +303,10 @@ async function addGithubActionsToDevelopmentPack(
     ".github/workflows/test.yml",
   );
 
-  if (releaseContent == null || !checkGithubActionsRelease(releaseContent)) {
+  if (
+    releaseContent == null ||
+    !checkGithubActionsRelease(pack, releaseContent)
+  ) {
     pack.issues.push("githubActionsReleaseSetToDefault");
   }
 
