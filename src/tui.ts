@@ -236,9 +236,41 @@ async function showLocalDevelopments() {
 /**
  *
  */
+async function showProblematicLocalDevelopments() {
+  const options = [{ action: showDevelopmentsMenu, label: "Back" }];
+
+  const state = getInstance();
+
+  for (const development of state.developments) {
+    if (await checkExistence(development.fullPath)) {
+      await refreshDevelopmentState(development);
+      if (development.state != null && development.state.issues.length > 0) {
+        options.push({
+          action: async () => {
+            showDevelopmentActions(
+              development,
+              showProblematicLocalDevelopments,
+            );
+          },
+          label: `${getDevelopmentDisplayName(development)} (${(await getDevelopmentStatus(development)).join(", ")})`,
+        });
+      }
+    }
+  }
+
+  await promptMenu("\n[PROBLEMATIC LOCAL DEVELOPMENTS]", options);
+}
+
+/**
+ *
+ */
 async function showDevelopmentsMenu() {
   await promptMenu("\n[DEVELOPMENTS]", [
     { action: showMainMenu, label: "Back" },
+    {
+      action: showProblematicLocalDevelopments,
+      label: "List of problematic developments",
+    },
     { action: showLocalDevelopments, label: "List of local developments" },
     { action: showAllDevelopments, label: "List of all developments" },
   ]);

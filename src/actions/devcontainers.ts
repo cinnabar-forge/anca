@@ -48,7 +48,8 @@ const JSON_NODEJS = {
 
 const DOCKERFILE_NODEJS = `FROM docker.io/node:22.4.0
 
-USER node`;
+USER node
+`;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DOCKERFILE_NODEJS_INSTALL = `# Install Node.js
