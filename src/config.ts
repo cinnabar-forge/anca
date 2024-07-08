@@ -3,21 +3,21 @@ import path from "path";
 
 import {
   ANCA_WORKFOLDER_SCHEMA,
-  AncaDeploymentState,
-  AncaDevelopmentState,
-  AncaState,
+  Anca,
+  AncaDeployment,
+  AncaDevelopment,
   AncaWorkfolder,
 } from "./schema.js";
 import { checkExistence, verifyAjv } from "./utils.js";
 
-let state: AncaState;
+let instance: Anca;
 
 /**
- * Gets current Anca state
- * @returns Anca state
+ * Gets current Anca instance
+ * @returns Anca instance
  */
-export function getState(): AncaState {
-  return state;
+export function getInstance(): Anca {
+  return instance;
 }
 
 /**
@@ -35,7 +35,7 @@ export function loadAndValidateConfig(
 
   verifyAjv(ANCA_WORKFOLDER_SCHEMA, configContents);
 
-  state = {
+  instance = {
     deployments: [],
     developments: [],
   };
@@ -46,11 +46,11 @@ export function loadAndValidateConfig(
       "deployments",
       deployment.code,
     );
-    const deploymentState: AncaDeploymentState = {
+    const deploymentInstance: AncaDeployment = {
       data: deployment,
       fullPath,
     };
-    state.deployments.push(deploymentState);
+    instance.deployments.push(deploymentInstance);
   }
 
   for (const development of configContents.developments) {
@@ -60,12 +60,12 @@ export function loadAndValidateConfig(
       development.folder,
     );
     const fullPath = path.resolve(folderPath, development.name);
-    const developmentState: AncaDevelopmentState = {
+    const developmentInstance: AncaDevelopment = {
       data: development,
       folderPath,
       fullPath,
     };
-    state.developments.push(developmentState);
+    instance.developments.push(developmentInstance);
   }
 }
 
@@ -79,7 +79,7 @@ export async function createFolders(workfolderPath: string) {
     await fs.promises.mkdir(deploymentsPath, { recursive: true });
   }
 
-  for (const development of getState().developments) {
+  for (const development of getInstance().developments) {
     if (!(await checkExistence(development.folderPath))) {
       await fs.promises.mkdir(development.folderPath, { recursive: true });
     }

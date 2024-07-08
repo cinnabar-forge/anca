@@ -1,21 +1,21 @@
-export interface AncaDeployment {
+export interface AncaDeploymentWorkfolderData {
   code: string;
   gitOrigin?: string;
 }
 
-export interface AncaDeploymentState {
-  data: AncaDeployment;
+export interface AncaDeployment {
+  data: AncaDeploymentWorkfolderData;
   fullPath: string;
 }
 
-export interface AncaDevelopment {
+export interface AncaDevelopmentWorkfolderData {
   folder: string;
   gitOrigin?: string;
   gitProds?: string[];
   name: string;
 }
 
-export interface AncaDevelopmentPack {
+export interface AncaDevelopmentState {
   actions: string[];
   config: AncaConfig;
   files: Record<string, string>;
@@ -23,21 +23,22 @@ export interface AncaDevelopmentPack {
   jsonFiles: Record<string, object>;
 }
 
-export interface AncaDevelopmentState {
-  data: AncaDevelopment;
+export interface AncaDevelopment {
+  data: AncaDevelopmentWorkfolderData;
   folderPath: string;
   fullPath: string;
+  state?: AncaDevelopmentState;
 }
 
-export interface AncaState {
-  deployments: AncaDeploymentState[];
-  developments: AncaDevelopmentState[];
+export interface Anca {
+  deployments: AncaDeployment[];
+  developments: AncaDevelopment[];
 }
 
 export interface AncaWorkfolder {
   ancaDataVersion: 0;
-  deployments: AncaDeployment[];
-  developments: AncaDevelopment[];
+  deployments: AncaDeploymentWorkfolderData[];
+  developments: AncaDevelopmentWorkfolderData[];
 }
 
 export enum AncaConfigStack {

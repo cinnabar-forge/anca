@@ -11,16 +11,15 @@ import {
   fixGithubActionsTest,
 } from "./actions/github-actions.js";
 import cinnabarData from "./cinnabar.js";
-import { getState } from "./config.js";
+import { getInstance } from "./config.js";
 import {
-  clearDevelopmentDevelopmentCache,
   createAncaJson,
   getDevelopmentDisplayName,
-  getDevelopmentPack,
   getDevelopmentStatus,
+  refreshDevelopmentState,
   syncDevelopment,
 } from "./developments.js";
-import { AncaDevelopmentState } from "./schema.js";
+import { AncaDevelopment } from "./schema.js";
 import { checkExistence } from "./utils.js";
 
 interface ClivoAction {
@@ -36,17 +35,24 @@ const APP_NAME_AND_VERSION = `${cinnabarData.name.toLocaleUpperCase()} v${cinnab
  * @param previousMenu
  */
 async function showDevelopmentActions(
-  development: AncaDevelopmentState,
+  development: AncaDevelopment,
   previousMenu: () => Promise<void>,
 ) {
   const menu = [{ action: previousMenu, label: "Back" }];
 
   const backHere = async () => {
-    clearDevelopmentDevelopmentCache(development);
+    development.state = undefined;
     await showDevelopmentActions(development, previousMenu);
   };
 
-  const pack = await getDevelopmentPack(development);
+  await refreshDevelopmentState(development);
+
+  if (development.state == null) {
+    console.log("Development state is not available");
+    return;
+  }
+
+  const state = development.state;
 
   const mappings: Record<string, ClivoAction> = {
     ancaJsonCreate: {
@@ -60,22 +66,22 @@ async function showDevelopmentActions(
     },
     ancaJsonFix: {
       action: async () => {
-        await fixAncaConfig(pack.config);
-        await createAncaJson(development, pack.config);
+        await fixAncaConfig(state.config);
+        await createAncaJson(development, state.config);
         await backHere();
       },
       label: "[anca.json] Fix",
     },
     devcontainerDockerfileSetToDefault: {
       action: async () => {
-        await fixDevcontainerDockerfile(development, pack);
+        await fixDevcontainerDockerfile(development, state);
         await backHere();
       },
       label: "[.devcontainer/Dockerfile] Set to default",
     },
     devcontainerJsonSetToDefault: {
       action: async () => {
-        await fixDevcontainerJson(development, pack);
+        await fixDevcontainerJson(development, state);
         await backHere();
       },
       label: "[.devcontainer/devcontainer.json] Set to default",
@@ -103,7 +109,7 @@ async function showDevelopmentActions(
     },
     githubActionsReleaseSetToDefault: {
       action: async () => {
-        await fixGithubActionsRelease(development, pack);
+        await fixGithubActionsRelease(development, state);
         await backHere();
       },
       label: "[.github/workflows/release.yml] Set to default",
@@ -176,8 +182,8 @@ async function showDevelopmentActions(
     }
   };
 
-  pack.issues.forEach(map);
-  pack.actions.forEach(map);
+  state.issues.forEach(map);
+  state.actions.forEach(map);
 
   await promptMenu(
     `\n[${development.data.name.toUpperCase()} at ${development.data.folder.toUpperCase()}] (${(await getDevelopmentStatus(development)).join(", ")})`,
@@ -191,7 +197,7 @@ async function showDevelopmentActions(
 async function showAllDevelopments() {
   const options = [{ action: showDevelopmentsMenu, label: "Back" }];
 
-  const state = getState();
+  const state = getInstance();
 
   for (const development of state.developments) {
     options.push({
@@ -211,7 +217,7 @@ async function showAllDevelopments() {
 async function showLocalDevelopments() {
   const options = [{ action: showDevelopmentsMenu, label: "Back" }];
 
-  const state = getState();
+  const state = getInstance();
 
   for (const development of state.developments) {
     if (await checkExistence(development.fullPath)) {

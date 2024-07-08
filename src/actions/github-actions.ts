@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-import { AncaDevelopmentPack, AncaDevelopmentState } from "../schema.js";
+import { AncaDevelopment, AncaDevelopmentState } from "../schema.js";
 
 const RELEASE_NODEJS = `name: Release
 
@@ -30,7 +30,8 @@ jobs:
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: \${{secrets.npm_token}}
-        name: "Publish to registry"`;
+        name: "Publish to registry"
+`;
 
 const RELEASE_NODEJS_APP = `name: Release
 
@@ -91,7 +92,8 @@ jobs:
             build/sea/\${{ github.event.repository.name }}-\${{ github.ref_name }}-\${{ runner.arch }}\${{ matrix.os == 'windows-latest' && '.exe' || '' }}
         env:
           GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
-        name: Attach executables to release`;
+        name: Attach executables to release
+`;
 
 const TEST_NODEJS = `name: Test
 
@@ -117,7 +119,8 @@ jobs:
       - run: npm ci
         name: "Install dependencies"
       - run: npm test
-        name: "Run tests"`;
+        name: "Run tests"
+`;
 
 /**
  *
@@ -131,16 +134,16 @@ async function createGithubActionsFolders(fullPath: string) {
 
 /**
  *
- * @param pack
+ * @param state
  * @param contents
  */
 export function checkGithubActionsRelease(
-  pack: AncaDevelopmentPack,
+  state: AncaDevelopmentState,
   contents: string,
 ) {
   return (
     contents ===
-    (pack.config.type === "app" ? RELEASE_NODEJS_APP : RELEASE_NODEJS)
+    (state.config.type === "app" ? RELEASE_NODEJS_APP : RELEASE_NODEJS)
   );
 }
 
@@ -157,7 +160,7 @@ export function checkGithubActionsTest(contents: string) {
  * @param development
  */
 export async function checkGithubActionsOtherFiles(
-  development: AncaDevelopmentState,
+  development: AncaDevelopment,
 ) {
   await createGithubActionsFolders(development.fullPath);
   const files = fs.readdirSync(
@@ -172,16 +175,16 @@ export async function checkGithubActionsOtherFiles(
 /**
  *
  * @param development
- * @param pack
+ * @param state
  */
 export async function fixGithubActionsRelease(
-  development: AncaDevelopmentState,
-  pack: AncaDevelopmentPack,
+  development: AncaDevelopment,
+  state: AncaDevelopmentState,
 ) {
   await createGithubActionsFolders(development.fullPath);
   fs.writeFileSync(
     path.join(development.fullPath, ".github/workflows/release.yml"),
-    pack.config.type === "app" ? RELEASE_NODEJS_APP : RELEASE_NODEJS,
+    state.config.type === "app" ? RELEASE_NODEJS_APP : RELEASE_NODEJS,
   );
 }
 
@@ -189,7 +192,7 @@ export async function fixGithubActionsRelease(
  *
  * @param development
  */
-export async function fixGithubActionsTest(development: AncaDevelopmentState) {
+export async function fixGithubActionsTest(development: AncaDevelopment) {
   await createGithubActionsFolders(development.fullPath);
   fs.writeFileSync(
     path.join(development.fullPath, ".github/workflows/test.yml"),
@@ -202,7 +205,7 @@ export async function fixGithubActionsTest(development: AncaDevelopmentState) {
  * @param development
  */
 export async function fixGithubActionsOtherFiles(
-  development: AncaDevelopmentState,
+  development: AncaDevelopment,
 ) {
   await createGithubActionsFolders(development.fullPath);
   const files = fs.readdirSync(
