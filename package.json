@@ -26,9 +26,10 @@
     "build:dev": "tsc",
     "build:sea": "node sea.build.js",
     "dev": "tsc-watch",
+    "fix": "prettier . --write && eslint --fix .",
     "format": "prettier . --write",
     "lint": "eslint --fix .",
-    "test": "eslint --max-warnings 0 . && tsc && mocha './build/dev/test'"
+    "test": "prettier . -c && eslint --max-warnings 0 . && tsc && mocha './build/dev/test'"
   },
   "dependencies": {
     "ajv": "8.16.0",
@@ -54,8 +55,6 @@
     "node": ">=18.0.0"
   },
   "pre-commit": [
-    "lint",
-    "format",
     "test"
   ]
 }
