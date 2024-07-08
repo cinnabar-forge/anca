@@ -2,29 +2,26 @@ import path from "path";
 import pc from "picocolors";
 
 import { checkAnca } from "./actions/anca.js";
+import {
+  checkDevcontainerDockerfile,
+  checkDevcontainerJson,
+} from "./actions/devcontainers.js";
 import { checkForGit, getGit } from "./git.js";
-import { AncaConfig, AncaDevelopmentState } from "./schema.js";
+import {
+  AncaConfig,
+  AncaDevelopmentPack,
+  AncaDevelopmentState,
+} from "./schema.js";
 import {
   checkExistence,
   readFolderFile,
-  readFolderJson,
+  readFolderJsonFile,
   writeFolderFile,
 } from "./utils.js";
 
-export interface DevelopmentPack {
-  actions: string[];
-  files: Record<string, string>;
-  issues: string[];
-  jsons: Record<string, object>;
-}
-
-const developmentCache: Map<string, DevelopmentPack> = new Map<
+const developmentCache: Map<string, AncaDevelopmentPack> = new Map<
   string,
-  DevelopmentPack
->();
-const projectTypeCache: Map<string, { stack: string; type: string }> = new Map<
-  string,
-  { stack: string; type: string }
+  AncaDevelopmentPack
 >();
 
 /**
@@ -88,10 +85,10 @@ export async function getDevelopmentStatus(development: AncaDevelopmentState) {
     statuses.push(pc.bgRed("issues: " + pack.issues.length));
   }
 
-  const ancaType = projectTypeCache.get(development.fullPath);
-
-  if (ancaType != null) {
-    statuses.unshift(`${ancaType.stack} ${ancaType.type}`);
+  if (pack.config != null) {
+    statuses.unshift(
+      `${pack.config.stack || "unsupported"} ${pack.config.type || "project"}`,
+    );
   }
 
   return statuses;
@@ -132,116 +129,185 @@ export function getDevelopmentDisplayName(
  */
 export async function getDevelopmentPack(
   development: AncaDevelopmentState,
-): Promise<DevelopmentPack> {
+): Promise<AncaDevelopmentPack> {
   const cache = developmentCache.get(development.fullPath);
   if (cache != null) {
     return cache;
   }
   const exists = await checkExistence(development.fullPath);
 
-  const actions: string[] = [];
-  const files: Record<string, string> = {};
-  const issues: string[] = [];
-  const jsons: Record<string, object> = {};
-
-  const pack: DevelopmentPack = {
-    actions,
-    files,
-    issues,
-    jsons,
+  const pack: AncaDevelopmentPack = {
+    actions: [],
+    config: await readFolderJsonFile(development.fullPath, "anca.json"),
+    files: {},
+    issues: [],
+    jsonFiles: {},
   };
 
   developmentCache.set(development.fullPath, pack);
 
   if (!exists) {
-    actions.push("gitClone");
+    pack.actions.push("gitClone");
     return pack;
   }
 
-  const ancaJsonContent = await readFolderJson(
-    development.fullPath,
-    "anca.json",
-  );
-  jsons["anca.json"] = ancaJsonContent;
-
-  if (ancaJsonContent == null) {
-    actions.push("ancaJsonCreate");
+  if (pack.config == null) {
+    pack.actions.push("ancaJsonCreate");
     return pack;
-  } else if (!checkAnca(ancaJsonContent)) {
-    issues.push("ancaJsonFix");
+  } else if (!checkAnca(pack.config)) {
+    pack.issues.push("ancaJsonFix");
     return pack;
-  } else {
-    projectTypeCache.set(development.fullPath, {
-      stack: ancaJsonContent.stack,
-      type: ancaJsonContent.type,
-    });
   }
 
-  const packageJsonContent = await readFolderJson(
-    development.fullPath,
-    "package.json",
-  );
-  jsons["package.json"] = packageJsonContent;
+  await addCommonToDevelopmentPack(development, pack);
 
-  const gitIgnoreContent = await readFolderFile(
-    development.fullPath,
-    ".gitignore",
-  );
-  files[".gitignore"] = gitIgnoreContent;
+  await addDevcontainersToDevelopmentPack(development, pack);
 
-  const licenseContent = await readFolderFile(development.fullPath, "LICENSE");
-  files["LICENSE"] = licenseContent;
-
-  const readmeContent = await readFolderFile(development.fullPath, "README.md");
-  files["README.md"] = readmeContent;
-
-  const eslintContent = await readFolderFile(
-    development.fullPath,
-    "eslint.config.js",
-  );
-  files["eslint.config.js"] = eslintContent;
-
-  const prettierRcContent = await readFolderFile(
-    development.fullPath,
-    ".prettierrc",
-  );
-  files[".prettierrc"] = prettierRcContent;
-
-  const prettierIgnoreContent = await readFolderFile(
-    development.fullPath,
-    ".prettierignore",
-  );
-  files[".prettierignore"] = prettierIgnoreContent;
-
-  if (gitIgnoreContent == null) {
-    issues.push("gitIgnoreCreate");
-  }
-
-  if (licenseContent == null) {
-    issues.push("licenseCreate");
-  }
-
-  if (readmeContent == null) {
-    issues.push("readmeCreate");
-  }
-
-  if (packageJsonContent != null && packageJsonContent.keywords != null) {
-    issues.push("packageJsonKeywordsUpdate");
-  }
-
-  if (eslintContent == null) {
-    issues.push("nodejsEslintCreate");
-  }
-
-  if (prettierRcContent == null) {
-    issues.push("nodejsPrettierRcCreate");
-  }
-
-  if (prettierIgnoreContent == null) {
-    issues.push("nodejsPrettierIgnoreCreate");
+  if (pack.config.stack === "nodejs") {
+    await addNodeJsToDevelopmentPack(development, pack);
   }
 
   return pack;
+}
+
+/**
+ *
+ * @param development
+ * @param pack
+ * @param file
+ */
+async function addFileToPack(
+  development: AncaDevelopmentState,
+  pack: AncaDevelopmentPack,
+  file: string,
+) {
+  const contents = await readFolderFile(development.fullPath, file);
+  pack.files[file] = contents;
+  return contents;
+}
+
+/**
+ *
+ * @param development
+ * @param pack
+ * @param file
+ */
+async function addJsonFileToPack(
+  development: AncaDevelopmentState,
+  pack: AncaDevelopmentPack,
+  file: string,
+) {
+  const contents = await readFolderJsonFile(development.fullPath, file);
+  pack.files[file] = contents;
+  return contents;
+}
+
+/**
+ *
+ * @param development
+ * @param pack
+ */
+async function addCommonToDevelopmentPack(
+  development: AncaDevelopmentState,
+  pack: AncaDevelopmentPack,
+) {
+  const gitIgnoreContent = await addFileToPack(development, pack, ".gitignore");
+  const licenseContent = await addFileToPack(development, pack, "LICENSE");
+  const readmeContent = await addFileToPack(development, pack, "README.md");
+
+  if (gitIgnoreContent == null) {
+    pack.issues.push("gitIgnoreCreate");
+  }
+
+  if (licenseContent == null) {
+    pack.issues.push("licenseCreate");
+  }
+
+  if (readmeContent == null) {
+    pack.issues.push("readmeCreate");
+  }
+}
+
+/**
+ *
+ * @param development
+ * @param pack
+ */
+async function addDevcontainersToDevelopmentPack(
+  development: AncaDevelopmentState,
+  pack: AncaDevelopmentPack,
+) {
+  const devcontainerJsonContent = await addJsonFileToPack(
+    development,
+    pack,
+    ".devcontainer/devcontainer.json",
+  );
+  const dockerfileContent = await addFileToPack(
+    development,
+    pack,
+    ".devcontainer/Dockerfile",
+  );
+
+  if (
+    devcontainerJsonContent == null ||
+    !checkDevcontainerJson(pack, devcontainerJsonContent)
+  ) {
+    pack.issues.push("devcontainerJsonSetToDefault");
+  }
+
+  if (
+    dockerfileContent == null ||
+    !checkDevcontainerDockerfile(pack, dockerfileContent)
+  ) {
+    pack.issues.push("devcontainerDockerfileSetToDefault");
+  }
+}
+
+/**
+ *
+ * @param development
+ * @param pack
+ */
+async function addNodeJsToDevelopmentPack(
+  development: AncaDevelopmentState,
+  pack: AncaDevelopmentPack,
+) {
+  const packageJsonContent = await addJsonFileToPack(
+    development,
+    pack,
+    "package.json",
+  );
+  const eslintContent = await addFileToPack(
+    development,
+    pack,
+    "eslint.config.js",
+  );
+  const prettierRcContent = await addFileToPack(
+    development,
+    pack,
+    ".prettierrc",
+  );
+  const prettierIgnoreContent = await addFileToPack(
+    development,
+    pack,
+    ".prettierignore",
+  );
+
+  if (packageJsonContent != null && packageJsonContent.keywords != null) {
+    pack.issues.push("packageJsonKeywordsUpdate");
+  }
+
+  if (eslintContent == null) {
+    pack.issues.push("nodejsEslintCreate");
+  }
+
+  if (prettierRcContent == null) {
+    pack.issues.push("nodejsPrettierRcCreate");
+  }
+
+  if (prettierIgnoreContent == null) {
+    pack.issues.push("nodejsPrettierIgnoreCreate");
+  }
 }
 
 /**

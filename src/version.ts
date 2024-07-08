@@ -1,4 +1,4 @@
-import { readFolderJson } from "./utils.js";
+import { readFolderJsonFile } from "./utils.js";
 
 /**
  *
@@ -6,7 +6,7 @@ import { readFolderJson } from "./utils.js";
  */
 export async function getDirectoryVersion(directoryPath: string) {
   let prefix = "";
-  const cinnabarJson = await readFolderJson(directoryPath, "cinnabar.json");
+  const cinnabarJson = await readFolderJsonFile(directoryPath, "cinnabar.json");
 
   let version;
 
@@ -14,14 +14,14 @@ export async function getDirectoryVersion(directoryPath: string) {
     version = `v${cinnabarJson.version.text}`;
   }
 
-  const versionJson = await readFolderJson(directoryPath, "version.json");
+  const versionJson = await readFolderJsonFile(directoryPath, "version.json");
 
   if (version == null && versionJson != null) {
     version = `v${versionJson.major}.${versionJson.minor}.${versionJson.patch}`;
     prefix = " (cf-v)";
   }
 
-  const packageJson = await readFolderJson(directoryPath, "package.json");
+  const packageJson = await readFolderJsonFile(directoryPath, "package.json");
 
   if (version == null && packageJson != null) {
     version = `v${packageJson.version}`;

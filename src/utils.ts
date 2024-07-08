@@ -21,7 +21,7 @@ export async function checkExistence(filePath: string) {
  *
  * @param jsonPath
  */
-export async function readJson(jsonPath: string): Promise<any> {
+export async function readJsonFile(jsonPath: string): Promise<any> {
   try {
     return JSON.parse(await fs.promises.readFile(jsonPath, "utf-8"));
   } catch {
@@ -72,7 +72,7 @@ export async function writeFolderFile(
  * @param folder
  * @param jsonPath
  */
-export async function readFolderJson(
+export async function readFolderJsonFile(
   folder: string,
   jsonPath: string,
 ): Promise<any> {
@@ -111,8 +111,8 @@ export function isSubset(first: any, second: any): boolean {
  * @param secondPath
  */
 export async function isJsonFileSubset(firstPath: string, secondPath: string) {
-  const firstContent = await readJson(firstPath);
-  const secondContent = await readJson(secondPath);
+  const firstContent = await readJsonFile(firstPath);
+  const secondContent = await readJsonFile(secondPath);
 
   return firstContent && secondContent && isSubset(firstContent, secondContent);
 }

@@ -1,6 +1,10 @@
 import { promptMenu } from "clivo";
 
 import { fixAncaConfig } from "./actions/anca.js";
+import {
+  fixDevcontainerDockerfile,
+  fixDevcontainerJson,
+} from "./actions/devcontainers.js";
 import cinnabarData from "./cinnabar.js";
 import { getState } from "./config.js";
 import {
@@ -51,12 +55,25 @@ async function showDevelopmentActions(
     },
     ancaJsonFix: {
       action: async () => {
-        const ancaConfig = pack.jsons["anca.json"];
-        await fixAncaConfig(ancaConfig);
-        await createAncaJson(development, ancaConfig);
+        await fixAncaConfig(pack.config);
+        await createAncaJson(development, pack.config);
         await backHere();
       },
       label: "[anca.json] Fix",
+    },
+    devcontainerDockerfileSetToDefault: {
+      action: async () => {
+        await fixDevcontainerDockerfile(development, pack);
+        await backHere();
+      },
+      label: "[.devcontainer/Dockerfile] Set to default",
+    },
+    devcontainerJsonSetToDefault: {
+      action: async () => {
+        await fixDevcontainerJson(development, pack);
+        await backHere();
+      },
+      label: "[.devcontainer/devcontainer.json] Set to default",
     },
     gitClone: {
       action: async () => {
@@ -124,7 +141,12 @@ async function showDevelopmentActions(
         label: mapping.label,
       });
     } else {
-      console.log("[WARNING] No mapping found for code:", code);
+      menu.push({
+        action: async () => {
+          await backHere();
+        },
+        label: "THE ACTION IS NOT IMPMLEMENTED: " + code,
+      });
     }
   };
 

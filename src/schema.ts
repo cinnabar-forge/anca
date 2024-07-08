@@ -15,6 +15,14 @@ export interface AncaDevelopment {
   name: string;
 }
 
+export interface AncaDevelopmentPack {
+  actions: string[];
+  config: AncaConfig;
+  files: Record<string, string>;
+  issues: string[];
+  jsonFiles: Record<string, object>;
+}
+
 export interface AncaDevelopmentState {
   data: AncaDevelopment;
   folderPath: string;
