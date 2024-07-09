@@ -11,6 +11,7 @@ import {
   checkGithubActionsRelease,
   checkGithubActionsTest,
 } from "./actions/github-actions.js";
+import { NodejsPackageJson, checkNodejsPackageJson } from "./actions/nodejs.js";
 import { checkForGit, getGit } from "./git.js";
 import { AncaConfig, AncaDevelopment, AncaDevelopmentState } from "./schema.js";
 import {
@@ -19,10 +20,6 @@ import {
   readFolderJsonFile,
   writeFolderFile,
 } from "./utils.js";
-
-interface PackageJson {
-  keywords?: string[];
-}
 
 /**
  *
@@ -293,7 +290,7 @@ async function addGithubActionsToDevelopmentPack(
   }
 
   if (!(await checkGithubActionsOtherFiles(development))) {
-    state.issues.push("githubActionsOtherFilesRemove");
+    state.actions.push("githubActionsOtherFilesRemove");
   }
 }
 
@@ -306,7 +303,7 @@ async function addNodeJsToDevelopmentPack(
   development: AncaDevelopment,
   state: AncaDevelopmentState,
 ) {
-  const packageJsonContent: PackageJson | null = await addJsonFileToPack(
+  const packageJsonContent: NodejsPackageJson | null = await addJsonFileToPack(
     development,
     state,
     "package.json",
@@ -327,9 +324,13 @@ async function addNodeJsToDevelopmentPack(
     ".prettierignore",
   );
 
-  if (packageJsonContent != null && packageJsonContent.keywords != null) {
-    state.issues.push("packageJsonKeywordsUpdate");
+  if (
+    packageJsonContent == null ||
+    !checkNodejsPackageJson(state, packageJsonContent)
+  ) {
+    state.issues.push("nodejsPackageJsonFix");
   }
+  state.actions.push("nodejsPackageJsonCheckUpdates");
 
   if (eslintContent == null) {
     state.issues.push("nodejsEslintCreate");

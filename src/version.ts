@@ -12,7 +12,7 @@ interface VersionJson {
   patch?: number;
 }
 
-interface PackageJson {
+interface NodejsPackageJson {
   version?: string;
 }
 
@@ -47,7 +47,7 @@ export async function getDirectoryVersion(directoryPath: string) {
     prefix = " (cf-v)";
   }
 
-  const packageJson: PackageJson | null = await readFolderJsonFile(
+  const packageJson: NodejsPackageJson | null = await readFolderJsonFile(
     directoryPath,
     "package.json",
   );

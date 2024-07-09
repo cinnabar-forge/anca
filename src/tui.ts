@@ -1,4 +1,5 @@
 import { promptMenu } from "clivo";
+import pc from "picocolors";
 
 import { fixAncaConfig } from "./actions/anca.js";
 import {
@@ -10,6 +11,11 @@ import {
   fixGithubActionsRelease,
   fixGithubActionsTest,
 } from "./actions/github-actions.js";
+import {
+  checkNodejsPackageJsonDevDependencies,
+  fixNodejsPackageJson,
+  writeNodejsPackageJson,
+} from "./actions/nodejs.js";
 import cinnabarData from "./cinnabar.js";
 import { getInstance } from "./config.js";
 import {
@@ -133,28 +139,38 @@ async function showDevelopmentActions(
         // Implementation for creating ESLint config for Node.js projects
         await backHere();
       },
-      label: "[Node.js] Create ESLint Config",
+      label: "[eslint.config.js] Create ESLint Config",
+    },
+    nodejsPackageJsonCheckUpdates: {
+      action: async () => {
+        // Implementation for checking dependencies updates in Node.js projects
+        await checkNodejsPackageJsonDevDependencies(state);
+        await writeNodejsPackageJson(development);
+        await backHere();
+      },
+      label: "[package.json] Check dependencies updates",
+    },
+    nodejsPackageJsonFix: {
+      action: async () => {
+        await fixNodejsPackageJson(state);
+        await writeNodejsPackageJson(development);
+        await backHere();
+      },
+      label: "[package.json] Fix",
     },
     nodejsPrettierIgnoreCreate: {
       action: async () => {
         // Implementation for creating .prettierignore for Node.js projects
         await backHere();
       },
-      label: "[Node.js] Create Prettier Ignore",
+      label: "[.prettierignore] Create Prettier Ignore",
     },
     nodejsPrettierRcCreate: {
       action: async () => {
         // Implementation for creating Prettier config for Node.js projects
         await backHere();
       },
-      label: "[Node.js] Create Prettier Config",
-    },
-    packageJsonKeywordsUpdate: {
-      action: async () => {
-        // Implementation for updating keywords in package.json
-        await backHere();
-      },
-      label: "[package.json] Update Keywords",
+      label: "[.prettierrc] Create Prettier Config",
     },
     readmeCreate: {
       action: async () => {
@@ -165,25 +181,25 @@ async function showDevelopmentActions(
     },
   };
 
-  const map = (code: string) => {
+  const map = (code: string, isIssue: boolean) => {
     const mapping = mappings[code];
     if (mapping) {
       menu.push({
         action: mapping.action,
-        label: mapping.label,
+        label: isIssue ? pc.bgRed("[!]") + " " + mapping.label : mapping.label,
       });
     } else {
       menu.push({
         action: async () => {
           await backHere();
         },
-        label: "THE ACTION IS NOT IMPMLEMENTED: " + code,
+        label: "THE ACTION IS NOT IMPLEMENTED: " + code,
       });
     }
   };
 
-  state.issues.forEach(map);
-  state.actions.forEach(map);
+  state.issues.forEach((code) => map(code, true));
+  state.actions.forEach((code) => map(code, false));
 
   await promptMenu(
     `\n[${development.data.name.toUpperCase()} at ${development.data.folder.toUpperCase()}] (${(await getDevelopmentStatus(development)).join(", ")})`,
@@ -289,7 +305,7 @@ export async function showMainMenu() {
     },
     {
       action: async () => {
-        console.log("off");
+        showMainMenu();
       },
       label: "Deployments",
     },

@@ -204,9 +204,7 @@ export async function fixGithubActionsTest(development: AncaDevelopment) {
  *
  * @param development
  */
-export async function fixGithubActionsOtherFiles(
-  development: AncaDevelopment,
-) {
+export async function fixGithubActionsOtherFiles(development: AncaDevelopment) {
   await createGithubActionsFolders(development.fullPath);
   const files = fs.readdirSync(
     path.join(development.fullPath, ".github", "workflows"),
