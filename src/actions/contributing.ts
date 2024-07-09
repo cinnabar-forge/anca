@@ -24,7 +24,7 @@ export async function checkContributingMd(development: AncaDevelopment) {
  * @param development
  */
 export async function fixContributingMd(development: AncaDevelopment) {
-  if (development.state == null) {
+  if (development.state == null || development.state.files[FILE_PATH] == null) {
     return;
   }
   await writeFolderFile(

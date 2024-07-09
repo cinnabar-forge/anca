@@ -304,8 +304,12 @@ export async function checkNodejsPackageJsonDevDependencies(
   if (development.state == null) {
     return;
   }
-  const contents: NodejsPackageJson =
+  const contents: NodejsPackageJson | null | undefined =
     development.state.jsonFiles["package.json"];
+
+  if (contents == null) {
+    return;
+  }
 
   if (contents.devDependencies == null) {
     contents.devDependencies = {};
@@ -326,7 +330,10 @@ export async function checkNodejsPackageJsonDevDependencies(
  * @param development
  */
 export async function writeNodejsPackageJson(development: AncaDevelopment) {
-  if (development.state == null) {
+  if (
+    development.state == null ||
+    development.state.jsonFiles["package.json"] == null
+  ) {
     return;
   }
   await writeFolderJsonFile(

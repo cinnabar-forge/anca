@@ -24,7 +24,7 @@ export async function checkNodejsEslintConfigJs(development: AncaDevelopment) {
  * @param development
  */
 export async function fixNodejsEslintConfigJs(development: AncaDevelopment) {
-  if (development.state == null) {
+  if (development.state == null || development.state.files[FILE_PATH] == null) {
     return;
   }
   await writeFolderFile(

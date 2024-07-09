@@ -41,7 +41,10 @@ export async function checkNodejsSeaConfigJson(development: AncaDevelopment) {
  * @param development
  */
 export async function fixNodejsSeaBuildJs(development: AncaDevelopment) {
-  if (development.state == null) {
+  if (
+    development.state == null ||
+    development.state.files[BUILD_FILE_PATH] == null
+  ) {
     return;
   }
   await writeFolderFile(
@@ -56,7 +59,10 @@ export async function fixNodejsSeaBuildJs(development: AncaDevelopment) {
  * @param development
  */
 export async function writeNodejsSeaConfigJson(development: AncaDevelopment) {
-  if (development.state == null) {
+  if (
+    development.state == null ||
+    development.state.jsonFiles[CONFIG_FILE_PATH] == null
+  ) {
     return;
   }
   await writeFolderJsonFile(

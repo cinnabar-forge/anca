@@ -24,7 +24,10 @@ export async function checkNodejsTsconfigJson(development: AncaDevelopment) {
  * @param development
  */
 export async function fixNodejsTsconfigJson(development: AncaDevelopment) {
-  if (development.state == null) {
+  if (
+    development.state == null ||
+    development.state.jsonFiles[FILE_PATH] == null
+  ) {
     return;
   }
   await writeFolderJsonFile(

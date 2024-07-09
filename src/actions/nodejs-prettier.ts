@@ -1,5 +1,21 @@
 import { AncaDevelopment } from "../schema.js";
-import { writeFolderFile, writeFolderJsonFile } from "../utils.js";
+import { writeFolderFile } from "../utils.js";
+
+const RC = `{}\n`;
+
+const IGNORE = `# General
+**/.git
+**/.svn
+**/.hg
+
+# Node.js
+**/node_modules
+package-lock.json
+
+# Cinnabar Meta
+**/cinnabar.js
+**/cinnabar.ts
+cinnabar.json`;
 
 const RC_FILE_PATH = ".prettierrc";
 const IGNORE_FILE_PATH = ".prettierignore";
@@ -12,12 +28,13 @@ export async function checkNodejsPrettierRc(development: AncaDevelopment) {
   if (development.state == null) {
     return;
   }
-  const contents = development.state.jsonFiles[RC_FILE_PATH];
+  const contents = development.state.files[RC_FILE_PATH];
+  console.log("checkNodejsPrettierRc", contents);
   if (contents == null) {
     return false;
   }
-  contents;
-  return true;
+
+  return contents === RC;
 }
 
 /**
@@ -32,8 +49,8 @@ export async function checkNodejsPrettierIgnore(development: AncaDevelopment) {
   if (contents == null) {
     return false;
   }
-  contents;
-  return true;
+
+  return contents === IGNORE;
 }
 
 /**
@@ -44,11 +61,7 @@ export async function fixNodejsPrettierRc(development: AncaDevelopment) {
   if (development.state == null) {
     return;
   }
-  await writeFolderJsonFile(
-    development.fullPath,
-    RC_FILE_PATH,
-    development.state.jsonFiles[RC_FILE_PATH],
-  );
+  await writeFolderFile(development.fullPath, RC_FILE_PATH, RC);
 }
 
 /**
@@ -59,9 +72,5 @@ export async function fixNodejsPrettierIgnore(development: AncaDevelopment) {
   if (development.state == null) {
     return;
   }
-  await writeFolderFile(
-    development.fullPath,
-    IGNORE_FILE_PATH,
-    development.state.files[IGNORE_FILE_PATH],
-  );
+  await writeFolderFile(development.fullPath, IGNORE_FILE_PATH, IGNORE);
 }

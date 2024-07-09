@@ -24,7 +24,7 @@ export async function checkReadmeMd(development: AncaDevelopment) {
  * @param development
  */
 export async function fixReadmeMd(development: AncaDevelopment) {
-  if (development.state == null) {
+  if (development.state == null || development.state.files[FILE_PATH] == null) {
     return;
   }
   await writeFolderFile(

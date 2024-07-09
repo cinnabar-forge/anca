@@ -18,9 +18,9 @@ export interface AncaDevelopmentWorkfolderData {
 export interface AncaDevelopmentState {
   actions: string[];
   config: AncaConfig;
-  files: Record<string, string>;
+  files: Record<string, null | string | undefined>;
   issues: string[];
-  jsonFiles: Record<string, object>;
+  jsonFiles: Record<string, null | object | undefined>;
 }
 
 export interface AncaDevelopment {
