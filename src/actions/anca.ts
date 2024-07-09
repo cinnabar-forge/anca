@@ -2,26 +2,44 @@ import { promptOptions } from "clivo";
 
 import {
   ANCA_CONFIG_SCHEMA,
-  AncaConfig,
   AncaConfigStack,
   AncaConfigType,
+  AncaDevelopment,
 } from "../schema.js";
-import { isAjvValid } from "../utils.js";
+import { isAjvValid, writeFolderJsonFile } from "../utils.js";
+
+const FILE_PATH = "anca.json";
 
 /**
  * Check the Anca configuration file.
- * @param contents - The contents of the Anca configuration file.
+ * @param development
  */
-export function checkAnca(contents: object) {
+export async function checkAnca(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
+  }
+  const contents = development.state.config;
+  if (contents == null) {
+    return false;
+  }
   return isAjvValid(ANCA_CONFIG_SCHEMA, contents);
 }
 
 /**
  * Fix the Anca configuration file.
- * @param contents
+ * @param development
  */
-export async function fixAncaConfig(contents: AncaConfig) {
-  console.log("fixAncaConfig", contents);
+export async function fixAncaConfig(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
+  }
+
+  let contents = development.state.config;
+  if (contents == null) {
+    contents = {};
+    development.state.config = contents;
+  }
+
   if (contents.type == null || AncaConfigType[contents.type] == null) {
     contents.type = (
       await promptOptions("\nChoose project type:", [
@@ -40,4 +58,6 @@ export async function fixAncaConfig(contents: AncaConfig) {
       ])
     ).name as AncaConfigStack;
   }
+
+  await writeFolderJsonFile(development.fullPath, FILE_PATH, contents);
 }

@@ -6,20 +6,27 @@ import {
   fixDevcontainerDockerfile,
   fixDevcontainerJson,
 } from "./actions/devcontainers.js";
+import { fixGitIgnore } from "./actions/git.js";
 import {
   fixGithubActionsOtherFiles,
   fixGithubActionsRelease,
   fixGithubActionsTest,
 } from "./actions/github-actions.js";
+import { fixLicenseMd } from "./actions/license.js";
 import {
   checkNodejsPackageJsonDevDependencies,
   fixNodejsPackageJson,
   writeNodejsPackageJson,
 } from "./actions/nodejs.js";
+import { fixNodejsEslintConfigJs } from "./actions/nodejs-eslint.js";
+import {
+  fixNodejsPrettierIgnore,
+  fixNodejsPrettierRc,
+} from "./actions/nodejs-prettier.js";
+import { fixReadmeMd } from "./actions/readme.js";
 import cinnabarData from "./cinnabar.js";
 import { getInstance } from "./config.js";
 import {
-  createAncaJson,
   getDevelopmentDisplayName,
   getDevelopmentStatus,
   refreshDevelopmentState,
@@ -61,33 +68,23 @@ async function showDevelopmentActions(
   const state = development.state;
 
   const mappings: Record<string, ClivoAction> = {
-    ancaJsonCreate: {
-      action: async () => {
-        const ancaConfig = {};
-        await fixAncaConfig(ancaConfig);
-        await createAncaJson(development, ancaConfig);
-        await backHere();
-      },
-      label: "[anca.json] Create",
-    },
     ancaJsonFix: {
       action: async () => {
-        await fixAncaConfig(state.config);
-        await createAncaJson(development, state.config);
+        await fixAncaConfig(development);
         await backHere();
       },
       label: "[anca.json] Fix",
     },
     devcontainerDockerfileSetToDefault: {
       action: async () => {
-        await fixDevcontainerDockerfile(development, state);
+        await fixDevcontainerDockerfile(development);
         await backHere();
       },
       label: "[.devcontainer/Dockerfile] Set to default",
     },
     devcontainerJsonSetToDefault: {
       action: async () => {
-        await fixDevcontainerJson(development, state);
+        await fixDevcontainerJson(development);
         await backHere();
       },
       label: "[.devcontainer/devcontainer.json] Set to default",
@@ -99,12 +96,12 @@ async function showDevelopmentActions(
       },
       label: "[git] Clone",
     },
-    gitIgnoreCreate: {
+    gitIgnoreSetToDefault: {
       action: async () => {
-        // Implementation for creating .gitignore
+        await fixGitIgnore(development);
         await backHere();
       },
-      label: "[.gitignore] Create",
+      label: "[.gitignore] Set to default",
     },
     githubActionsOtherFilesRemove: {
       action: async () => {
@@ -115,7 +112,7 @@ async function showDevelopmentActions(
     },
     githubActionsReleaseSetToDefault: {
       action: async () => {
-        await fixGithubActionsRelease(development, state);
+        await fixGithubActionsRelease(development);
         await backHere();
       },
       label: "[.github/workflows/release.yml] Set to default",
@@ -127,24 +124,23 @@ async function showDevelopmentActions(
       },
       label: "[.github/workflows/test.yml] Set to default",
     },
-    licenseCreate: {
+    licenseSetToDefault: {
       action: async () => {
-        // Implementation for creating LICENSE file
+        await fixLicenseMd(development);
         await backHere();
       },
-      label: "[LICENSE] Create",
+      label: "[LICENSE] Set to default",
     },
-    nodejsEslintCreate: {
+    nodejsEslintSetToDefault: {
       action: async () => {
-        // Implementation for creating ESLint config for Node.js projects
+        await fixNodejsEslintConfigJs(development);
         await backHere();
       },
-      label: "[eslint.config.js] Create ESLint Config",
+      label: "[eslint.config.js] Set to default",
     },
     nodejsPackageJsonCheckUpdates: {
       action: async () => {
-        // Implementation for checking dependencies updates in Node.js projects
-        await checkNodejsPackageJsonDevDependencies(state);
+        await checkNodejsPackageJsonDevDependencies(development);
         await writeNodejsPackageJson(development);
         await backHere();
       },
@@ -152,32 +148,32 @@ async function showDevelopmentActions(
     },
     nodejsPackageJsonFix: {
       action: async () => {
-        await fixNodejsPackageJson(state);
+        await fixNodejsPackageJson(development);
         await writeNodejsPackageJson(development);
         await backHere();
       },
       label: "[package.json] Fix",
     },
-    nodejsPrettierIgnoreCreate: {
+    nodejsPrettierIgnoreSetToDefault: {
       action: async () => {
-        // Implementation for creating .prettierignore for Node.js projects
+        await fixNodejsPrettierIgnore(development);
         await backHere();
       },
-      label: "[.prettierignore] Create Prettier Ignore",
+      label: "[.prettierignore] Set to default",
     },
-    nodejsPrettierRcCreate: {
+    nodejsPrettierRcSetToDefault: {
       action: async () => {
-        // Implementation for creating Prettier config for Node.js projects
+        await fixNodejsPrettierRc(development);
         await backHere();
       },
-      label: "[.prettierrc] Create Prettier Config",
+      label: "[.prettierrc] Set to default",
     },
-    readmeCreate: {
+    readmeSetToDefault: {
       action: async () => {
-        // Implementation for creating README.md
+        await fixReadmeMd(development);
         await backHere();
       },
-      label: "[README.md] Create",
+      label: "[README.md] Set to default",
     },
   };
 

@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
 
-import { AncaDevelopment, AncaDevelopmentState } from "../schema.js";
-import { isSubset } from "../utils.js";
+import { AncaDevelopment } from "../schema.js";
+import { isSubset, writeFolderJsonFile } from "../utils.js";
 
 const JSON_FALLBACK = {
   build: {
@@ -59,69 +59,84 @@ ADD --checksum=$NODE_CHECKSUM https://nodejs.org/dist/v\${NODE_VERSION}/node-v\$
 RUN tar -xz -f /node.tar.gz -C /usr/local --remove-files --strip-components=1
 `;
 
-/**
- *
- * @param state
- * @param contents
- */
-export function checkDevcontainerJson(
-  state: AncaDevelopmentState,
-  contents: object,
-) {
-  return isSubset(
-    contents,
-    state.config.stack === "nodejs" ? JSON_NODEJS : JSON_FALLBACK,
-  );
-}
+const DEVCONTAINER_JSON_FILE_PATH = ".devcontainer/devcontainer.json";
+const DOCKERFILE_FILE_PATH = ".devcontainer/Dockerfile";
 
 /**
  *
- * @param state
- * @param contents
+ * @param development
  */
-export function checkDevcontainerDockerfile(
-  state: AncaDevelopmentState,
-  contents: string,
-) {
-  return (
-    contents ===
-    (state.config.stack === "nodejs" ? DOCKERFILE_NODEJS : DOCKERFILE_FALLBACK)
+export async function checkDevcontainerJson(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
+  }
+  const contents = development.state.jsonFiles[DEVCONTAINER_JSON_FILE_PATH];
+  if (contents == null) {
+    return false;
+  }
+  return isSubset(
+    contents,
+    development.state.config.stack === "nodejs" ? JSON_NODEJS : JSON_FALLBACK,
   );
 }
 
 /**
  *
  * @param development
- * @param state
  */
-export async function fixDevcontainerJson(
+export async function checkDevcontainerDockerfile(
   development: AncaDevelopment,
-  state: AncaDevelopmentState,
 ) {
+  if (development.state == null) {
+    return;
+  }
+  const contents = development.state.files[DOCKERFILE_FILE_PATH];
+  if (contents == null) {
+    return false;
+  }
+  return (
+    contents ===
+    (development.state.config.stack === "nodejs"
+      ? DOCKERFILE_NODEJS
+      : DOCKERFILE_FALLBACK)
+  );
+}
+
+/**
+ *
+ * @param development
+ */
+export async function fixDevcontainerJson(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
+  }
   await fs.promises.mkdir(path.join(development.fullPath, ".devcontainer"), {
     recursive: true,
   });
-  const json = state.config.stack === "nodejs" ? JSON_NODEJS : JSON_FALLBACK;
-  fs.writeFileSync(
-    path.join(development.fullPath, ".devcontainer/devcontainer.json"),
-    JSON.stringify(json, null, 2),
+  const json =
+    development.state.config.stack === "nodejs" ? JSON_NODEJS : JSON_FALLBACK;
+  writeFolderJsonFile(
+    development.fullPath,
+    ".devcontainer/devcontainer.json",
+    json,
   );
 }
 
 /**
  *
  * @param development
- * @param state
  */
-export async function fixDevcontainerDockerfile(
-  development: AncaDevelopment,
-  state: AncaDevelopmentState,
-) {
+export async function fixDevcontainerDockerfile(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
+  }
   await fs.promises.mkdir(path.join(development.fullPath, ".devcontainer"), {
     recursive: true,
   });
   const dockerfile =
-    state.config.stack === "nodejs" ? DOCKERFILE_NODEJS : DOCKERFILE_FALLBACK;
+    development.state.config.stack === "nodejs"
+      ? DOCKERFILE_NODEJS
+      : DOCKERFILE_FALLBACK;
   fs.writeFileSync(
     path.join(development.fullPath, ".devcontainer/Dockerfile"),
     dockerfile,

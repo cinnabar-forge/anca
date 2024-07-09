@@ -57,7 +57,37 @@ export async function writeFolderFile(
   data: string,
 ): Promise<void> {
   try {
-    await fs.promises.writeFile(path.resolve(folder, filePath), data, "utf-8");
+    await fs.promises.writeFile(
+      path.resolve(folder, filePath),
+      data || "",
+      "utf-8",
+    );
+  } catch (error) {
+    console.error(
+      `Failed to write file at ${path.resolve(folder, filePath)}:`,
+      error,
+    );
+    throw error;
+  }
+}
+
+/**
+ * Writes data to a JSON file within a specified folder. If the file does not exist, it will be created.
+ * @param folder
+ * @param filePath
+ * @param data
+ */
+export async function writeFolderJsonFile(
+  folder: string,
+  filePath: string,
+  data: object,
+): Promise<void> {
+  try {
+    await fs.promises.writeFile(
+      path.resolve(folder, filePath),
+      JSON.stringify(data, null, 2) + "\n",
+      "utf-8",
+    );
   } catch (error) {
     console.error(
       `Failed to write file at ${path.resolve(folder, filePath)}:`,

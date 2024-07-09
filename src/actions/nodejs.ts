@@ -2,8 +2,8 @@
 import { promptText } from "clivo";
 
 import { fetchNpmPackageVersion } from "../api/nodejs-npm.js";
-import { AncaDevelopment, AncaDevelopmentState } from "../schema.js";
-import { writeFolderFile } from "../utils.js";
+import { AncaDevelopment } from "../schema.js";
+import { writeFolderJsonFile } from "../utils.js";
 
 export interface NodejsPackageJson {
   author?: {
@@ -90,15 +90,20 @@ const ENGINES: Record<string, string> = {
 
 const PRECOMMIT = ["test"];
 
+const FILE_PATH = "package.json";
+
 /**
  *
- * @param state
- * @param contents
+ * @param development
  */
-export function checkNodejsPackageJson(
-  state: AncaDevelopmentState,
-  contents: NodejsPackageJson,
-) {
+export async function checkNodejsPackageJson(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
+  }
+  const contents = development.state.jsonFiles[FILE_PATH] as NodejsPackageJson;
+  if (contents == null) {
+    return false;
+  }
   if (contents.name == null) {
     return false;
   }
@@ -135,11 +140,14 @@ export function checkNodejsPackageJson(
     return false;
   }
 
-  if (state.config.type === "app" && contents.types !== "dist/index.d.ts") {
+  if (
+    development.state.config.type === "app" &&
+    contents.types !== "dist/index.d.ts"
+  ) {
     return false;
   }
 
-  if (state.config.type === "app" && contents.bin == null) {
+  if (development.state.config.type === "app" && contents.bin == null) {
     return false;
   }
 
@@ -173,13 +181,17 @@ export function checkNodejsPackageJson(
 
 /**
  * Fix the Anca configuration file.
- * @param state
+ * @param development
  */
-export async function fixNodejsPackageJson(state: AncaDevelopmentState) {
-  if (state.jsonFiles["package.json"] == null) {
-    state.jsonFiles["package.json"] = {};
+export async function fixNodejsPackageJson(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
   }
-  const contents: NodejsPackageJson = state.jsonFiles["package.json"];
+  if (development.state.jsonFiles["package.json"] == null) {
+    development.state.jsonFiles["package.json"] = {};
+  }
+  const contents: NodejsPackageJson =
+    development.state.jsonFiles["package.json"];
 
   if (contents.name == null) {
     contents.name = await promptText("\nPackage name");
@@ -227,11 +239,14 @@ export async function fixNodejsPackageJson(state: AncaDevelopmentState) {
     contents.main = "dist/index.js";
   }
 
-  if (state.config.type === "app" && contents.types !== "dist/index.d.ts") {
+  if (
+    development.state.config.type === "app" &&
+    contents.types !== "dist/index.d.ts"
+  ) {
     contents.types = "dist/index.d.ts";
   }
 
-  if (state.config.type === "app" && contents.bin == null) {
+  if (development.state.config.type === "app" && contents.bin == null) {
     contents.bin = {};
   }
 
@@ -240,9 +255,10 @@ export async function fixNodejsPackageJson(state: AncaDevelopmentState) {
   }
 
   if (contents.scripts == null) {
-    contents.scripts = state.config.type === "app" ? SCRIPTS_APP : SCRIPTS_LIB;
+    contents.scripts =
+      development.state.config.type === "app" ? SCRIPTS_APP : SCRIPTS_LIB;
   } else {
-    if (state.config.type === "app") {
+    if (development.state.config.type === "app") {
       for (const key in SCRIPTS_APP) {
         if (contents.scripts[key] == null) {
           contents.scripts[key] = SCRIPTS_APP[key];
@@ -261,7 +277,7 @@ export async function fixNodejsPackageJson(state: AncaDevelopmentState) {
     contents.dependencies = {};
   }
 
-  await checkNodejsPackageJsonDevDependencies(state);
+  await checkNodejsPackageJsonDevDependencies(development);
 
   if (contents.engines == null) {
     contents.engines = ENGINES;
@@ -280,19 +296,25 @@ export async function fixNodejsPackageJson(state: AncaDevelopmentState) {
 
 /**
  *
- * @param state
+ * @param development
  */
 export async function checkNodejsPackageJsonDevDependencies(
-  state: AncaDevelopmentState,
+  development: AncaDevelopment,
 ) {
-  const contents: NodejsPackageJson = state.jsonFiles["package.json"];
+  if (development.state == null) {
+    return;
+  }
+  const contents: NodejsPackageJson =
+    development.state.jsonFiles["package.json"];
 
   if (contents.devDependencies == null) {
     contents.devDependencies = {};
   }
 
   const devDependencies =
-    state.config.type === "app" ? DEV_DEPENDENCIES_APP : DEV_DEPENDENCIES_LIB;
+    development.state.config.type === "app"
+      ? DEV_DEPENDENCIES_APP
+      : DEV_DEPENDENCIES_LIB;
 
   for (const key of devDependencies) {
     contents.devDependencies[key] = fetchNpmPackageVersion(key);
@@ -307,9 +329,9 @@ export async function writeNodejsPackageJson(development: AncaDevelopment) {
   if (development.state == null) {
     return;
   }
-  await writeFolderFile(
+  await writeFolderJsonFile(
     development.fullPath,
     "package.json",
-    JSON.stringify(development.state.jsonFiles["package.json"], null, 2),
+    development.state.jsonFiles["package.json"],
   );
 }

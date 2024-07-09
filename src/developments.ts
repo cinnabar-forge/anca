@@ -1,3 +1,4 @@
+import fs from "fs";
 import path from "path";
 import pc from "picocolors";
 
@@ -6,19 +7,27 @@ import {
   checkDevcontainerDockerfile,
   checkDevcontainerJson,
 } from "./actions/devcontainers.js";
+import { checkGitIgnore } from "./actions/git.js";
 import {
   checkGithubActionsOtherFiles,
   checkGithubActionsRelease,
   checkGithubActionsTest,
 } from "./actions/github-actions.js";
-import { NodejsPackageJson, checkNodejsPackageJson } from "./actions/nodejs.js";
+import { checkLicenseMd } from "./actions/license.js";
+import { checkNodejsPackageJson } from "./actions/nodejs.js";
+import { checkNodejsEslintConfigJs } from "./actions/nodejs-eslint.js";
+import {
+  checkNodejsPrettierIgnore,
+  checkNodejsPrettierRc,
+} from "./actions/nodejs-prettier.js";
+import { checkReadmeMd } from "./actions/readme.js";
 import { checkForGit, getGit } from "./git.js";
-import { AncaConfig, AncaDevelopment, AncaDevelopmentState } from "./schema.js";
+import { AncaDevelopment, AncaDevelopmentState } from "./schema.js";
 import {
   checkExistence,
   readFolderFile,
   readFolderJsonFile,
-  writeFolderFile,
+  writeFolderJsonFile,
 } from "./utils.js";
 
 /**
@@ -135,228 +144,163 @@ export async function refreshDevelopmentState(
     return;
   }
 
-  if (config == null) {
-    state.actions.push("ancaJsonCreate");
-    return;
-  } else if (!checkAnca(state.config)) {
-    state.issues.push("ancaJsonFix");
+  if (!(await checkAnca(development))) {
+    if (config == null) {
+      state.actions.push("ancaJsonFix");
+    } else {
+      state.issues.push("ancaJsonFix");
+    }
     return;
   }
 
-  await addCommonToDevelopmentPack(development, state);
+  await addCommonToDevelopmentPack(development);
 
-  await addDevcontainersToDevelopmentPack(development, state);
+  await addDevcontainersToDevelopmentPack(development);
 
-  await addGithubActionsToDevelopmentPack(development, state);
+  await addGithubActionsToDevelopmentPack(development);
 
   if (state.config.stack === "nodejs") {
-    await addNodeJsToDevelopmentPack(development, state);
+    await addNodeJsToDevelopmentPack(development);
   }
+
+  const folder = path.join(".", "data", "tmp", development.data.folder);
+  fs.mkdirSync(folder, { recursive: true });
+  await writeFolderJsonFile(
+    folder,
+    development.data.name + ".json",
+    development,
+  );
 }
 
 /**
  *
  * @param development
- * @param state
  * @param file
  */
-async function addFileToPack(
-  development: AncaDevelopment,
-  state: AncaDevelopmentState,
-  file: string,
-) {
-  const contents = await readFolderFile(development.fullPath, file);
-  if (contents != null) {
-    state.files[file] = contents;
-  }
-  return contents;
-}
-
-/**
- *
- * @param development
- * @param state
- * @param file
- */
-async function addJsonFileToPack(
-  development: AncaDevelopment,
-  state: AncaDevelopmentState,
-  file: string,
-) {
-  const contents = await readFolderJsonFile(development.fullPath, file);
-  if (contents != null) {
-    state.jsonFiles[file] = contents;
-  }
-  return contents;
-}
-
-/**
- *
- * @param development
- * @param state
- */
-async function addCommonToDevelopmentPack(
-  development: AncaDevelopment,
-  state: AncaDevelopmentState,
-) {
-  const gitIgnoreContent = await addFileToPack(
-    development,
-    state,
-    ".gitignore",
-  );
-  const licenseContent = await addFileToPack(development, state, "LICENSE");
-  const readmeContent = await addFileToPack(development, state, "README.md");
-
-  if (gitIgnoreContent == null) {
-    state.issues.push("gitIgnoreCreate");
-  }
-
-  if (licenseContent == null) {
-    state.issues.push("licenseCreate");
-  }
-
-  if (readmeContent == null) {
-    state.issues.push("readmeCreate");
-  }
-}
-
-/**
- *
- * @param development
- * @param state
- */
-async function addDevcontainersToDevelopmentPack(
-  development: AncaDevelopment,
-  state: AncaDevelopmentState,
-) {
-  const devcontainerJsonContent = await addJsonFileToPack(
-    development,
-    state,
-    ".devcontainer/devcontainer.json",
-  );
-  const dockerfileContent = await addFileToPack(
-    development,
-    state,
-    ".devcontainer/Dockerfile",
-  );
-
-  if (
-    devcontainerJsonContent == null ||
-    !checkDevcontainerJson(state, devcontainerJsonContent)
-  ) {
-    state.issues.push("devcontainerJsonSetToDefault");
-  }
-
-  if (
-    dockerfileContent == null ||
-    !checkDevcontainerDockerfile(state, dockerfileContent)
-  ) {
-    state.issues.push("devcontainerDockerfileSetToDefault");
-  }
-}
-
-/**
- *
- * @param development
- * @param state
- */
-async function addGithubActionsToDevelopmentPack(
-  development: AncaDevelopment,
-  state: AncaDevelopmentState,
-) {
-  if (state.config.stack !== "nodejs") {
+async function addFileToPack(development: AncaDevelopment, file: string) {
+  if (development.state == null) {
     return;
   }
-  const releaseContent = await addFileToPack(
-    development,
-    state,
-    ".github/workflows/release.yml",
-  );
-  const testContent = await addFileToPack(
-    development,
-    state,
-    ".github/workflows/test.yml",
-  );
+  development.state.files[file] =
+    (await readFolderFile(development.fullPath, file)) || "";
+}
 
-  if (
-    releaseContent == null ||
-    !checkGithubActionsRelease(state, releaseContent)
-  ) {
-    state.issues.push("githubActionsReleaseSetToDefault");
+/**
+ *
+ * @param development
+ * @param file
+ */
+async function addJsonFileToPack(development: AncaDevelopment, file: string) {
+  if (development.state == null) {
+    return;
+  }
+  development.state.jsonFiles[file] =
+    (await readFolderJsonFile(development.fullPath, file)) || {};
+}
+
+/**
+ *
+ * @param development
+ */
+async function addCommonToDevelopmentPack(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
   }
 
-  if (testContent == null || !checkGithubActionsTest(testContent)) {
-    state.issues.push("githubActionsTestSetToDefault");
+  await addFileToPack(development, ".gitignore");
+  await addFileToPack(development, "LICENSE");
+  await addFileToPack(development, "README.md");
+
+  if (!(await checkGitIgnore(development))) {
+    development.state.issues.push("gitIgnoreSetToDefault");
+  }
+
+  if (!(await checkLicenseMd(development))) {
+    development.state.issues.push("licenseSetToDefault");
+  }
+
+  if (!(await checkReadmeMd(development))) {
+    development.state.issues.push("readmeSetToDefault");
+  }
+}
+
+/**
+ *
+ * @param development
+ */
+async function addDevcontainersToDevelopmentPack(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
+  }
+
+  await addJsonFileToPack(development, ".devcontainer/devcontainer.json");
+  await addFileToPack(development, ".devcontainer/Dockerfile");
+
+  if (!(await checkDevcontainerJson(development))) {
+    development.state.issues.push("devcontainerJsonSetToDefault");
+  }
+
+  if (!(await checkDevcontainerDockerfile(development))) {
+    development.state.issues.push("devcontainerDockerfileSetToDefault");
+  }
+}
+
+/**
+ *
+ * @param development
+ */
+async function addGithubActionsToDevelopmentPack(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
+  }
+  if (development.state.config.stack !== "nodejs") {
+    return;
+  }
+
+  await addFileToPack(development, ".github/workflows/release.yml");
+  await addFileToPack(development, ".github/workflows/test.yml");
+
+  if (!(await checkGithubActionsRelease(development))) {
+    development.state.issues.push("githubActionsReleaseSetToDefault");
+  }
+
+  if (!(await checkGithubActionsTest(development))) {
+    development.state.issues.push("githubActionsTestSetToDefault");
   }
 
   if (!(await checkGithubActionsOtherFiles(development))) {
-    state.actions.push("githubActionsOtherFilesRemove");
+    development.state.actions.push("githubActionsOtherFilesRemove");
   }
 }
 
 /**
  *
  * @param development
- * @param state
  */
-async function addNodeJsToDevelopmentPack(
-  development: AncaDevelopment,
-  state: AncaDevelopmentState,
-) {
-  const packageJsonContent: NodejsPackageJson | null = await addJsonFileToPack(
-    development,
-    state,
-    "package.json",
-  );
-  const eslintContent = await addFileToPack(
-    development,
-    state,
-    "eslint.config.js",
-  );
-  const prettierRcContent = await addFileToPack(
-    development,
-    state,
-    ".prettierrc",
-  );
-  const prettierIgnoreContent = await addFileToPack(
-    development,
-    state,
-    ".prettierignore",
-  );
-
-  if (
-    packageJsonContent == null ||
-    !checkNodejsPackageJson(state, packageJsonContent)
-  ) {
-    state.issues.push("nodejsPackageJsonFix");
-  }
-  state.actions.push("nodejsPackageJsonCheckUpdates");
-
-  if (eslintContent == null) {
-    state.issues.push("nodejsEslintCreate");
+async function addNodeJsToDevelopmentPack(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
   }
 
-  if (prettierRcContent == null) {
-    state.issues.push("nodejsPrettierRcCreate");
+  await addJsonFileToPack(development, "package.json");
+  await addFileToPack(development, "eslint.config.js");
+  await addFileToPack(development, ".prettierrc");
+  await addFileToPack(development, ".prettierignore");
+
+  if (!(await checkNodejsPackageJson(development))) {
+    development.state.issues.push("nodejsPackageJsonFix");
+  }
+  development.state.actions.push("nodejsPackageJsonCheckUpdates");
+
+  if (!(await checkNodejsEslintConfigJs(development))) {
+    development.state.issues.push("nodejsEslintSetToDefault");
   }
 
-  if (prettierIgnoreContent == null) {
-    state.issues.push("nodejsPrettierIgnoreCreate");
+  if (!(await checkNodejsPrettierRc(development))) {
+    development.state.issues.push("nodejsPrettierRcSetToDefault");
   }
-}
 
-/**
- * Creates anca.json file
- * @param development
- * @param config
- */
-export async function createAncaJson(
-  development: AncaDevelopment,
-  config: AncaConfig,
-) {
-  await writeFolderFile(
-    development.fullPath,
-    "anca.json",
-    JSON.stringify(config),
-  );
+  if (!(await checkNodejsPrettierIgnore(development))) {
+    development.state.issues.push("nodejsPrettierIgnoreSetToDefault");
+  }
 }
