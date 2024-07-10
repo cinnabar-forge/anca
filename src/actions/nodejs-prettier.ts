@@ -8,9 +8,19 @@ const IGNORE = `# General
 **/.svn
 **/.hg
 
+# Binaries
+/bin
+
+# Devcontainer
+.devcontainer
+
 # Node.js
 **/node_modules
 package-lock.json
+
+# Distributions
+/build
+/dist
 
 # Cinnabar Meta
 **/cinnabar.js
@@ -29,7 +39,6 @@ export async function checkNodejsPrettierRc(development: AncaDevelopment) {
     return;
   }
   const contents = development.state.files[RC_FILE_PATH];
-  console.log("checkNodejsPrettierRc", contents);
   if (contents == null) {
     return false;
   }

@@ -1,6 +1,25 @@
 import { AncaDevelopment } from "../schema.js";
 import { writeFolderFile } from "../utils.js";
 
+const ESLINT = `import cinnabarPlugin from "@cinnabar-forge/eslint-plugin";
+
+const files = ["src/**/*.ts"];
+const ignores = ["bin/**/*", "build/**/*", "dist/**/*"];
+
+export default [
+  ...cinnabarPlugin.default.map((config) => ({
+    ...config,
+    files,
+  })),
+  {
+    files,
+    rules: {},
+  },
+  {
+    ignores,
+  },
+];`;
+
 const FILE_PATH = "eslint.config.js";
 
 /**
@@ -15,8 +34,8 @@ export async function checkNodejsEslintConfigJs(development: AncaDevelopment) {
   if (contents == null) {
     return false;
   }
-  contents;
-  return true;
+
+  return contents === ESLINT;
 }
 
 /**
@@ -24,12 +43,8 @@ export async function checkNodejsEslintConfigJs(development: AncaDevelopment) {
  * @param development
  */
 export async function fixNodejsEslintConfigJs(development: AncaDevelopment) {
-  if (development.state == null || development.state.files[FILE_PATH] == null) {
+  if (development.state == null) {
     return;
   }
-  await writeFolderFile(
-    development.fullPath,
-    FILE_PATH,
-    development.state.files[FILE_PATH],
-  );
+  await writeFolderFile(development.fullPath, FILE_PATH, ESLINT);
 }

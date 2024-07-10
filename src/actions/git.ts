@@ -20,6 +20,9 @@ pids
 *.pid
 *.seed
 *.pid.lock
+
+# Temp folder
+tmp
 `;
 
 const IGNORE_NODEJS = `# Built sources

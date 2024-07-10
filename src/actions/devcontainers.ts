@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 import { AncaDevelopment } from "../schema.js";
-import { isSubset, writeFolderJsonFile } from "../utils.js";
+import { stringifyJson, writeFolderJsonFile } from "../utils.js";
 
 const JSON_FALLBACK = {
   build: {
@@ -70,13 +70,15 @@ export async function checkDevcontainerJson(development: AncaDevelopment) {
   if (development.state == null) {
     return;
   }
-  const contents = development.state.jsonFiles[DEVCONTAINER_JSON_FILE_PATH];
+  const contents = development.state.files[DEVCONTAINER_JSON_FILE_PATH];
   if (contents == null) {
     return false;
   }
-  return isSubset(
-    contents,
-    development.state.config.stack === "nodejs" ? JSON_NODEJS : JSON_FALLBACK,
+  return (
+    contents ===
+    stringifyJson(
+      development.state.config.stack === "nodejs" ? JSON_NODEJS : JSON_FALLBACK,
+    )
   );
 }
 

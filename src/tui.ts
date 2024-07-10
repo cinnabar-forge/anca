@@ -18,11 +18,18 @@ import {
   fixNodejsPackageJson,
   writeNodejsPackageJson,
 } from "./actions/nodejs.js";
+import { fixNodejsEsbuildJs } from "./actions/nodejs-esbuild.js";
 import { fixNodejsEslintConfigJs } from "./actions/nodejs-eslint.js";
 import {
   fixNodejsPrettierIgnore,
   fixNodejsPrettierRc,
 } from "./actions/nodejs-prettier.js";
+import {
+  fixNodejsSeaBuildJs,
+  fixNodejsSeaConfigJson,
+} from "./actions/nodejs-sea.js";
+import { fixNodejsTsconfigJson } from "./actions/nodejs-tsconfig.js";
+import { fixNodejsTsupConfigJs } from "./actions/nodejs-tsup.js";
 import { fixReadmeMd } from "./actions/readme.js";
 import cinnabarData from "./cinnabar.js";
 import { getInstance } from "./config.js";
@@ -32,7 +39,7 @@ import {
   refreshDevelopmentState,
   syncDevelopment,
 } from "./developments.js";
-import { AncaDevelopment } from "./schema.js";
+import { AncaAction, AncaDevelopment } from "./schema.js";
 import { checkExistence } from "./utils.js";
 
 interface ClivoAction {
@@ -67,7 +74,7 @@ async function showDevelopmentActions(
 
   const state = development.state;
 
-  const mappings: Record<string, ClivoAction> = {
+  const mappings: Record<AncaAction, ClivoAction> = {
     ancaJsonFix: {
       action: async () => {
         await fixAncaConfig(development);
@@ -131,6 +138,13 @@ async function showDevelopmentActions(
       },
       label: "[LICENSE] Set to default",
     },
+    nodejsEsbuildSetToDefault: {
+      action: async () => {
+        await fixNodejsEsbuildJs(development);
+        await backHere();
+      },
+      label: "[esbuild.js] Set to default",
+    },
     nodejsEslintSetToDefault: {
       action: async () => {
         await fixNodejsEslintConfigJs(development);
@@ -168,6 +182,34 @@ async function showDevelopmentActions(
       },
       label: "[.prettierrc] Set to default",
     },
+    nodejsSeaBuildJsSetToDefault: {
+      action: async () => {
+        await fixNodejsSeaBuildJs(development);
+        await backHere();
+      },
+      label: "[sea.build.js] Set to default",
+    },
+    nodejsSeaConfigJsonSetToDefault: {
+      action: async () => {
+        await fixNodejsSeaConfigJson(development);
+        await backHere();
+      },
+      label: "[sea.config.json] Set to default",
+    },
+    nodejsTsconfigSetToDefault: {
+      action: async () => {
+        await fixNodejsTsconfigJson(development);
+        await backHere();
+      },
+      label: "[tsconfig.json] Set to default",
+    },
+    nodejsTsupConfigJsSetToDefault: {
+      action: async () => {
+        await fixNodejsTsupConfigJs(development);
+        await backHere();
+      },
+      label: "[tsup.config.js] Set to default",
+    },
     readmeSetToDefault: {
       action: async () => {
         await fixReadmeMd(development);
@@ -177,7 +219,7 @@ async function showDevelopmentActions(
     },
   };
 
-  const map = (code: string, isIssue: boolean) => {
+  const map = (code: AncaAction, isIssue: boolean) => {
     const mapping = mappings[code];
     if (mapping) {
       menu.push({

@@ -15,11 +15,33 @@ export interface AncaDevelopmentWorkfolderData {
   name: string;
 }
 
+export type AncaAction =
+  | "ancaJsonFix"
+  | "devcontainerDockerfileSetToDefault"
+  | "devcontainerJsonSetToDefault"
+  | "gitClone"
+  | "gitIgnoreSetToDefault"
+  | "githubActionsOtherFilesRemove"
+  | "githubActionsReleaseSetToDefault"
+  | "githubActionsTestSetToDefault"
+  | "licenseSetToDefault"
+  | "nodejsEsbuildSetToDefault"
+  | "nodejsEslintSetToDefault"
+  | "nodejsPackageJsonCheckUpdates"
+  | "nodejsPackageJsonFix"
+  | "nodejsPrettierIgnoreSetToDefault"
+  | "nodejsPrettierRcSetToDefault"
+  | "nodejsSeaBuildJsSetToDefault"
+  | "nodejsSeaConfigJsonSetToDefault"
+  | "nodejsTsconfigSetToDefault"
+  | "nodejsTsupConfigJsSetToDefault"
+  | "readmeSetToDefault";
+
 export interface AncaDevelopmentState {
-  actions: string[];
+  actions: AncaAction[];
   config: AncaConfig;
   files: Record<string, null | string | undefined>;
-  issues: string[];
+  issues: AncaAction[];
   jsonFiles: Record<string, null | object | undefined>;
 }
 
@@ -54,25 +76,23 @@ export enum AncaConfigType {
 }
 
 export interface AncaConfig {
-  deployment?: DeploymentConfig;
-  development?: DevelopmentConfig;
+  deployment?: AncaDeploymentConfig;
+  development?: AncaDevelopmentConfig;
   stack?: AncaConfigStack;
   type?: AncaConfigType;
 }
 
-export interface DeploymentConfig {
+export interface AncaDeploymentConfig {
   preparation: string[];
   start: string[];
 }
 
-export interface DevelopmentConfig {
-  cinnabarMeta?: boolean;
-  gitIgnore?: string; // Consider replacing 'string' with a specific type if there are a limited set of possible values.
-  license?: boolean;
-  nodejs?: string; // Consider replacing 'string' with a specific type if there are a limited set of possible values.
-  nodejsEslint?: string; // Consider replacing 'string' with a specific type if there are a limited set of possible values.
-  nodejsPrettier?: string; // Consider replacing 'string' with a specific type if there are a limited set of possible values.
-  readme?: string; // Consider replacing 'string' with a specific type if there are a limited set of possible values.
+export interface AncaNodejsSeaModules {
+  sqlite3?: boolean;
+}
+
+export interface AncaDevelopmentConfig {
+  nodejsSeaModules?: AncaNodejsSeaModules;
 }
 
 export const ANCA_WORKFOLDER_SCHEMA = {
@@ -154,18 +174,18 @@ export const ANCA_CONFIG_SCHEMA = {
     development: {
       additionalProperties: false,
       properties: {
-        cinnabarMeta: { type: "boolean" },
-        gitIgnore: { type: "string" },
-        license: { type: "boolean" },
-        nodejs: { type: "string" },
-        nodejsEslint: { type: "string" },
-        nodejsPrettier: { type: "string" },
-        readme: { type: "string" },
+        nodejsSeaModules: {
+          additionalProperties: false,
+          properties: {
+            sqlite3: { type: "boolean" },
+          },
+          type: "object",
+        },
       },
       type: "object",
     },
     stack: {
-      enum: ["nodejs", "python", "unsupported"],
+      enum: ["nodejs", "unsupported"],
       type: "string",
     },
     type: {

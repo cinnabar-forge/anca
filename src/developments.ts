@@ -15,11 +15,18 @@ import {
 } from "./actions/github-actions.js";
 import { checkLicenseMd } from "./actions/license.js";
 import { checkNodejsPackageJson } from "./actions/nodejs.js";
+import { checkNodejsEsbuildJs } from "./actions/nodejs-esbuild.js";
 import { checkNodejsEslintConfigJs } from "./actions/nodejs-eslint.js";
 import {
   checkNodejsPrettierIgnore,
   checkNodejsPrettierRc,
 } from "./actions/nodejs-prettier.js";
+import {
+  checkNodejsSeaBuildJs,
+  checkNodejsSeaConfigJson,
+} from "./actions/nodejs-sea.js";
+import { checkNodejsTsconfigJson } from "./actions/nodejs-tsconfig.js";
+import { checkNodejsTsupConfigJs } from "./actions/nodejs-tsup.js";
 import { checkReadmeMd } from "./actions/readme.js";
 import { checkForGit, getGit } from "./git.js";
 import { AncaDevelopment, AncaDevelopmentState } from "./schema.js";
@@ -194,6 +201,8 @@ async function addJsonFileToPack(development: AncaDevelopment, file: string) {
   if (development.state == null) {
     return;
   }
+  development.state.files[file] =
+    (await readFolderFile(development.fullPath, file)) || "";
   development.state.jsonFiles[file] =
     (await readFolderJsonFile(development.fullPath, file)) || {};
 }
@@ -281,26 +290,68 @@ async function addNodeJsToDevelopmentPack(development: AncaDevelopment) {
   if (development.state == null) {
     return;
   }
-
-  await addJsonFileToPack(development, "package.json");
-  await addFileToPack(development, "eslint.config.js");
-  await addFileToPack(development, ".prettierrc");
-  await addFileToPack(development, ".prettierignore");
-
-  if (!(await checkNodejsPackageJson(development))) {
-    development.state.issues.push("nodejsPackageJsonFix");
+  if (development.state.config.stack !== "nodejs") {
+    return;
   }
-  development.state.actions.push("nodejsPackageJsonCheckUpdates");
 
-  if (!(await checkNodejsEslintConfigJs(development))) {
-    development.state.issues.push("nodejsEslintSetToDefault");
+  await addFileToPack(development, ".prettierignore");
+  await addFileToPack(development, ".prettierrc");
+  await addFileToPack(
+    development,
+    development.state.config.type === "library"
+      ? "tsup.config.js"
+      : "esbuild.js",
+  );
+  await addFileToPack(development, "eslint.config.js");
+  await addJsonFileToPack(development, "package.json");
+  if (development.state.config.type !== "library") {
+    await addFileToPack(development, "sea.build.js");
+    await addJsonFileToPack(development, "sea.config.json");
+  }
+  await addJsonFileToPack(development, "tsconfig.json");
+
+  if (!(await checkNodejsPrettierIgnore(development))) {
+    development.state.issues.push("nodejsPrettierIgnoreSetToDefault");
   }
 
   if (!(await checkNodejsPrettierRc(development))) {
     development.state.issues.push("nodejsPrettierRcSetToDefault");
   }
 
-  if (!(await checkNodejsPrettierIgnore(development))) {
-    development.state.issues.push("nodejsPrettierIgnoreSetToDefault");
+  if (
+    development.state.config.type !== "library" &&
+    !(await checkNodejsEsbuildJs(development))
+  ) {
+    development.state.issues.push("nodejsEsbuildSetToDefault");
+  }
+
+  if (!(await checkNodejsEslintConfigJs(development))) {
+    development.state.issues.push("nodejsEslintSetToDefault");
+  }
+
+  if (!(await checkNodejsPackageJson(development))) {
+    development.state.issues.push("nodejsPackageJsonFix");
+  }
+  development.state.actions.push("nodejsPackageJsonCheckUpdates");
+
+  if (development.state.config.type !== "library") {
+    if (!(await checkNodejsSeaBuildJs(development))) {
+      development.state.issues.push("nodejsSeaBuildJsSetToDefault");
+    }
+
+    if (!(await checkNodejsSeaConfigJson(development))) {
+      development.state.issues.push("nodejsSeaConfigJsonSetToDefault");
+    }
+  }
+
+  if (!(await checkNodejsTsconfigJson(development))) {
+    development.state.issues.push("nodejsTsconfigSetToDefault");
+  }
+
+  if (
+    development.state.config.type === "library" &&
+    !(await checkNodejsTsupConfigJs(development))
+  ) {
+    development.state.issues.push("nodejsTsupConfigJsSetToDefault");
   }
 }

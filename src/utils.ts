@@ -56,6 +56,7 @@ export async function writeFolderFile(
   filePath: string,
   data: string,
 ): Promise<void> {
+  console.log("writeFolderFile", folder, filePath, data);
   try {
     await fs.promises.writeFile(
       path.resolve(folder, filePath),
@@ -72,6 +73,14 @@ export async function writeFolderFile(
 }
 
 /**
+ * Stringifies JSON data with 2 spaces indentation
+ * @param data
+ */
+export function stringifyJson(data: object) {
+  return JSON.stringify(data, null, 2) + "\n";
+}
+
+/**
  * Writes data to a JSON file within a specified folder. If the file does not exist, it will be created.
  * @param folder
  * @param filePath
@@ -85,7 +94,7 @@ export async function writeFolderJsonFile(
   try {
     await fs.promises.writeFile(
       path.resolve(folder, filePath),
-      JSON.stringify(data, null, 2) + "\n",
+      stringifyJson(data),
       "utf-8",
     );
   } catch (error) {
