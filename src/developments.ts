@@ -3,6 +3,7 @@ import path from "path";
 import pc from "picocolors";
 
 import { checkAnca } from "./actions/anca.js";
+import { checkContributingMd } from "./actions/contributing.js";
 import {
   checkDevcontainerDockerfile,
   checkDevcontainerJson,
@@ -217,11 +218,16 @@ async function addCommonToDevelopmentPack(development: AncaDevelopment) {
   }
 
   await addFileToPack(development, ".gitignore");
+  await addFileToPack(development, "CONTRIBUTING.md");
   await addFileToPack(development, "LICENSE");
   await addFileToPack(development, "README.md");
 
   if (!(await checkGitIgnore(development))) {
     development.state.issues.push("gitIgnoreSetToDefault");
+  }
+
+  if (!(await checkContributingMd(development))) {
+    development.state.issues.push("contributingSetToDefault");
   }
 
   if (!(await checkLicenseMd(development))) {

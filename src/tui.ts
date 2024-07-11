@@ -2,6 +2,7 @@ import { promptMenu } from "clivo";
 import pc from "picocolors";
 
 import { fixAncaConfig } from "./actions/anca.js";
+import { fixContributingMd } from "./actions/contributing.js";
 import {
   fixDevcontainerDockerfile,
   fixDevcontainerJson,
@@ -81,6 +82,13 @@ async function showDevelopmentActions(
         await backHere();
       },
       label: "[anca.json] Fix",
+    },
+    contributingSetToDefault: {
+      action: async () => {
+        await fixContributingMd(development);
+        await backHere();
+      },
+      label: "[CONTRIBUTING.md] Set to default",
     },
     devcontainerDockerfileSetToDefault: {
       action: async () => {

@@ -17,6 +17,7 @@ export interface AncaDevelopmentWorkfolderData {
 
 export type AncaAction =
   | "ancaJsonFix"
+  | "contributingSetToDefault"
   | "devcontainerDockerfileSetToDefault"
   | "devcontainerJsonSetToDefault"
   | "gitClone"
