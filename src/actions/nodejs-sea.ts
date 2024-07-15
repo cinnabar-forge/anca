@@ -58,12 +58,15 @@ const buildCrossPlatform = function () {
 
   const nodeBinaryPath = process.execPath;
   const baseName = "app";
-  const destinationPath = path.join(BUILD_DIR, isWindows ? \`\${baseName}.exe\` : baseName);
+  const destinationPath = path.join(
+    BUILD_DIR,
+    isWindows ? \`\${baseName}.exe\` : baseName,
+  );
   fs.copyFileSync(nodeBinaryPath, destinationPath);
 
   const postjectCommandBase = \`npx postject \${destinationPath} NODE_SEA_BLOB \${path.join(BUILD_DIR, "prep.blob")} --sentinel-fuse ${Buffer.from("Tk9ERV9TRUFfRlVTRV9mY2U2ODBhYjJjYzQ2N2I2ZTA3MmI4YjVkZjE5OTZiMg==", "base64").toString("ascii")}\`;
   const postjectCommand = isWindows
-    ? postjectCommandBase.replace(/\\//g, "\\")
+    ? postjectCommandBase.replace(/\\//g, "\\\\")
     : postjectCommandBase;
   execSync(postjectCommand, { stdio: "inherit" });
 };

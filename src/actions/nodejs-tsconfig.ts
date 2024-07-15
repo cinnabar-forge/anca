@@ -1,20 +1,21 @@
 import { AncaDevelopment } from "../schema.js";
-import { stringifyJson, writeFolderJsonFile } from "../utils.js";
+import { writeFolderFile } from "../utils.js";
 
-const TSCONFIG = {
-  compilerOptions: {
-    esModuleInterop: true,
-    forceConsistentCasingInFileNames: true,
-    module: "es2022",
-    moduleResolution: "node",
-    outDir: "./build/dev",
-    rootDir: "./",
-    skipLibCheck: true,
-    strict: true,
-    target: "es2022",
+const TSCONFIG = `{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "es2022",
+    "moduleResolution": "node",
+    "outDir": "./build/dev",
+    "rootDir": "./",
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "es2022"
   },
-  include: ["./src/**/*", "./test/**/*"],
-};
+  "include": ["./src/**/*", "./test/**/*"]
+}
+`;
 
 const FILE_PATH = "tsconfig.json";
 
@@ -31,7 +32,7 @@ export async function checkNodejsTsconfigJson(development: AncaDevelopment) {
     return false;
   }
 
-  return contents === stringifyJson(TSCONFIG);
+  return contents === TSCONFIG;
 }
 
 /**
@@ -42,5 +43,5 @@ export async function fixNodejsTsconfigJson(development: AncaDevelopment) {
   if (development.state == null) {
     return;
   }
-  await writeFolderJsonFile(development.fullPath, FILE_PATH, TSCONFIG);
+  await writeFolderFile(development.fullPath, FILE_PATH, TSCONFIG);
 }
