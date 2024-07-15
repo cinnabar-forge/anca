@@ -30,6 +30,7 @@ import { checkNodejsTsconfigJson } from "./actions/nodejs-tsconfig.js";
 import { checkNodejsTsupConfigJs } from "./actions/nodejs-tsup.js";
 import { checkReadmeMd } from "./actions/readme.js";
 import { checkForGit, getGit } from "./git.js";
+import { getDevelopmentMeta } from "./meta.js";
 import { AncaDevelopment, AncaDevelopmentState } from "./schema.js";
 import {
   checkExistence,
@@ -161,14 +162,21 @@ export async function refreshDevelopmentState(
     return;
   }
 
+  await addMetaToDevelopmentPack(development);
   await addCommonToDevelopmentPack(development);
-
   await addDevcontainersToDevelopmentPack(development);
-
   await addGithubActionsToDevelopmentPack(development);
-
   if (state.config.stack === "nodejs") {
     await addNodeJsToDevelopmentPack(development);
+  }
+
+  state.meta = getDevelopmentMeta(development);
+
+  await checkCommonToDevelopmentPack(development);
+  await checkDevcontainersToDevelopmentPack(development);
+  await checkGithubActionsToDevelopmentPack(development);
+  if (state.config.stack === "nodejs") {
+    await checkNodeJsToDevelopmentPack(development);
   }
 
   const folder = path.join(".", "data", "tmp", development.data.folder);
@@ -212,6 +220,19 @@ async function addJsonFileToPack(development: AncaDevelopment, file: string) {
  *
  * @param development
  */
+async function addMetaToDevelopmentPack(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
+  }
+
+  await addFileToPack(development, "cinnabar.json");
+  await addFileToPack(development, "version.json");
+}
+
+/**
+ *
+ * @param development
+ */
 async function addCommonToDevelopmentPack(development: AncaDevelopment) {
   if (development.state == null) {
     return;
@@ -221,6 +242,16 @@ async function addCommonToDevelopmentPack(development: AncaDevelopment) {
   await addFileToPack(development, "CONTRIBUTING.md");
   await addFileToPack(development, "LICENSE");
   await addFileToPack(development, "README.md");
+}
+
+/**
+ *
+ * @param development
+ */
+async function checkCommonToDevelopmentPack(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
+  }
 
   if (!(await checkGitIgnore(development))) {
     development.state.issues.push("gitIgnoreSetToDefault");
@@ -250,6 +281,18 @@ async function addDevcontainersToDevelopmentPack(development: AncaDevelopment) {
 
   await addJsonFileToPack(development, ".devcontainer/devcontainer.json");
   await addFileToPack(development, ".devcontainer/Dockerfile");
+}
+
+/**
+ *
+ * @param development
+ */
+async function checkDevcontainersToDevelopmentPack(
+  development: AncaDevelopment,
+) {
+  if (development.state == null) {
+    return;
+  }
 
   if (!(await checkDevcontainerJson(development))) {
     development.state.issues.push("devcontainerJsonSetToDefault");
@@ -274,6 +317,21 @@ async function addGithubActionsToDevelopmentPack(development: AncaDevelopment) {
 
   await addFileToPack(development, ".github/workflows/release.yml");
   await addFileToPack(development, ".github/workflows/test.yml");
+}
+
+/**
+ *
+ * @param development
+ */
+async function checkGithubActionsToDevelopmentPack(
+  development: AncaDevelopment,
+) {
+  if (development.state == null) {
+    return;
+  }
+  if (development.state.config.stack !== "nodejs") {
+    return;
+  }
 
   if (!(await checkGithubActionsRelease(development))) {
     development.state.issues.push("githubActionsReleaseSetToDefault");
@@ -315,6 +373,19 @@ async function addNodeJsToDevelopmentPack(development: AncaDevelopment) {
     await addJsonFileToPack(development, "sea.config.json");
   }
   await addJsonFileToPack(development, "tsconfig.json");
+}
+
+/**
+ *
+ * @param development
+ */
+async function checkNodeJsToDevelopmentPack(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
+  }
+  if (development.state.config.stack !== "nodejs") {
+    return;
+  }
 
   if (!(await checkNodejsPrettierIgnore(development))) {
     development.state.issues.push("nodejsPrettierIgnoreSetToDefault");

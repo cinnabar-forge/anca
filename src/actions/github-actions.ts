@@ -62,6 +62,7 @@ jobs:
           NODE_AUTH_TOKEN: \${{secrets.npm_token}}
         name: "Publish to registry"
   build-executables:
+    permissions: write-all
     runs-on: \${{ matrix.os }}
     strategy:
       matrix:

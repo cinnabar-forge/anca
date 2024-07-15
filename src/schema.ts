@@ -38,12 +38,19 @@ export type AncaAction =
   | "nodejsTsupConfigJsSetToDefault"
   | "readmeSetToDefault";
 
+export interface AncaMeta {
+  description?: string;
+  name?: string;
+  version?: { isPrerelease?: boolean; isUnstable?: boolean; text: string };
+}
+
 export interface AncaDevelopmentState {
   actions: AncaAction[];
   config: AncaConfig;
   files: Record<string, null | string | undefined>;
   issues: AncaAction[];
   jsonFiles: Record<string, null | object | undefined>;
+  meta?: AncaMeta;
 }
 
 export interface AncaDevelopment {
@@ -76,9 +83,26 @@ export enum AncaConfigType {
   project = "project",
 }
 
+export interface AncaConfigAuthor {
+  email?: string;
+  github?: string;
+  name: string;
+  text?: string;
+  type?: "contributor" | "maintainer" | "special";
+  url?: string;
+}
+
+export interface AncaConfigOrganization {
+  name: string;
+  text?: string;
+  url?: string;
+}
+
 export interface AncaConfig {
+  authors?: AncaConfigAuthor[];
   deployment?: AncaDeploymentConfig;
   development?: AncaDevelopmentConfig;
+  organizations?: AncaConfigOrganization[];
   stack?: AncaConfigStack;
   type?: AncaConfigType;
 }
@@ -92,8 +116,23 @@ export interface AncaNodejsSeaModules {
   sqlite3?: boolean;
 }
 
+export interface AncaReadmeUsageSection {
+  code?: string[];
+  description?: string;
+  language?: string;
+  name?: string;
+  sections?: AncaReadmeUsageSection[];
+}
+
+export interface AncaReadme {
+  description?: string[];
+  features?: string[];
+  usage?: AncaReadmeUsageSection[];
+}
+
 export interface AncaDevelopmentConfig {
   nodejsSeaModules?: AncaNodejsSeaModules;
+  readme?: AncaReadme;
 }
 
 export const ANCA_WORKFOLDER_SCHEMA = {
@@ -152,8 +191,50 @@ export const ANCA_WORKFOLDER_SCHEMA = {
 
 export const ANCA_CONFIG_SCHEMA = {
   $schema: "http://json-schema.org/draft-07/schema#",
-  additionalProperties: false,
+  definitions: {
+    author: {
+      properties: {
+        email: { type: "string" },
+        github: { type: "string" },
+        name: { type: "string" },
+        text: { type: "string" },
+        type: {
+          enum: ["contributor", "maintainer", "special"],
+          type: "string",
+        },
+        url: { type: "string" },
+      },
+      required: ["name"],
+      type: "object",
+    },
+    usageItem: {
+      properties: {
+        code: {
+          items: {
+            type: "string",
+          },
+          type: "array",
+        },
+        description: { type: "string" },
+        language: { type: "string" },
+        name: { type: "string" },
+        sections: {
+          items: {
+            $ref: "#/definitions/usageItem",
+          },
+          type: "array",
+        },
+      },
+      type: "object",
+    },
+  },
   properties: {
+    authors: {
+      items: {
+        $ref: "#/definitions/author",
+      },
+      type: "array",
+    },
     deployment: {
       properties: {
         preparation: {
@@ -169,16 +250,36 @@ export const ANCA_CONFIG_SCHEMA = {
           type: "array",
         },
       },
-      required: ["preparation", "start"],
       type: "object",
     },
     development: {
-      additionalProperties: false,
       properties: {
         nodejsSeaModules: {
-          additionalProperties: false,
           properties: {
             sqlite3: { type: "boolean" },
+          },
+          type: "object",
+        },
+        readme: {
+          properties: {
+            description: {
+              items: {
+                type: "string",
+              },
+              type: "array",
+            },
+            features: {
+              items: {
+                type: "string",
+              },
+              type: "array",
+            },
+            usage: {
+              items: {
+                $ref: "#/definitions/usageItem",
+              },
+              type: "array",
+            },
           },
           type: "object",
         },

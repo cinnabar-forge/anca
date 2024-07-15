@@ -7,7 +7,6 @@ import path from "path";
 
 const getNodeModules = () => {
   const nodeModulesPath = path.resolve(import.meta.dirname, "node_modules");
-  console.log(nodeModulesPath);
   if (!fs.existsSync(nodeModulesPath)) {
     return [];
   }

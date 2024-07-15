@@ -56,7 +56,6 @@ export async function writeFolderFile(
   filePath: string,
   data: string,
 ): Promise<void> {
-  console.log("writeFolderFile", folder, filePath, data);
   try {
     await fs.promises.writeFile(
       path.resolve(folder, filePath),
