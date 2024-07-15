@@ -298,3 +298,22 @@ export const ANCA_CONFIG_SCHEMA = {
   required: ["stack", "type"],
   type: "object",
 };
+
+/**
+ * Format the author line for the Markdown file
+ * @param author
+ */
+export function formatAuthorLine(author: AncaConfigAuthor): string {
+  let authorLine = `- ${author.name}`;
+  if (author.github) {
+    authorLine += ` ([@${author.github}](https://github.com/${author.github}))`;
+  } else if (author.url) {
+    authorLine += ` — <${author.url}>`;
+  } else if (author.email) {
+    authorLine += ` — <${author.email}>`;
+  }
+  if (author.text) {
+    authorLine += ` — ${author.text}`;
+  }
+  return authorLine;
+}

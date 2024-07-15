@@ -1,4 +1,8 @@
-import { AncaDevelopment } from "../schema.js";
+import {
+  AncaConfigAuthor,
+  AncaDevelopment,
+  formatAuthorLine,
+} from "../schema.js";
 import { writeFolderFile } from "../utils.js";
 
 const COMMON_PART = `# Contributing
@@ -28,10 +32,62 @@ function getContents(development: AncaDevelopment) {
   if (development.state == null) {
     return "";
   }
+
+  const lines = [COMMON_PART];
+
   if (development.state.config.stack === "nodejs") {
-    return `${COMMON_PART}\n\n${NODE_JS_PART}\n`;
+    lines.push(NODE_JS_PART);
   }
-  return COMMON_PART + "\n";
+
+  if (development.state.config.authors) {
+    lines.push(`## Authors`);
+
+    // Group authors by type
+    const groupedAuthors: Record<string, AncaConfigAuthor[]> = {
+      contributors: [],
+      maintainers: [],
+      specials: [],
+    };
+
+    development.state.config.authors.forEach((author) => {
+      if (author.type === "maintainer") {
+        groupedAuthors.maintainers.push(author);
+      } else if (author.type === "contributor") {
+        groupedAuthors.contributors.push(author);
+      } else {
+        groupedAuthors.specials.push(author);
+      }
+    });
+
+    // Sort each group alphabetically by name
+    Object.keys(groupedAuthors).forEach((key) => {
+      groupedAuthors[key].sort((a, b) => a.name.localeCompare(b.name));
+    });
+
+    // Generate sections for each group
+    if (groupedAuthors.maintainers.length > 0) {
+      lines.push(`### Maintainers`);
+      groupedAuthors.maintainers.forEach((author) => {
+        lines.push(formatAuthorLine(author));
+      });
+    }
+
+    if (groupedAuthors.contributors.length > 0) {
+      lines.push(`### Contributors`);
+      groupedAuthors.contributors.forEach((author) => {
+        lines.push(formatAuthorLine(author));
+      });
+    }
+
+    if (groupedAuthors.specials.length > 0) {
+      lines.push(`### Special Thanks`);
+      groupedAuthors.specials.forEach((author) => {
+        lines.push(formatAuthorLine(author));
+      });
+    }
+  }
+
+  return lines.join("\n\n") + "\n";
 }
 
 /**
