@@ -1,15 +1,19 @@
 {
+  "authors": [
+    {
+      "name": "Timur Moziev",
+      "github": "TimurRin",
+      "email": "timur.moziev@gmail.com",
+      "type": "maintainer",
+      "url": "https://timurrin.github.io/"
+    }
+  ],
   "deployment": {
     "preparation": ["npm ci", "npm run build"],
     "start": ["node ./dist/index.js"]
   },
   "development": {
-    "cinnabarMeta": true,
-    "gitIgnore": "cinnabar",
-    "license": true,
-    "nodejsEslint": "cinnabar",
-    "nodejsPrettier": "cinnabar",
-    "readme": "cinnabar"
+    "readme": {}
   },
   "stack": "nodejs",
   "type": "app"

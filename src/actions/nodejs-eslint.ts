@@ -18,7 +18,8 @@ export default [
   {
     ignores,
   },
-];`;
+];
+`;
 
 const FILE_PATH = "eslint.config.js";
 

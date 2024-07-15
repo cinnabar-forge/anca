@@ -35,7 +35,8 @@ build({
   .catch((e) => {
     console.log(\`Error building \${ESBUILD_NAME}: \${e.message}\`);
     process.exit(1);
-  });`;
+  });
+`;
 
 const FILE_PATH = "esbuild.js";
 

@@ -25,7 +25,8 @@ package-lock.json
 # Cinnabar Meta
 **/cinnabar.js
 **/cinnabar.ts
-cinnabar.json`;
+cinnabar.json
+`;
 
 const RC_FILE_PATH = ".prettierrc";
 const IGNORE_FILE_PATH = ".prettierignore";

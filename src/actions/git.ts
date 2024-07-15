@@ -56,9 +56,25 @@ lerna-debug.log*
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Output of 'npm pack'
-*.tgz`;
+*.tgz
+`;
 
 const FILE_PATH = ".gitignore";
+
+/**
+ *
+ * @param development
+ */
+function getContents(development: AncaDevelopment) {
+  if (development.state == null) {
+    return "";
+  }
+  if (development.state.config.stack === "nodejs") {
+    return IGNORE_ALL + "\n" + IGNORE_NODEJS;
+  }
+
+  return IGNORE_ALL;
+}
 
 /**
  *
@@ -73,11 +89,7 @@ export async function checkGitIgnore(development: AncaDevelopment) {
     return false;
   }
 
-  if (development.state.config.stack === "nodejs") {
-    return contents === IGNORE_ALL + "\n" + IGNORE_NODEJS;
-  }
-
-  return contents === IGNORE_ALL;
+  return contents === getContents(development);
 }
 
 /**
@@ -91,8 +103,6 @@ export async function fixGitIgnore(development: AncaDevelopment) {
   await writeFolderFile(
     development.fullPath,
     FILE_PATH,
-    development.state.config.stack === "nodejs"
-      ? IGNORE_ALL + "\n" + IGNORE_NODEJS
-      : IGNORE_ALL,
+    getContents(development),
   );
 }
