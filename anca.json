@@ -8,9 +8,39 @@
       "url": "https://timurrin.github.io/"
     }
   ],
+  "cinnabarMeta": {
+    "dataVersion": 0,
+    "version": {
+      "latest": "0.1.0-dev",
+      "timestamp": 1720199005
+    },
+    "files": [
+      {
+        "path": "./package.json",
+        "type": "nodejs-package-json"
+      },
+      {
+        "path": "./package-lock.json",
+        "type": "nodejs-package-lock-json"
+      },
+      {
+        "path": "./src/cinnabar.ts",
+        "type": "typescript"
+      }
+    ],
+    "repo": {
+      "type": "github",
+      "value": "cinnabar-forge/anca"
+    }
+  },
   "deployment": {
-    "preparation": ["npm ci", "npm run build"],
-    "start": ["node ./dist/index.js"]
+    "preparation": [
+      "npm ci",
+      "npm run build"
+    ],
+    "start": [
+      "node ./dist/index.js"
+    ]
   },
   "development": {
     "readme": {}

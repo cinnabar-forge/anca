@@ -26,6 +26,9 @@ package-lock.json
 **/cinnabar.js
 **/cinnabar.ts
 cinnabar.json
+
+# Anca
+anca.json
 `;
 
 const RC_FILE_PATH = ".prettierrc";

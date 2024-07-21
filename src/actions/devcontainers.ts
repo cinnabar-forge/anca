@@ -3,6 +3,7 @@ import path from "path";
 
 import { AncaDevelopment } from "../schema.js";
 import { stringifyJson, writeFolderJsonFile } from "../utils.js";
+import { NODEJS_22_VERSION, NODEJS_22_VERSION_SHA } from "./variables.js";
 
 const JSON_FALLBACK = {
   build: {
@@ -46,15 +47,15 @@ const JSON_NODEJS = {
   name: "Node.js 22",
 };
 
-const DOCKERFILE_NODEJS = `FROM docker.io/node:22.4.0
+const DOCKERFILE_NODEJS = `FROM docker.io/node:${NODEJS_22_VERSION}
 
 USER node
 `;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DOCKERFILE_NODEJS_INSTALL = `# Install Node.js
-ENV NODE_VERSION 22.3.0
-ENV NODE_CHECKSUM sha256:a6d4fbf4306a883b8e1d235a8a890be84b9d95d2d39b929520bed64da41ce540
+ENV NODE_VERSION ${NODEJS_22_VERSION}
+ENV NODE_CHECKSUM sha256:${NODEJS_22_VERSION_SHA}
 ADD --checksum=$NODE_CHECKSUM https://nodejs.org/dist/v\${NODE_VERSION}/node-v\${NODE_VERSION}-linux-x64.tar.gz /node.tar.gz
 RUN tar -xz -f /node.tar.gz -C /usr/local --remove-files --strip-components=1
 `;

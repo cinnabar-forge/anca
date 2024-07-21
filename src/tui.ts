@@ -32,7 +32,7 @@ import {
 import { fixNodejsTsconfigJson } from "./actions/nodejs-tsconfig.js";
 import { fixNodejsTsupConfigJs } from "./actions/nodejs-tsup.js";
 import { fixReadmeMd } from "./actions/readme.js";
-import cinnabarData from "./cinnabar.js";
+import { CINNABAR_PROJECT_VERSION } from "./cinnabar.js";
 import { getInstance } from "./config.js";
 import {
   getDevelopmentDisplayName,
@@ -48,7 +48,7 @@ interface ClivoAction {
   label: string;
 }
 
-const APP_NAME_AND_VERSION = `${cinnabarData.name.toLocaleUpperCase()} v${cinnabarData.version.text}`;
+const APP_NAME_AND_VERSION = `ANCA v${CINNABAR_PROJECT_VERSION}`;
 
 /**
  *

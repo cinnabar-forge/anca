@@ -2,6 +2,11 @@ import fs from "fs";
 import path from "path";
 
 import { AncaDevelopment } from "../schema.js";
+import {
+  NODEJS_18_VERSION,
+  NODEJS_20_VERSION,
+  NODEJS_22_VERSION,
+} from "./variables.js";
 
 const RELEASE_NODEJS = `name: Release
 
@@ -12,13 +17,15 @@ on:
 jobs:
   publish-npm:
     runs-on: ubuntu-latest
+    env:
+      ANCA_CI: true
     name: "Publish package to npm registry"
     steps:
       - uses: actions/checkout@v4
         name: "Checkout repo"
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${NODEJS_22_VERSION}
           registry-url: https://registry.npmjs.org/
         name: "Install Node.js"
       - run: npm ci
@@ -42,13 +49,15 @@ on:
 jobs:
   publish-npm:
     runs-on: ubuntu-latest
+    env:
+      ANCA_CI: true
     name: "Publish package to npm registry"
     steps:
       - uses: actions/checkout@v4
         name: "Checkout repo"
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${NODEJS_22_VERSION}
           registry-url: https://registry.npmjs.org/
         name: "Install Node.js"
       - run: npm ci
@@ -67,13 +76,15 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+    env:
+      ANCA_CI: true
     name: Build executables on \${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         name: Checkout repo
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${NODEJS_22_VERSION}
         name: Install Node.js
       - run: npm ci
         name: Install dependencies
@@ -107,7 +118,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [18, 20, 22]
+        node: [${NODEJS_18_VERSION}, ${NODEJS_20_VERSION}, ${NODEJS_22_VERSION}]
     name: Test repo on Node.js \${{ matrix.node }}
     steps:
       - uses: actions/checkout@v4

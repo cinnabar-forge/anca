@@ -44,7 +44,7 @@ export function parseSemver(version: string) {
       preReleaseNumber,
     };
   } else {
-    throw new Error("Invalid version format");
+    return false;
   }
 }
 
@@ -110,11 +110,13 @@ export function getDevelopmentMeta(development: AncaDevelopment): AncaMeta {
 
     if (meta.version == null && packageJson.version != null) {
       const version = parseSemver(packageJson.version);
-      meta.version = {
-        isPrerelease: version.preRelease != null,
-        isUnstable: version.major < 1,
-        text: packageJson.version,
-      };
+      if (version) {
+        meta.version = {
+          isPrerelease: version.preRelease != null,
+          isUnstable: version.major < 1,
+          text: packageJson.version,
+        };
+      }
     }
   }
 
