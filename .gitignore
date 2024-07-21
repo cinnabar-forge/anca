@@ -1,12 +1,30 @@
+# Editor directories and files
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vscode
+
 # Logs
 logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Temp folder
+tmp
+
+# Built sources
+/dist
+/build
+*.spec
 
 # Dependency directories
 node_modules/
@@ -18,48 +36,20 @@ jspm_packages/
 .pnp.*
 .yarn-integrity
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Editor directories and files
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.vscode
-
-# Built sources
-/dist
-/build
-*.spec
-
-# Output of 'npm pack'
-*.tgz
-
 # Local settings
 .env
 .env.development.local
 .env.test.local
 .env.production.local
 .env.local
-config.json
 
-# Node SEA
-sea-prep.blob
-/anca
+# Node.js logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-# Data
-/data
-/public/assets
-
-# Anca
-README.md.json
-README.md.1.cfm.json
-README.md.2.cfm.json
-*.local
+# Output of 'npm pack'
+*.tgz

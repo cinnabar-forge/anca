@@ -3,11 +3,21 @@
 **/.svn
 **/.hg
 
+# Binaries
+/bin
+
+# Devcontainer
+.devcontainer
+
 # Node.js
 **/node_modules
 package-lock.json
 
-# Cinnabar Forge
+# Distributions
+/build
+/dist
+
+# Cinnabar Meta
 **/cinnabar.js
 **/cinnabar.ts
 cinnabar.json

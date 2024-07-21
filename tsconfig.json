@@ -1,15 +1,14 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "target": "es2022",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "module": "es2022",
+    "moduleResolution": "node",
     "outDir": "./build/dev",
     "rootDir": "./",
-    "moduleResolution": "node",
-    "strict": true,
-    "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "strict": true,
+    "target": "es2022"
   },
   "include": ["./src/**/*", "./test/**/*"]
 }
