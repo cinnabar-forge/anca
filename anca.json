@@ -26,7 +26,8 @@
       },
       {
         "path": "./src/cinnabar.ts",
-        "type": "typescript"
+        "type": "typescript",
+        "updateBuild": true
       }
     ],
     "repo": {

@@ -32,12 +32,10 @@ jobs:
         name: "Install dependencies"
       - run: npm test
         name: "Run tests"
-      - run: npm run build
-        name: "Build distribution bundle"
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: \${{secrets.npm_token}}
-        name: "Publish to registry"
+        name: "Build distribution bundle and publish to registry"
 `;
 
 const RELEASE_NODEJS_APP = `name: Release
@@ -64,12 +62,10 @@ jobs:
         name: "Install dependencies"
       - run: npm test
         name: "Run tests"
-      - run: npm run build
-        name: "Build distribution bundle"
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: \${{secrets.npm_token}}
-        name: "Publish to registry"
+        name: "Build distribution bundle and publish to registry"
   build-executables:
     permissions: write-all
     runs-on: \${{ matrix.os }}
