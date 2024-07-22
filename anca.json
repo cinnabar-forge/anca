@@ -11,9 +11,8 @@
   "cinnabarMeta": {
     "dataVersion": 0,
     "version": {
-      "latest": "0.1.0-dev",
-      "latestNext": "0.1.0-dev+next.20240722_062523",
-      "timestamp": 1721629523
+      "latest": "0.1.0-dev.1",
+      "timestamp": 1721650842
     },
     "files": [
       {
@@ -33,7 +32,8 @@
     "repo": {
       "type": "github",
       "value": "cinnabar-forge/anca"
-    }
+    },
+    "updateChangelog": true
   },
   "deployment": {
     "preparation": [
