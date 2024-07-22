@@ -20,6 +20,7 @@ pids
 *.pid
 *.seed
 *.pid.lock
+*.lock
 
 # Temp folder
 tmp
