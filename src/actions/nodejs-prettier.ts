@@ -26,6 +26,7 @@ package-lock.json
 **/cinnabar.js
 **/cinnabar.ts
 cinnabar.json
+CHANGELOG.md
 
 # Anca
 anca.json
