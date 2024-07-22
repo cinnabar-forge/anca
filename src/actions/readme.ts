@@ -53,10 +53,13 @@ function getContents(development: AncaDevelopment) {
     const binName = development.state.meta?.name;
     const packageName = packageJson.name ?? "app";
 
-    if (development.state.config.type === "app") {
+    if (
+      development.state.config.type === "app" &&
+      development.state.config.downloadBinariesUrl
+    ) {
       lines.push(`### Binary`);
       lines.push(
-        `[Get the latest binaries](https://example.com/github/user/app-name/releases/latest).`,
+        `[Get the latest binaries](${development.state.config.downloadBinariesUrl}).`,
       );
       lines.push(
         `If you want to use the app with a command line, rename it to \`${binName}\` or \`${binName}.exe\` and add the location to \`PATH\`.`,

@@ -102,6 +102,7 @@ export interface AncaConfig {
   authors?: AncaConfigAuthor[];
   deployment?: AncaDeploymentConfig;
   development?: AncaDevelopmentConfig;
+  downloadBinariesUrl?: string;
   organizations?: AncaConfigOrganization[];
   stack?: AncaConfigStack;
   type?: AncaConfigType;
@@ -285,6 +286,9 @@ export const ANCA_CONFIG_SCHEMA = {
         },
       },
       type: "object",
+    },
+    downloadBinariesUrl: {
+      type: "string",
     },
     stack: {
       enum: ["nodejs", "unsupported"],
