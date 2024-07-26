@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import { promptText } from "clivo";
 
-import { fetchNpmPackageVersion } from "../api/nodejs-npm.js";
+import { fetchNpmPackagesVersion } from "../api/nodejs-npm.js";
 import { AncaDevelopment } from "../schema.js";
 import { writeFolderJsonFile } from "../utils.js";
 
@@ -273,9 +273,7 @@ export async function fixNodejsPackageJson(development: AncaDevelopment) {
     }
   }
 
-  if (contents.dependencies == null) {
-    contents.dependencies = {};
-  }
+  await checkNodejsPackageJsonDependencies(development);
 
   await checkNodejsPackageJsonDevDependencies(development);
 
@@ -291,6 +289,40 @@ export async function fixNodejsPackageJson(development: AncaDevelopment) {
 
   if (contents["pre-commit"] == null) {
     contents["pre-commit"] = PRECOMMIT;
+  }
+}
+
+/**
+ *
+ * @param development
+ */
+export async function checkNodejsPackageJsonDependencies(
+  development: AncaDevelopment,
+) {
+  if (development.state == null) {
+    return;
+  }
+  const contents: NodejsPackageJson | null | undefined =
+    development.state.jsonFiles["package.json"];
+
+  if (contents == null) {
+    return;
+  }
+
+  if (contents.dependencies == null) {
+    contents.dependencies = {};
+  }
+
+  const dependencyKeys = Object.keys(contents.dependencies);
+
+  try {
+    const fetchedVersions = await fetchNpmPackagesVersion(dependencyKeys);
+
+    for (const pkg of dependencyKeys) {
+      contents.dependencies[pkg] = fetchedVersions[pkg];
+    }
+  } catch (error) {
+    console.error("Error updating devDependencies:", error);
   }
 }
 
@@ -320,8 +352,14 @@ export async function checkNodejsPackageJsonDevDependencies(
       ? DEV_DEPENDENCIES_APP
       : DEV_DEPENDENCIES_LIB;
 
-  for (const key of devDependencies) {
-    contents.devDependencies[key] = fetchNpmPackageVersion(key);
+  try {
+    const fetchedVersions = await fetchNpmPackagesVersion(devDependencies);
+
+    for (const pkg of devDependencies) {
+      contents.devDependencies[pkg] = fetchedVersions[pkg];
+    }
+  } catch (error) {
+    console.error("Error updating devDependencies:", error);
   }
 }
 

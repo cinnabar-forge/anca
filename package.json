@@ -36,20 +36,23 @@
     "cftm": "0.1.0",
     "clivo": "0.5.1",
     "markdown-it": "14.1.0",
+    "node-fetch": "3.3.2",
     "picocolors": "1.0.1",
     "simple-git": "3.25.0"
   },
   "devDependencies": {
     "@cinnabar-forge/eslint-plugin": "0.6.1",
-    "@cinnabar-forge/meta": "0.2.0",
+    "@cinnabar-forge/meta": "0.3.1",
     "@types/markdown-it": "14.1.1",
-    "@types/node": "20.14.11",
+    "@types/node": "20.14.12",
+    "@types/chai": "4.3.16",
+    "@types/mocha": "10.0.7",
     "chai": "5.1.1",
     "esbuild": "0.23.0",
     "mocha": "10.7.0",
     "pre-commit": "1.2.2",
     "tsc-watch": "6.2.0",
-    "typescript": "5.5.3"
+    "typescript": "5.5.4"
   },
   "engines": {
     "node": ">=18.0.0"

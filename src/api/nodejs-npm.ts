@@ -1,24 +1,27 @@
-const NPM_PACKAGES_PREDEFINED_VERSIONS: Record<string, string> = {
-  "@cinnabar-forge/eslint-plugin": "0.6.0",
-  "@cinnabar-forge/meta": "0.1.2",
-  "@types/chai": "4.3.16",
-  "@types/mocha": "10.0.7",
-  "@types/node": "20.14.8",
-  "@types/sinon": "17.0.3",
-  chai: "5.1.1",
-  esbuild: "0.21.5",
-  mocha: "10.5.1",
-  "pre-commit": "1.2.2",
-  sinon: "18.0.0",
-  "tsc-watch": "6.2.0",
-  tsup: "8.1.0",
-  typescript: "5.5.2",
-};
+import fetch from "node-fetch";
 
 /**
- *
- * @param packageName
+ * Predefined versions for npm packages
+ * @param packagesName
  */
-export function fetchNpmPackageVersion(packageName: string): string {
-  return NPM_PACKAGES_PREDEFINED_VERSIONS[packageName];
+export async function fetchNpmPackagesVersion(
+  packagesName: string[],
+): Promise<Record<string, string>> {
+  const baseUrl = "https://npm-versions.cinnabar.ru/versions";
+  const query = `?packages=${packagesName.join(",")}`;
+  const url = `${baseUrl}${query}`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = (await response.json()) as {
+      response: Record<string, string>;
+    };
+    return data.response;
+  } catch (error) {
+    console.error("Error fetching package versions:", error);
+    throw error;
+  }
 }
