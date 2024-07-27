@@ -42,6 +42,7 @@ const SCRIPTS_APP: Record<string, string> = {
   fix: "prettier . --write && eslint --fix .",
   format: "prettier . --write",
   lint: "eslint --fix .",
+  prepack: "npm run build",
   test: "prettier . -c && eslint --max-warnings 0 . && tsc && mocha './build/dev/test'",
 };
 
@@ -51,6 +52,7 @@ const SCRIPTS_LIB: Record<string, string> = {
   fix: "prettier . --write && eslint --fix .",
   format: "prettier . --write",
   lint: "eslint --fix .",
+  prepack: "npm run build",
   test: "prettier . -c && eslint --max-warnings 0 . && tsc && mocha './build/dev/test'",
 };
 
