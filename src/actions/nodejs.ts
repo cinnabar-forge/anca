@@ -321,6 +321,11 @@ export async function checkNodejsPackageJsonDependencies(
     const fetchedVersions = await fetchNpmPackagesVersion(dependencyKeys);
 
     for (const pkg of dependencyKeys) {
+      if (fetchedVersions[pkg] !== contents.dependencies[pkg]) {
+        console.log(
+          `Updating dep '${pkg}' from ${contents.dependencies[pkg]} to ${fetchedVersions[pkg]}`,
+        );
+      }
       contents.dependencies[pkg] = fetchedVersions[pkg];
     }
   } catch (error) {
@@ -358,6 +363,11 @@ export async function checkNodejsPackageJsonDevDependencies(
     const fetchedVersions = await fetchNpmPackagesVersion(devDependencies);
 
     for (const pkg of devDependencies) {
+      if (fetchedVersions[pkg] !== contents.devDependencies[pkg]) {
+        console.log(
+          `Updating dev-dep '${pkg}' from ${contents.devDependencies[pkg]} to ${fetchedVersions[pkg]}`,
+        );
+      }
       contents.devDependencies[pkg] = fetchedVersions[pkg];
     }
   } catch (error) {
