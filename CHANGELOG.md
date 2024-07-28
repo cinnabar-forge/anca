@@ -8,6 +8,18 @@ Visit the link above to see all unreleased changes.
 
 [comment]: # (Insert new version after this line)
 
+## [0.1.0-dev.2](https://github.com/cinnabar-forge/anca/releases/tag/v0.1.0-dev.2) — 2024-07-28
+
+- add npm cached version fetch and check ([7b55ca9])
+- comply anca ([c5402e9])
+- update nodejs actions ([c5402e9])
+- update npm packages ([10aa93b], [7b55ca9])
+
+[c5402e9]: https://github.com/cinnabar-forge/anca/commit/c5402e9
+[10aa93b]: https://github.com/cinnabar-forge/anca/commit/10aa93b
+[7b55ca9]: https://github.com/cinnabar-forge/anca/commit/7b55ca9
+
+
 ## [0.1.0-dev.1](https://github.com/cinnabar-forge/anca/releases/tag/v0.1.0-dev.1) — 2024-07-22
 
 - [[b651739]] add .lock extension to gitignore action
@@ -67,4 +79,4 @@ Visit the link above to see all unreleased changes.
 [506c697]: https://github.com/cinnabar-forge/anca/commit/506c697
 
 
-[unreleased]: https://github.com/cinnabar-forge/anca/compare/v0.1.0-dev.1...HEAD
+[unreleased]: https://github.com/cinnabar-forge/anca/compare/v0.1.0-dev.2...HEAD
