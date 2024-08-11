@@ -6,7 +6,7 @@ import {
   NODEJS_18_VERSION,
   NODEJS_20_VERSION,
   NODEJS_22_VERSION,
-} from "./variables.js";
+} from "./utils/variables.js";
 
 const RELEASE_NODEJS = `name: Release
 

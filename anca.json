@@ -12,7 +12,8 @@
     "dataVersion": 0,
     "version": {
       "latest": "0.1.0-dev.2",
-      "timestamp": 1722142139
+      "latestNext": "0.1.0-dev.2+next.20240811_071211",
+      "timestamp": 1723360331
     },
     "files": [
       {

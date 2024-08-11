@@ -23,8 +23,8 @@ pids
 tmp
 
 # Built sources
-/dist
-/build
+dist
+build
 *.spec
 
 # Dependency directories

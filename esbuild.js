@@ -13,16 +13,18 @@ const getNodeModules = () => {
   });
 };
 
-const ESBUILD_NAME = "NPM Bundle";
-const OUT_FILE = "dist/index.js";
+const IS_NPM_BUNDLE = process.argv[2] !== "full";
 
-const nodeModules = getNodeModules();
+const ESBUILD_NAME = IS_NPM_BUNDLE ? "NPM Bundle" : "Full Bundle";
+const OUT_FILE = IS_NPM_BUNDLE ? "dist/index.js" : "build/bundle/index.js";
+
+const nodeModules = IS_NPM_BUNDLE ? getNodeModules() : [];
 
 build({
   bundle: true,
   entryPoints: ["src/index.ts"],
   external: nodeModules,
-  format: "esm",
+  format: IS_NPM_BUNDLE ? "esm" : "cjs",
   outfile: OUT_FILE,
   platform: "node",
 })

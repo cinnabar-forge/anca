@@ -3,7 +3,7 @@ import path from "path";
 
 import { AncaDevelopment } from "../schema.js";
 import { stringifyJson, writeFolderJsonFile } from "../utils.js";
-import { NODEJS_22_VERSION, NODEJS_22_VERSION_SHA } from "./variables.js";
+import { NODEJS_22_VERSION, NODEJS_22_VERSION_SHA } from "./utils/variables.js";
 
 const JSON_FALLBACK = {
   build: {

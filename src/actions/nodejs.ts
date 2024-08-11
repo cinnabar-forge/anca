@@ -329,7 +329,7 @@ export async function checkNodejsPackageJsonDependencies(
       contents.dependencies[pkg] = fetchedVersions[pkg];
     }
   } catch (error) {
-    console.error("Error updating devDependencies:", error);
+    console.error("Error updating dependencies:", error);
   }
 }
 
@@ -354,15 +354,22 @@ export async function checkNodejsPackageJsonDevDependencies(
     contents.devDependencies = {};
   }
 
-  const devDependencies =
+  const predefinedDevDependencies =
     development.state.config.type === "app"
       ? DEV_DEPENDENCIES_APP
       : DEV_DEPENDENCIES_LIB;
 
-  try {
-    const fetchedVersions = await fetchNpmPackagesVersion(devDependencies);
+  const allDevDependencies = new Set([
+    ...predefinedDevDependencies,
+    ...Object.keys(contents.devDependencies),
+  ]);
 
-    for (const pkg of devDependencies) {
+  try {
+    const fetchedVersions = await fetchNpmPackagesVersion(
+      Array.from(allDevDependencies),
+    );
+
+    for (const pkg of allDevDependencies) {
       if (fetchedVersions[pkg] !== contents.devDependencies[pkg]) {
         console.log(
           `Updating dev-dep '${pkg}' from ${contents.devDependencies[pkg]} to ${fetchedVersions[pkg]}`,

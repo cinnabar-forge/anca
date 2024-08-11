@@ -15,6 +15,7 @@ import {
 } from "./actions/github-actions.js";
 import { fixLicenseMd } from "./actions/license.js";
 import {
+  checkNodejsPackageJsonDependencies,
   checkNodejsPackageJsonDevDependencies,
   fixNodejsPackageJson,
   writeNodejsPackageJson,
@@ -162,6 +163,7 @@ async function showDevelopmentActions(
     },
     nodejsPackageJsonCheckUpdates: {
       action: async () => {
+        await checkNodejsPackageJsonDependencies(development);
         await checkNodejsPackageJsonDevDependencies(development);
         await writeNodejsPackageJson(development);
         await backHere();

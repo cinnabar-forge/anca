@@ -23,6 +23,7 @@
   ],
   "scripts": {
     "build": "node esbuild.js",
+    "build:bundle": "node esbuild.js full",
     "build:dev": "tsc",
     "build:sea": "node sea.build.js",
     "dev": "tsc-watch",
@@ -45,14 +46,14 @@
   "devDependencies": {
     "@cinnabar-forge/eslint-plugin": "0.6.1",
     "@cinnabar-forge/meta": "0.3.1",
-    "@types/chai": "4.3.16",
+    "@types/chai": "4.3.17",
     "@types/diff": "5.2.1",
-    "@types/markdown-it": "14.1.1",
+    "@types/markdown-it": "14.1.2",
     "@types/mocha": "10.0.7",
-    "@types/node": "22.0.0",
+    "@types/node": "22.2.0",
     "chai": "5.1.1",
     "esbuild": "0.23.0",
-    "mocha": "10.7.0",
+    "mocha": "10.7.3",
     "pre-commit": "1.2.2",
     "tsc-watch": "6.2.0",
     "typescript": "5.5.4"
@@ -62,5 +63,9 @@
   },
   "pre-commit": [
     "test"
-  ]
+  ],
+  "keywords": [
+    "project manager"
+  ],
+  "types": "dist/index.d.ts"
 }

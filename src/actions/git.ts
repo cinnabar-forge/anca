@@ -27,8 +27,8 @@ tmp
 `;
 
 const IGNORE_NODEJS = `# Built sources
-/dist
-/build
+dist
+build
 *.spec
 
 # Dependency directories
