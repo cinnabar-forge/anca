@@ -1,41 +1,90 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import { promptText } from "clivo";
+import { isDeepStrictEqual } from "util";
 
 import { fetchNpmPackagesVersion } from "../api/nodejs-npm.js";
-import { AncaDevelopment } from "../schema.js";
+import { AncaConfig, AncaDevelopment } from "../schema.js";
 import { writeFolderJsonFile } from "../utils.js";
 
+export interface NodeJsPackageAuthor {
+  email?: string;
+  name: string;
+  url?: string;
+}
+
 export interface NodejsPackageJson {
-  author?: {
-    email: string;
-    name: string;
-    url: string;
-  };
-  bin?: Record<string, string>;
-  dependencies?: Record<string, string>;
-  description?: string;
-  devDependencies?: Record<string, string>;
-  engines?: Record<string, string>;
-  files?: string[];
-  keywords?: string[];
-  license?: string;
-  main?: string;
-  name?: string;
-  "pre-commit"?: string[];
+  author?: NodeJsPackageAuthor | null;
+  bin?: Record<string, string> | null;
+  bugs?: null | string;
+  contributors?: NodeJsPackageAuthor[] | null;
+  dependencies?: Record<string, string> | null;
+  description?: null | string;
+  devDependencies?: Record<string, string> | null;
+  engines?: Record<string, string> | null;
+  files?: null | string[];
+  funding?: null | string;
+  homepage?: null | string;
+  keywords?: null | string[];
+  license?: null | string;
+  main?: null | string;
+  name?: null | string;
+  "pre-commit"?: null | string[];
   repository?: {
     type: string;
     url: string;
-  };
-  scripts?: Record<string, string>;
-  type?: string;
-  types?: string;
-  version?: string;
+  } | null;
+  scripts?: Record<string, string> | null;
+  type?: null | string;
+  types?: null | string;
+  version?: null | string;
 }
 
-const FILES = ["bin", "dist"];
+// eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
+interface NodejsPackageJson2 extends NodejsPackageJson {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+const packageNameOrder = [
+  "name",
+  "version",
+  "description",
+  "keywords",
+  "homepage",
+  "bugs",
+  "license",
+  "contributors",
+  "funding",
+  "files",
+  "type",
+  "main",
+  "types",
+  "browser",
+  "bin",
+  "man",
+  "directories",
+  "repository",
+  "scripts",
+  "config",
+  "dependencies",
+  "devDependencies",
+  "peerDependencies",
+  "peerDependenciesMeta",
+  "bundleDependencies",
+  "optionalDependencies",
+  "overrides",
+  "engines",
+  "os",
+  "cpu",
+  "private",
+  "publishConfig",
+  "workspaces",
+  "pre-commit",
+];
 
 const SCRIPTS_APP: Record<string, string> = {
   build: "node esbuild.js",
+  "build:bundle": "node esbuild.js full",
   "build:dev": "tsc",
   "build:sea": "node sea.build.js",
   dev: "tsc-watch",
@@ -86,96 +135,450 @@ const DEV_DEPENDENCIES_LIB: string[] = [
   "typescript",
 ];
 
-const ENGINES: Record<string, string> = {
-  node: ">=18",
-};
-
 const PRECOMMIT = ["test"];
 
 const FILE_PATH = "package.json";
 
 /**
  *
- * @param development
+ * @param config
  */
-export async function checkNodejsPackageJson(development: AncaDevelopment) {
+function getContributors(config: AncaConfig) {
+  return (
+    config.authors?.map((author) => {
+      return {
+        email: author.email,
+        name: author.name,
+        url: author.url,
+      };
+    }) || []
+  );
+}
+
+/**
+ *
+ * @param development
+ * @param full
+ */
+export async function checkNodejsPackageJson(
+  development: AncaDevelopment,
+  full: boolean,
+) {
   if (development.state == null) {
-    return;
+    return false;
   }
   const contents = development.state.jsonFiles[FILE_PATH] as NodejsPackageJson;
   if (contents == null) {
     return false;
   }
-  if (contents.name == null) {
-    return false;
-  }
 
-  if (contents.version == null) {
-    return false;
-  }
+  const config = development.state.config;
 
-  if (contents.description == null) {
-    return false;
-  }
+  return (
+    hasName(contents) &&
+    hasVersion(contents) &&
+    hasDescription(contents, full) &&
+    hasKeywords(contents, full) &&
+    hasHomepage(contents, full) &&
+    hasBugs(contents, full) &&
+    hasLicense(contents) &&
+    hasContributors(contents, config) &&
+    hasFunding(contents, full) &&
+    hasFiles(contents, config) &&
+    hasType(contents) &&
+    hasMainScript(contents) &&
+    hasTypes(contents, config) &&
+    hasBrowser(contents) &&
+    hasBin(contents, config) &&
+    hasMan(contents) &&
+    hasDirectories(contents) &&
+    hasRepository(contents, full) &&
+    hasScripts(contents, config) &&
+    hasConfig(contents) &&
+    hasDependencies(contents) &&
+    hasDevDependencies(contents, config) &&
+    hasPeerDependencies(contents) &&
+    hasPeerDependenciesMeta(contents) &&
+    hasBundleDependencies(contents) &&
+    hasOptionalDependencies(contents) &&
+    hasOverrides(contents) &&
+    hasEngines(contents) &&
+    hasOs(contents) &&
+    hasCpu(contents) &&
+    hasPrivate(contents) &&
+    hasPublishConfig(contents) &&
+    hasWorkspaces(contents) &&
+    hasPreCommit(contents) &&
+    checkPackageJsonOrder(contents)
+  );
+}
 
-  if (contents.keywords == null) {
-    return false;
-  }
+/**
+ *
+ * @param contents
+ */
+function hasName(contents: NodejsPackageJson) {
+  return contents.name != null;
+}
 
-  if (contents.repository == null) {
-    return false;
-  }
+/**
+ *
+ * @param contents
+ */
+function hasVersion(contents: NodejsPackageJson) {
+  return contents.version != null;
+}
 
-  if (contents.license == null) {
-    return false;
-  }
+/**
+ *
+ * @param contents
+ * @param full
+ */
+function hasDescription(contents: NodejsPackageJson, full: boolean) {
+  return !full || contents.description != null;
+}
 
-  if (contents.author == null) {
-    return false;
-  }
+/**
+ *
+ * @param contents
+ * @param full
+ */
+function hasKeywords(contents: NodejsPackageJson, full: boolean) {
+  return !full || contents.keywords != null;
+}
 
-  if (contents.type !== "module") {
-    return false;
-  }
+/**
+ *
+ * @param contents
+ * @param full
+ */
+function hasHomepage(contents: NodejsPackageJson, full: boolean) {
+  return !full || contents.homepage != null;
+}
 
-  if (contents.main !== "dist/index.js") {
-    return false;
-  }
+/**
+ *
+ * @param contents
+ * @param full
+ */
+function hasBugs(contents: NodejsPackageJson, full: boolean) {
+  return !full || contents.bugs != null;
+}
 
-  if (
-    development.state.config.type === "app" &&
-    contents.types !== "dist/index.d.ts"
+/**
+ *
+ * @param contents
+ */
+function hasLicense(contents: NodejsPackageJson) {
+  return contents.license != null;
+}
+
+/**
+ *
+ * @param contents
+ * @param config
+ */
+function hasContributors(contents: NodejsPackageJson, config: AncaConfig) {
+  const contributors = getContributors(config);
+  return isDeepStrictEqual(contributors, contents.contributors);
+}
+
+/**
+ *
+ * @param contents
+ * @param full
+ */
+function hasFunding(contents: NodejsPackageJson, full: boolean) {
+  return !full || contents.funding != null;
+}
+
+/**
+ *
+ * @param contents
+ * @param config
+ */
+function hasFiles(contents: NodejsPackageJson, config: AncaConfig) {
+  if (config.type === "app") {
+    return contents.files?.[0] === "bin" && contents.files?.[1] === "dist";
+  } else if (config.type === "library") {
+    return contents.files?.[0] === "dist";
+  }
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasType(contents: NodejsPackageJson) {
+  return contents.type === "module";
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasMainScript(contents: NodejsPackageJson) {
+  return contents.main === "dist/index.js";
+}
+
+/**
+ *
+ * @param contents
+ * @param config
+ */
+function hasTypes(contents: NodejsPackageJson, config: AncaConfig) {
+  if (config.type === "library") {
+    return contents.types === "dist/index.d.ts";
+  }
+  return contents.types == null;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasBrowser(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ * @param config
+ */
+function hasBin(contents: NodejsPackageJson, config: AncaConfig) {
+  if (config.type === "app") {
+    return contents.bin != null;
+  }
+  return contents.bin == null;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasMan(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasDirectories(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ * @param full
+ */
+function hasRepository(contents: NodejsPackageJson, full: boolean) {
+  return !full || contents.repository != null;
+}
+
+/**
+ *
+ * @param contents
+ * @param config
+ */
+function hasScripts(contents: NodejsPackageJson, config: AncaConfig) {
+  if (config.type === "app") {
+    for (const key in SCRIPTS_APP) {
+      if (contents.scripts == null || contents.scripts[key] == null) {
+        return false;
+      }
+    }
+  } else if (config.type === "library") {
+    for (const key in SCRIPTS_LIB) {
+      if (contents.scripts == null || contents.scripts[key] == null) {
+        return false;
+      }
+    }
+  } else {
+    return contents.scripts != null;
+  }
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasConfig(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasDependencies(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ * @param config
+ */
+function hasDevDependencies(contents: NodejsPackageJson, config: AncaConfig) {
+  if (config.type === "app") {
+    for (const key of DEV_DEPENDENCIES_APP) {
+      if (
+        contents.devDependencies == null ||
+        contents.devDependencies[key] == null
+      ) {
+        return false;
+      }
+    }
+  } else if (config.type === "library") {
+    for (const key of DEV_DEPENDENCIES_LIB) {
+      if (
+        contents.devDependencies == null ||
+        contents.devDependencies[key] == null
+      ) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasPeerDependencies(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasPeerDependenciesMeta(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasBundleDependencies(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasOptionalDependencies(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasOverrides(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasEngines(contents: NodejsPackageJson) {
+  return contents.engines && contents.engines.node === ">=18.0.0";
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasOs(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasCpu(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasPrivate(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasPublishConfig(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasWorkspaces(contents: NodejsPackageJson) {
+  contents;
+  return true;
+}
+
+/**
+ *
+ * @param contents
+ */
+function hasPreCommit(contents: NodejsPackageJson) {
+  return contents["pre-commit"] != null;
+}
+
+/**
+ *
+ * @param packageJson
+ */
+function checkPackageJsonOrder(packageJson: NodejsPackageJson) {
+  const packageKeys = Object.keys(packageJson);
+  let keyIndex = 0;
+  let orderIndex = 0;
+
+  while (
+    keyIndex < packageKeys.length &&
+    orderIndex < packageNameOrder.length
   ) {
-    return false;
-  }
-
-  if (development.state.config.type === "app" && contents.bin == null) {
-    return false;
-  }
-
-  if (contents.files == null) {
-    return false;
-  }
-
-  if (contents.scripts == null) {
-    return false;
-  }
-
-  if (contents.dependencies == null) {
-    return false;
-  }
-
-  if (contents.devDependencies == null) {
-    return false;
-  }
-
-  if (contents.engines == null) {
-    return false;
-  }
-
-  // eslint-disable-next-line sonarjs/prefer-single-boolean-return
-  if (contents["pre-commit"] == null) {
-    return false;
+    if (packageKeys[keyIndex] === packageNameOrder[orderIndex]) {
+      keyIndex++;
+    } else {
+      if (packageKeys.includes(packageNameOrder[orderIndex])) {
+        return false;
+      }
+    }
+    orderIndex++;
   }
 
   return true;
@@ -184,121 +587,414 @@ export async function checkNodejsPackageJson(development: AncaDevelopment) {
 /**
  * Fix the Anca configuration file.
  * @param development
+ * @param full
  */
-export async function fixNodejsPackageJson(development: AncaDevelopment) {
+export async function fixNodejsPackageJson(
+  development: AncaDevelopment,
+  full: boolean,
+) {
   if (development.state == null) {
     return;
   }
-  if (development.state.jsonFiles["package.json"] == null) {
-    development.state.jsonFiles["package.json"] = {};
-  }
-  const contents: NodejsPackageJson =
-    development.state.jsonFiles["package.json"];
+  const contents: NodejsPackageJson2 = (development.state.jsonFiles[
+    "package.json"
+  ] || {}) as NodejsPackageJson2;
 
+  const rebuildFile: NodejsPackageJson2 = {};
+
+  const config = development.state.config;
+
+  await fixPackageName(rebuildFile, contents);
+  await fixPackageVersion(rebuildFile, contents);
+  await fixPackageDescription(rebuildFile, contents, full);
+  await fixPackageKeywords(rebuildFile, contents, full);
+  await fixPackageHomepage(rebuildFile, contents, full);
+  await fixPackageBugs(rebuildFile, contents, full);
+  await fixPackageLicense(rebuildFile, contents);
+  await fixPackageContributors(rebuildFile, contents, config);
+  await fixPackageFunding(rebuildFile, contents, full);
+  await fixPackageFiles(rebuildFile, contents, config);
+  await fixPackageType(rebuildFile);
+  await fixPackageMain(rebuildFile);
+  await fixPackageTypes(rebuildFile, contents, config);
+  await fixPackageBrowser(rebuildFile, contents);
+  await fixPackageBin(rebuildFile, contents, config);
+  await fixPackageMan(rebuildFile, contents);
+  await fixPackageDirectories(rebuildFile, contents);
+  await fixPackageRepository(rebuildFile, contents, full);
+  await fixPackageScripts(rebuildFile, contents, config);
+  await fixPackageConfig(rebuildFile, contents);
+  await updateNodejsPackageJsonDependencies(rebuildFile, development);
+  await updateNodejsPackageJsonDevDependencies(rebuildFile, development);
+  await fixPackagePeerDependencies(rebuildFile, contents);
+  await fixPackagePeerDependenciesMeta(rebuildFile, contents);
+  await fixPackageBundleDependencies(rebuildFile, contents);
+  await fixPackageOptionalDependencies(rebuildFile, contents);
+  await fixPackageOverrides(rebuildFile, contents);
+  await fixPackageEngines(rebuildFile);
+  await fixPackageOs(rebuildFile, contents);
+  await fixPackageCpu(rebuildFile, contents);
+  await fixPackagePrivate(rebuildFile, contents);
+  await fixPackagePublishConfig(rebuildFile, contents);
+  await fixPackageWorkspaces(rebuildFile, contents);
+  await fixPackagePreCommit(rebuildFile, contents);
+
+  for (const key in contents) {
+    if (rebuildFile[key] == null && contents[key] != null) {
+      rebuildFile[key] = contents[key];
+    }
+  }
+
+  development.state.jsonFiles["package.json"] = rebuildFile;
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackageName(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
   if (contents.name == null) {
-    contents.name = await promptText("\nPackage name");
-  }
-
-  if (contents.version == null) {
-    contents.version = "0.0.0";
-  }
-
-  if (contents.description == null) {
-    contents.description = await promptText("\nPackage description");
-  }
-
-  if (contents.keywords == null) {
-    contents.keywords = (
-      await promptText("\nPackage keywords (word1,word two,word3,...)")
-    ).split(",");
-  }
-
-  if (contents.repository == null) {
-    contents.repository = {
-      type: "git",
-      url: "git+" + (await promptText("\nRepository URL")),
-    };
-  }
-
-  if (contents.license == null) {
-    contents.license = "ISC";
-  }
-
-  if (contents.author == null) {
-    contents.author = {
-      name: await promptText("\nAuthor name"),
-      // eslint-disable-next-line perfectionist/sort-objects
-      email: await promptText("\nAuthor email"),
-      url: await promptText("\nAuthor website"),
-    };
-  }
-
-  if (contents.type !== "module") {
-    contents.type = "module";
-  }
-
-  if (contents.main !== "dist/index.js") {
-    contents.main = "dist/index.js";
-  }
-
-  if (
-    development.state.config.type === "app" &&
-    contents.types !== "dist/index.d.ts"
-  ) {
-    contents.types = "dist/index.d.ts";
-  }
-
-  if (development.state.config.type === "app" && contents.bin == null) {
-    contents.bin = {};
-  }
-
-  if (contents.files == null) {
-    contents.files = FILES;
-  }
-
-  if (contents.scripts == null) {
-    contents.scripts =
-      development.state.config.type === "app" ? SCRIPTS_APP : SCRIPTS_LIB;
+    rebuildFile.name = await promptText("\nPackage name");
   } else {
-    if (development.state.config.type === "app") {
-      for (const key in SCRIPTS_APP) {
-        if (contents.scripts[key] == null) {
-          contents.scripts[key] = SCRIPTS_APP[key];
-        }
-      }
-    } else {
-      for (const key in SCRIPTS_LIB) {
-        if (contents.scripts[key] == null) {
-          contents.scripts[key] = SCRIPTS_LIB[key];
-        }
-      }
-    }
-  }
-
-  await checkNodejsPackageJsonDependencies(development);
-
-  await checkNodejsPackageJsonDevDependencies(development);
-
-  if (contents.engines == null) {
-    contents.engines = ENGINES;
-  } else {
-    for (const key in ENGINES) {
-      if (contents.engines[key] == null) {
-        contents.engines[key] = ENGINES[key];
-      }
-    }
-  }
-
-  if (contents["pre-commit"] == null) {
-    contents["pre-commit"] = PRECOMMIT;
+    rebuildFile.name = contents.name;
   }
 }
 
 /**
  *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackageVersion(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  if (contents.version == null) {
+    rebuildFile.version = "0.0.0";
+  } else {
+    rebuildFile.version = contents.version;
+  }
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ * @param full
+ */
+async function fixPackageDescription(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+  full: boolean,
+) {
+  if (full && contents.description == null) {
+    rebuildFile.description = await promptText("\nPackage description");
+  } else {
+    rebuildFile.description = contents.description;
+  }
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ * @param full
+ */
+async function fixPackageKeywords(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+  full: boolean,
+) {
+  if (full && contents.keywords == null) {
+    rebuildFile.keywords = (
+      await promptText("\nPackage keywords (keyword1,keyword two,keyword3,...)")
+    ).split(",");
+  } else {
+    rebuildFile.keywords = contents.keywords;
+  }
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ * @param full
+ */
+async function fixPackageHomepage(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+  full: boolean,
+) {
+  if (full && contents.homepage == null) {
+    rebuildFile.homepage = await promptText("\nPackage homepage URL");
+  } else {
+    rebuildFile.homepage = contents.homepage;
+  }
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ * @param full
+ */
+async function fixPackageBugs(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+  full: boolean,
+) {
+  if (full && contents.bugs == null) {
+    rebuildFile.bugs = await promptText("\nPackage bug report URL");
+  } else {
+    rebuildFile.bugs = contents.bugs;
+  }
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackageLicense(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  if (contents.license == null) {
+    rebuildFile.license = "ISC";
+  } else {
+    rebuildFile.license = contents.license;
+  }
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ * @param config
+ */
+async function fixPackageContributors(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+  config: AncaConfig,
+) {
+  const contributors = getContributors(config);
+  rebuildFile.contributors = contributors;
+  contents.author = null;
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ * @param full
+ */
+async function fixPackageFunding(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+  full: boolean,
+) {
+  if (full && contents.funding == null) {
+    rebuildFile.funding = await promptText("\nPackage funding URL");
+  } else {
+    rebuildFile.funding = contents.funding;
+  }
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ * @param config
+ */
+async function fixPackageFiles(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+  config: AncaConfig,
+) {
+  if (config.type === "app") {
+    rebuildFile.files = ["bin", "dist"];
+  } else if (config.type === "library") {
+    rebuildFile.files = ["dist"];
+  } else {
+    rebuildFile.files = contents.files;
+  }
+}
+
+/**
+ *
+ * @param rebuildFile
+ */
+async function fixPackageType(rebuildFile: NodejsPackageJson) {
+  rebuildFile.type = "module";
+}
+
+/**
+ *
+ * @param rebuildFile
+ */
+async function fixPackageMain(rebuildFile: NodejsPackageJson) {
+  rebuildFile.main = "dist/index.js";
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ * @param config
+ */
+async function fixPackageTypes(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+  config: AncaConfig,
+) {
+  if (config.type === "library") {
+    rebuildFile.types = "dist/index.d.ts";
+  } else {
+    contents.types = null;
+  }
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackageBrowser(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  rebuildFile;
+  contents;
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ * @param config
+ */
+async function fixPackageBin(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+  config: AncaConfig,
+) {
+  if (config.type === "app") {
+    if (contents.bin == null) {
+      rebuildFile.bin = {};
+    } else {
+      rebuildFile.bin = contents.bin;
+    }
+  } else {
+    contents.bin = null;
+  }
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackageMan(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  rebuildFile;
+  contents;
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackageDirectories(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  rebuildFile;
+  contents;
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ * @param full
+ */
+async function fixPackageRepository(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+  full: boolean,
+) {
+  if (full && contents.repository == null) {
+    rebuildFile.repository = {
+      type: "git",
+      url: "git+" + (await promptText("\nRepository URL")),
+    };
+  } else {
+    rebuildFile.repository = contents.repository;
+  }
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ * @param config
+ */
+async function fixPackageScripts(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+  config: AncaConfig,
+) {
+  if (contents.scripts == null) {
+    rebuildFile.scripts = config.type === "app" ? SCRIPTS_APP : SCRIPTS_LIB;
+  } else {
+    rebuildFile.scripts = {};
+    if (config.type === "app") {
+      for (const key in SCRIPTS_APP) {
+        if (contents.scripts[key] == null) {
+          rebuildFile.scripts[key] = SCRIPTS_APP[key];
+        } else {
+          rebuildFile.scripts[key] = contents.scripts[key];
+        }
+      }
+    } else {
+      for (const key in SCRIPTS_LIB) {
+        if (contents.scripts[key] == null) {
+          rebuildFile.scripts[key] = SCRIPTS_LIB[key];
+        } else {
+          rebuildFile.scripts[key] = contents.scripts[key];
+        }
+      }
+    }
+  }
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackageConfig(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  rebuildFile;
+  contents;
+}
+
+/**
+ *
+ * @param rebuildFile
  * @param development
  */
-export async function checkNodejsPackageJsonDependencies(
+export async function updateNodejsPackageJsonDependencies(
+  rebuildFile: NodejsPackageJson,
   development: AncaDevelopment,
 ) {
   if (development.state == null) {
@@ -315,18 +1011,27 @@ export async function checkNodejsPackageJsonDependencies(
     contents.dependencies = {};
   }
 
-  const dependencyKeys = Object.keys(contents.dependencies);
+  rebuildFile.dependencies = {};
+
+  const predefinedDependencies: string[] = [];
+
+  const allDependencies = new Set([
+    ...predefinedDependencies,
+    ...Object.keys(contents.dependencies),
+  ]);
+
+  const allDependenciesList = Array.from(allDependencies).sort();
 
   try {
-    const fetchedVersions = await fetchNpmPackagesVersion(dependencyKeys);
+    const fetchedVersions = await fetchNpmPackagesVersion(allDependenciesList);
 
-    for (const pkg of dependencyKeys) {
+    for (const pkg of allDependenciesList) {
       if (fetchedVersions[pkg] !== contents.dependencies[pkg]) {
         console.log(
           `Updating dep '${pkg}' from ${contents.dependencies[pkg]} to ${fetchedVersions[pkg]}`,
         );
       }
-      contents.dependencies[pkg] = fetchedVersions[pkg];
+      rebuildFile.dependencies[pkg] = fetchedVersions[pkg];
     }
   } catch (error) {
     console.error("Error updating dependencies:", error);
@@ -335,9 +1040,11 @@ export async function checkNodejsPackageJsonDependencies(
 
 /**
  *
+ * @param rebuildFile
  * @param development
  */
-export async function checkNodejsPackageJsonDevDependencies(
+export async function updateNodejsPackageJsonDevDependencies(
+  rebuildFile: NodejsPackageJson,
   development: AncaDevelopment,
 ) {
   if (development.state == null) {
@@ -354,6 +1061,8 @@ export async function checkNodejsPackageJsonDevDependencies(
     contents.devDependencies = {};
   }
 
+  rebuildFile.devDependencies = {};
+
   const predefinedDevDependencies =
     development.state.config.type === "app"
       ? DEV_DEPENDENCIES_APP
@@ -364,21 +1073,177 @@ export async function checkNodejsPackageJsonDevDependencies(
     ...Object.keys(contents.devDependencies),
   ]);
 
+  const allDevDependenciesList = Array.from(allDevDependencies).sort();
+
   try {
     const fetchedVersions = await fetchNpmPackagesVersion(
-      Array.from(allDevDependencies),
+      allDevDependenciesList,
     );
 
-    for (const pkg of allDevDependencies) {
+    for (const pkg of allDevDependenciesList) {
       if (fetchedVersions[pkg] !== contents.devDependencies[pkg]) {
         console.log(
           `Updating dev-dep '${pkg}' from ${contents.devDependencies[pkg]} to ${fetchedVersions[pkg]}`,
         );
       }
-      contents.devDependencies[pkg] = fetchedVersions[pkg];
+      rebuildFile.devDependencies[pkg] = fetchedVersions[pkg];
     }
   } catch (error) {
     console.error("Error updating devDependencies:", error);
+  }
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackagePeerDependencies(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  rebuildFile;
+  contents;
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackagePeerDependenciesMeta(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  rebuildFile;
+  contents;
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackageBundleDependencies(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  rebuildFile;
+  contents;
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackageOptionalDependencies(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  rebuildFile;
+  contents;
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackageOverrides(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  rebuildFile;
+  contents;
+}
+
+/**
+ *
+ * @param rebuildFile
+ */
+async function fixPackageEngines(rebuildFile: NodejsPackageJson) {
+  rebuildFile.engines = { node: ">=18.0.0" };
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackageOs(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  rebuildFile;
+  contents;
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackageCpu(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  rebuildFile;
+  contents;
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackagePrivate(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  rebuildFile;
+  contents;
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackagePublishConfig(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  rebuildFile;
+  contents;
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackageWorkspaces(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  rebuildFile;
+  contents;
+}
+
+/**
+ *
+ * @param rebuildFile
+ * @param contents
+ */
+async function fixPackagePreCommit(
+  rebuildFile: NodejsPackageJson,
+  contents: NodejsPackageJson,
+) {
+  if (contents["pre-commit"] == null) {
+    contents["pre-commit"] = PRECOMMIT;
+  } else {
+    rebuildFile["pre-commit"] = contents["pre-commit"];
   }
 }
 

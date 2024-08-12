@@ -60,13 +60,16 @@ export async function getDevelopmentStatus(development: AncaDevelopment) {
     await getGit().cwd(development.fullPath);
     const statusSummary = await getGit().status();
 
-    statuses.push(
-      statusSummary.behind > 0 || statusSummary.ahead > 0
-        ? pc.bgYellow("sync pending")
-        : pc.bgGreen("synced"),
-    );
+    const isSyncPending = statusSummary.behind > 0 || statusSummary.ahead > 0;
+    const isEdited = statusSummary.files.length > 0;
 
-    if (statusSummary.files.length > 0) {
+    if (isSyncPending) {
+      statuses.push(pc.bgYellow("sync pending"));
+    } else if (!isEdited) {
+      statuses.push(pc.bgGreen("synced"));
+    }
+
+    if (isEdited) {
       statuses.push(pc.bgMagenta("edited"));
     }
   } else {
@@ -406,8 +409,11 @@ async function checkNodeJsToDevelopmentPack(development: AncaDevelopment) {
     development.state.issues.push("nodejsEslintSetToDefault");
   }
 
-  if (!(await checkNodejsPackageJson(development))) {
+  if (!(await checkNodejsPackageJson(development, false))) {
     development.state.issues.push("nodejsPackageJsonFix");
+  }
+  if (!(await checkNodejsPackageJson(development, true))) {
+    development.state.actions.push("nodejsPackageJsonFixFull");
   }
   development.state.actions.push("nodejsPackageJsonCheckUpdates");
 

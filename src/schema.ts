@@ -30,6 +30,7 @@ export type AncaAction =
   | "nodejsEslintSetToDefault"
   | "nodejsPackageJsonCheckUpdates"
   | "nodejsPackageJsonFix"
+  | "nodejsPackageJsonFixFull"
   | "nodejsPrettierIgnoreSetToDefault"
   | "nodejsPrettierRcSetToDefault"
   | "nodejsSeaBuildJsSetToDefault"

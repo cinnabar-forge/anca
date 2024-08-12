@@ -15,9 +15,9 @@ import {
 } from "./actions/github-actions.js";
 import { fixLicenseMd } from "./actions/license.js";
 import {
-  checkNodejsPackageJsonDependencies,
-  checkNodejsPackageJsonDevDependencies,
   fixNodejsPackageJson,
+  updateNodejsPackageJsonDependencies,
+  updateNodejsPackageJsonDevDependencies,
   writeNodejsPackageJson,
 } from "./actions/nodejs.js";
 import { fixNodejsEsbuildJs } from "./actions/nodejs-esbuild.js";
@@ -163,20 +163,34 @@ async function showDevelopmentActions(
     },
     nodejsPackageJsonCheckUpdates: {
       action: async () => {
-        await checkNodejsPackageJsonDependencies(development);
-        await checkNodejsPackageJsonDevDependencies(development);
-        await writeNodejsPackageJson(development);
+        const fileContents = development.state?.jsonFiles["package.json"];
+        if (fileContents != null) {
+          await updateNodejsPackageJsonDependencies(fileContents, development);
+          await updateNodejsPackageJsonDevDependencies(
+            fileContents,
+            development,
+          );
+          await writeNodejsPackageJson(development);
+        }
         await backHere();
       },
       label: "[package.json] Check dependencies updates",
     },
     nodejsPackageJsonFix: {
       action: async () => {
-        await fixNodejsPackageJson(development);
+        await fixNodejsPackageJson(development, false);
         await writeNodejsPackageJson(development);
         await backHere();
       },
       label: "[package.json] Fix",
+    },
+    nodejsPackageJsonFixFull: {
+      action: async () => {
+        await fixNodejsPackageJson(development, true);
+        await writeNodejsPackageJson(development);
+        await backHere();
+      },
+      label: "[package.json] Fix & add optional fields",
     },
     nodejsPrettierIgnoreSetToDefault: {
       action: async () => {

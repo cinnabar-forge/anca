@@ -2,25 +2,30 @@
   "name": "anca",
   "version": "0.1.0-dev.2",
   "description": "Organize your workspaces and manage projects deploy fast and easy",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/cinnabar-forge/anca.git"
-  },
+  "keywords": [
+    "project manager"
+  ],
   "license": "ISC",
-  "author": {
-    "name": "Timur Moziev",
-    "email": "timur.moziev@gmail.com",
-    "url": "https://timurrin.github.io"
-  },
+  "contributors": [
+    {
+      "email": "timur.moziev@gmail.com",
+      "name": "Timur Moziev",
+      "url": "https://timurrin.github.io/"
+    }
+  ],
+  "files": [
+    "bin",
+    "dist"
+  ],
   "type": "module",
   "main": "dist/index.js",
   "bin": {
     "anca": "bin/anca.js"
   },
-  "files": [
-    "bin",
-    "dist"
-  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cinnabar-forge/anca.git"
+  },
   "scripts": {
     "build": "node esbuild.js",
     "build:bundle": "node esbuild.js full",
@@ -63,9 +68,5 @@
   },
   "pre-commit": [
     "test"
-  ],
-  "keywords": [
-    "project manager"
-  ],
-  "types": "dist/index.d.ts"
+  ]
 }

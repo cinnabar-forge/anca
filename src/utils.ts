@@ -1,5 +1,4 @@
 import Ajv, { AnySchema } from "ajv";
-import { CftmBuilder } from "cftm";
 import fs from "fs";
 import MarkdownIt from "markdown-it";
 import path from "path";
@@ -191,8 +190,6 @@ export async function isFileSubset(firstPath: string, secondPath: string) {
 export async function convertMarkdownItTokenToCinnabarMarkup(
   markdownItTokens: MarkdownIt.Token[],
 ) {
-  const markup = new CftmBuilder();
-
   let lastTag = "";
 
   for (const token of markdownItTokens) {
@@ -202,8 +199,6 @@ export async function convertMarkdownItTokenToCinnabarMarkup(
     }
     lastTag = token.tag;
   }
-
-  return markup.build();
 }
 
 /**
