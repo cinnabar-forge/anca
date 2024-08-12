@@ -17,6 +17,4 @@ npm test
 
 ## Authors
 
-### Maintainers
-
 - Timur Moziev ([@TimurRin](https://github.com/TimurRin))

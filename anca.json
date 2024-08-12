@@ -4,7 +4,8 @@
       "name": "Timur Moziev",
       "github": "TimurRin",
       "email": "timur.moziev@gmail.com",
-      "type": "maintainer",
+      "type": "author",
+      "status": "active",
       "url": "https://timurrin.github.io/"
     }
   ],
@@ -12,8 +13,8 @@
     "dataVersion": 0,
     "version": {
       "latest": "0.1.0-dev.2",
-      "latestNext": "0.1.0-dev.2+next.20240812_132412",
-      "timestamp": 1723469052
+      "latestNext": "0.1.0-dev.2+next.20240812_153741",
+      "timestamp": 1723477061
     },
     "files": [
       {

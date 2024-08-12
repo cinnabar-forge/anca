@@ -6,13 +6,11 @@
     "project manager"
   ],
   "license": "ISC",
-  "contributors": [
-    {
-      "email": "timur.moziev@gmail.com",
-      "name": "Timur Moziev",
-      "url": "https://timurrin.github.io/"
-    }
-  ],
+  "author": {
+    "email": "timur.moziev@gmail.com",
+    "name": "Timur Moziev",
+    "url": "https://timurrin.github.io/"
+  },
   "files": [
     "bin",
     "dist"

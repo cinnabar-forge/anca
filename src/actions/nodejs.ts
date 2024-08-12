@@ -53,6 +53,7 @@ const packageNameOrder = [
   "homepage",
   "bugs",
   "license",
+  "author",
   "contributors",
   "funding",
   "files",
@@ -143,16 +144,48 @@ const FILE_PATH = "package.json";
  *
  * @param config
  */
-function getContributors(config: AncaConfig) {
-  return (
-    config.authors?.map((author) => {
-      return {
+function getAuthors(config: AncaConfig) {
+  const authors: {
+    author?: NodeJsPackageAuthor;
+    contributors?: NodeJsPackageAuthor[];
+  } = {};
+
+  if (config.authors == null) {
+    return authors;
+  }
+
+  for (const author of config.authors) {
+    const isAuthor = author.type === "author" && authors.author == null;
+    const isMaintainer =
+      author.type === "maintainer" && author.status !== "retired";
+
+    if (!isAuthor && !isMaintainer) {
+      continue;
+    }
+
+    const authorNew: NodeJsPackageAuthor = { name: author.name };
+    if (author.email) {
+      authorNew.email = author.email;
+    }
+    if (author.url) {
+      authorNew.url = author.url;
+    }
+
+    if (isAuthor) {
+      authors.author = {
         email: author.email,
         name: author.name,
         url: author.url,
       };
-    }) || []
-  );
+    } else if (isMaintainer) {
+      if (authors.contributors == null) {
+        authors.contributors = [];
+      }
+      authors.contributors.push(authorNew);
+    }
+  }
+
+  return authors;
 }
 
 /**
@@ -279,8 +312,11 @@ function hasLicense(contents: NodejsPackageJson) {
  * @param config
  */
 function hasContributors(contents: NodejsPackageJson, config: AncaConfig) {
-  const contributors = getContributors(config);
-  return isDeepStrictEqual(contributors, contents.contributors);
+  const authors = getAuthors(config);
+  return (
+    isDeepStrictEqual(authors.author, contents.author) &&
+    isDeepStrictEqual(authors.contributors, contents.contributors)
+  );
 }
 
 /**
@@ -781,9 +817,19 @@ async function fixPackageContributors(
   contents: NodejsPackageJson,
   config: AncaConfig,
 ) {
-  const contributors = getContributors(config);
-  rebuildFile.contributors = contributors;
-  contents.author = null;
+  const authors = getAuthors(config);
+
+  if (authors.author) {
+    rebuildFile.author = authors.author;
+  } else {
+    contents.author = null;
+  }
+
+  if (authors.contributors) {
+    rebuildFile.contributors = authors.contributors;
+  } else {
+    contents.contributors = null;
+  }
 }
 
 /**

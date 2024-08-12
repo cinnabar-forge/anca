@@ -42,15 +42,17 @@ function getContents(development: AncaDevelopment) {
   if (development.state.config.authors) {
     lines.push(`## Authors`);
 
-    // Group authors by type
     const groupedAuthors: Record<string, AncaConfigAuthor[]> = {
+      authors: [],
       contributors: [],
       maintainers: [],
       specials: [],
     };
 
     development.state.config.authors.forEach((author) => {
-      if (author.type === "maintainer") {
+      if (author.type === "author") {
+        groupedAuthors.authors.push(author);
+      } else if (author.type === "maintainer") {
         groupedAuthors.maintainers.push(author);
       } else if (author.type === "contributor") {
         groupedAuthors.contributors.push(author);
@@ -59,12 +61,16 @@ function getContents(development: AncaDevelopment) {
       }
     });
 
-    // Sort each group alphabetically by name
     Object.keys(groupedAuthors).forEach((key) => {
       groupedAuthors[key].sort((a, b) => a.name.localeCompare(b.name));
     });
 
-    // Generate sections for each group
+    if (groupedAuthors.authors.length > 0) {
+      groupedAuthors.authors.forEach((author) => {
+        lines.push(formatAuthorLine(author));
+      });
+    }
+
     if (groupedAuthors.maintainers.length > 0) {
       lines.push(`### Maintainers`);
       groupedAuthors.maintainers.forEach((author) => {

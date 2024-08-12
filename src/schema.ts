@@ -88,8 +88,9 @@ export interface AncaConfigAuthor {
   email?: string;
   github?: string;
   name: string;
+  status?: "active" | "inactive" | "retired";
   text?: string;
-  type?: "contributor" | "maintainer" | "special";
+  type?: "author" | "contributor" | "maintainer" | "special";
   url?: string;
 }
 
@@ -199,9 +200,10 @@ export const ANCA_CONFIG_SCHEMA = {
         email: { type: "string" },
         github: { type: "string" },
         name: { type: "string" },
+        status: { enum: ["active", "inactive", "retired"], type: "string" },
         text: { type: "string" },
         type: {
-          enum: ["contributor", "maintainer", "special"],
+          enum: ["author", "contributor", "maintainer", "special"],
           type: "string",
         },
         url: { type: "string" },
@@ -316,6 +318,9 @@ export function formatAuthorLine(author: AncaConfigAuthor): string {
     authorLine += ` — <${author.url}>`;
   } else if (author.email) {
     authorLine += ` — <${author.email}>`;
+  }
+  if (author.status != null && author.status !== "active") {
+    authorLine += ` — ${author.status}`;
   }
   if (author.text) {
     authorLine += ` — ${author.text}`;

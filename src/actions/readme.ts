@@ -107,11 +107,15 @@ function getContents(development: AncaDevelopment) {
 
   if (development.state.config.authors) {
     const maintainers = development.state.config.authors.filter(
-      (author) => author.type === "maintainer",
+      (author) =>
+        (author.type === "author" || author.type === "maintainer") &&
+        author.status !== "retired",
     );
-    if (maintainers.length > 0) {
+    if (maintainers.length > 1) {
       lines.push(`Current maintainers:`);
       lines.push(...maintainers.map(formatAuthorLine));
+    } else if (maintainers.length === 1) {
+      lines.push(`Current maintainer ${formatAuthorLine(maintainers[0])}`);
     }
   }
 
