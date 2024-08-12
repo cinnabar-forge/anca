@@ -100,11 +100,19 @@ export interface AncaConfigOrganization {
   url?: string;
 }
 
+export interface AncaConfigNamings {
+  npmPackage?: string;
+  text: string;
+  textLong?: string;
+  textShort?: string;
+}
+
 export interface AncaConfig {
   authors?: AncaConfigAuthor[];
   deployment?: AncaDeploymentConfig;
   development?: AncaDevelopmentConfig;
   downloadBinariesUrl?: string;
+  namings?: AncaConfigNamings;
   organizations?: AncaConfigOrganization[];
   stack?: AncaConfigStack;
   type?: AncaConfigType;
@@ -293,6 +301,16 @@ export const ANCA_CONFIG_SCHEMA = {
     downloadBinariesUrl: {
       type: "string",
     },
+    namings: {
+      properties: {
+        npmPackage: { type: "string" },
+        text: { type: "string" },
+        textLong: { type: "string" },
+        textShort: { type: "string" },
+      },
+      required: ["text"],
+      type: "object",
+    },
     stack: {
       enum: ["nodejs", "unsupported"],
       type: "string",
@@ -302,7 +320,7 @@ export const ANCA_CONFIG_SCHEMA = {
       type: "string",
     },
   },
-  required: ["stack", "type"],
+  required: ["namings", "stack", "type"],
   type: "object",
 };
 

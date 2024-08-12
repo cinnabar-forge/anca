@@ -4,7 +4,6 @@ import {
   formatAuthorLine,
 } from "../schema.js";
 import { writeFolderFile } from "../utils.js";
-import { NodejsPackageJson } from "./nodejs.js";
 
 const FILE_PATH = "README.md";
 
@@ -17,9 +16,13 @@ function getContents(development: AncaDevelopment) {
     return "";
   }
 
+  const appName = development.state.config.namings?.text ?? "New App";
+  const packageName =
+    development.state.config.namings?.npmPackage ?? "@anca/new-app";
+
   const lines = [];
 
-  lines.push(`# ${development.state.meta?.name}`);
+  lines.push(`# ${appName}`);
 
   if (development.state.meta?.version?.isUnstable) {
     lines.push(
@@ -48,10 +51,7 @@ function getContents(development: AncaDevelopment) {
     development.state.config.stack === "nodejs" &&
     development.state.jsonFiles["package.json"] != null
   ) {
-    const packageJson: NodejsPackageJson =
-      development.state.jsonFiles["package.json"];
     const binName = development.state.meta?.name;
-    const packageName = packageJson.name ?? "app";
 
     if (
       development.state.config.type === "app" &&

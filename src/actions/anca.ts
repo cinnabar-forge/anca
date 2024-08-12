@@ -1,4 +1,4 @@
-import { promptOptions } from "clivo";
+import { promptOptions, promptText } from "clivo";
 
 import {
   ANCA_CONFIG_SCHEMA,
@@ -40,6 +40,13 @@ export async function fixAncaConfig(development: AncaDevelopment) {
     development.state.config = contents;
   }
 
+  if (contents.namings == null) {
+    contents.namings = { text: development.data.name };
+  }
+  if (contents.namings.text == null) {
+    contents.namings.text = development.data.name;
+  }
+
   if (contents.type == null || AncaConfigType[contents.type] == null) {
     contents.type = (
       await promptOptions("\nChoose project type:", [
@@ -57,6 +64,13 @@ export async function fixAncaConfig(development: AncaDevelopment) {
         { label: "Unsupported (other)", name: "unsupported" },
       ])
     ).name as AncaConfigStack;
+  }
+
+  // eslint-disable-next-line sonarjs/no-collapsible-if
+  if (contents.stack === AncaConfigStack.nodejs) {
+    if (contents.namings.npmPackage == null) {
+      contents.namings.npmPackage = await promptText("\nNPM package name:");
+    }
   }
 
   await writeFolderJsonFile(development.fullPath, FILE_PATH, contents);

@@ -208,7 +208,7 @@ export async function checkNodejsPackageJson(
   const config = development.state.config;
 
   return (
-    hasName(contents) &&
+    hasName(contents, config) &&
     hasVersion(contents) &&
     hasDescription(contents, full) &&
     hasKeywords(contents, full) &&
@@ -249,9 +249,10 @@ export async function checkNodejsPackageJson(
 /**
  *
  * @param contents
+ * @param config
  */
-function hasName(contents: NodejsPackageJson) {
-  return contents.name != null;
+function hasName(contents: NodejsPackageJson, config: AncaConfig) {
+  return contents.name === config.namings?.npmPackage;
 }
 
 /**
@@ -640,7 +641,7 @@ export async function fixNodejsPackageJson(
 
   const config = development.state.config;
 
-  await fixPackageName(rebuildFile, contents);
+  await fixPackageName(rebuildFile, contents, config);
   await fixPackageVersion(rebuildFile, contents);
   await fixPackageDescription(rebuildFile, contents, full);
   await fixPackageKeywords(rebuildFile, contents, full);
@@ -688,13 +689,15 @@ export async function fixNodejsPackageJson(
  *
  * @param rebuildFile
  * @param contents
+ * @param config
  */
 async function fixPackageName(
   rebuildFile: NodejsPackageJson,
   contents: NodejsPackageJson,
+  config: AncaConfig,
 ) {
   if (contents.name == null) {
-    rebuildFile.name = await promptText("\nPackage name");
+    rebuildFile.name = config.namings?.npmPackage;
   } else {
     rebuildFile.name = contents.name;
   }

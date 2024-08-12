@@ -125,7 +125,7 @@ export async function syncDevelopment(development: AncaDevelopment) {
 export function getDevelopmentDisplayName(
   development: AncaDevelopment,
 ): string {
-  return `${development.data.name}${pc.dim("@" + development.data.folder)}`;
+  return `${development.state?.config.namings?.text || development.data.name}${pc.dim(" (" + development.data.folder + ")")}`;
 }
 
 /**

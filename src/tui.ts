@@ -15,6 +15,7 @@ import {
 } from "./actions/github-actions.js";
 import { fixLicenseMd } from "./actions/license.js";
 import {
+  NodejsPackageJson,
   fixNodejsPackageJson,
   updateNodejsPackageJsonDependencies,
   updateNodejsPackageJsonDevDependencies,
@@ -163,13 +164,18 @@ async function showDevelopmentActions(
     },
     nodejsPackageJsonCheckUpdates: {
       action: async () => {
-        const fileContents = development.state?.jsonFiles["package.json"];
+        const fileContents = development.state?.jsonFiles[
+          "package.json"
+        ] as NodejsPackageJson;
         if (fileContents != null) {
-          await updateNodejsPackageJsonDependencies(fileContents, development);
+          const rebuildFile: NodejsPackageJson = {};
+          await updateNodejsPackageJsonDependencies(rebuildFile, development);
           await updateNodejsPackageJsonDevDependencies(
-            fileContents,
+            rebuildFile,
             development,
           );
+          fileContents.dependencies = rebuildFile.dependencies;
+          fileContents.devDependencies = rebuildFile.devDependencies;
           await writeNodejsPackageJson(development);
         }
         await backHere();
