@@ -84,7 +84,11 @@ export async function getDevelopmentStatus(development: AncaDevelopment) {
     statuses.push(pc.bgRed("issues: " + development.state.issues.length));
   }
 
-  if (development.state != null && development.state.config != null) {
+  if (
+    hasAncaJson &&
+    development.state != null &&
+    development.state.config != null
+  ) {
     statuses.unshift(
       `${development.state.config.stack || "unsupported"} ${development.state.config.type || "project"}`,
     );
@@ -119,7 +123,7 @@ export async function syncDevelopment(development: AncaDevelopment) {
 export function getDevelopmentDisplayName(
   development: AncaDevelopment,
 ): string {
-  return `${development.state?.config.namings?.text || development.data?.name || development.fullPath}${pc.dim(" (" + (development.data?.folder || "-") + ")")}`;
+  return `${development.state?.config.namings?.text || development.data?.name || development.fullPath.split("/").pop()}${pc.dim(" (" + (development.data?.folder || development.fullPath) + ")")}`;
 }
 
 /**
