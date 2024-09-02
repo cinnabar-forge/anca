@@ -1,3 +1,4 @@
+import { mergician } from "mergician";
 import path from "path";
 import pc from "picocolors";
 
@@ -30,28 +31,39 @@ import { checkNodejsTsupConfigJs } from "./actions/nodejs-tsup.js";
 import { checkReadmeMd } from "./actions/readme.js";
 import { checkForGit, getGit } from "./git.js";
 import { getDevelopmentMeta } from "./meta.js";
-import { AncaDevelopment, AncaDevelopmentState } from "./schema.js";
+import { AncaConfig, AncaDevelopment, AncaDevelopmentState } from "./schema.js";
 import { checkExistence, readFolderFile, readFolderJsonFile } from "./utils.js";
 
 /**
  *
  * @param development
  */
+export function getDevelopmentMainFullPath(development: AncaDevelopment) {
+  return development.monorepoFullPath || development.fullPath;
+}
+
+/**
+ *
+ * @param development
+ */
 export async function getDevelopmentStatus(development: AncaDevelopment) {
+  const mainFullPath = getDevelopmentMainFullPath(development);
+
   const exists = await checkExistence(development.fullPath);
   if (!exists) {
     return ["remote"];
   }
 
   const hasAncaJson =
-    (await checkExistence(development.fullPath)) &&
-    (await checkExistence(path.join(development.fullPath, "anca.json")));
+    development.monorepoFullPath != null ||
+    ((await checkExistence(development.fullPath)) &&
+      (await checkExistence(path.join(development.fullPath, "anca.json"))));
 
   const statuses = [];
 
-  const gitExists = await checkForGit(development.fullPath);
+  const gitExists = await checkForGit(mainFullPath);
   if (gitExists) {
-    await getGit().cwd(development.fullPath);
+    await getGit().cwd(mainFullPath);
     const statusSummary = await getGit().status();
 
     const isSyncPending = statusSummary.behind > 0 || statusSummary.ahead > 0;
@@ -90,7 +102,9 @@ export async function getDevelopmentStatus(development: AncaDevelopment) {
     development.state.config != null
   ) {
     statuses.unshift(
-      `${development.state.config.stack || "unsupported"} ${development.state.config.type || "project"}`,
+      development.state.config.monorepo != null
+        ? "monorepo"
+        : `${development.state.config.stack || "unsupported"} ${development.state.config.type || "project"}`,
     );
   }
 
@@ -106,13 +120,14 @@ export async function syncDevelopment(development: AncaDevelopment) {
     return;
   }
   const folderExists = await checkExistence(development.fullPath);
-  const gitExists = await checkForGit(development.fullPath);
+  const mailFullPath = getDevelopmentMainFullPath(development);
+  const gitExists = await checkForGit(mailFullPath);
   if (folderExists && gitExists) {
-    await getGit().cwd(development.fullPath).fetch();
+    await getGit().cwd(mailFullPath).fetch();
   } else if (folderExists) {
-    await getGit().cwd(development.fullPath).init();
+    await getGit().cwd(mailFullPath).init();
   } else {
-    await getGit().clone(development.data.gitOrigin, development.fullPath);
+    await getGit().clone(development.data.gitOrigin, mailFullPath);
   }
 }
 
@@ -138,7 +153,16 @@ export async function refreshDevelopmentState(
   }
   const exists = await checkExistence(development.fullPath);
 
-  const config = await readFolderJsonFile(development.fullPath, "anca.json");
+  let config = (await readFolderJsonFile(
+    getDevelopmentMainFullPath(development),
+    "anca.json",
+  )) as AncaConfig | null;
+
+  if (config != null && development.monorepoPart != null) {
+    config = mergician(config, development.monorepoPart);
+    config.monorepo = undefined;
+    console.log(config);
+  }
 
   const state: AncaDevelopmentState = {
     actions: [],

@@ -49,7 +49,10 @@ export async function fixAncaConfig(development: AncaDevelopment) {
     contents.namings.text = development.data?.name || "Unnamed development";
   }
 
-  if (contents.type == null || AncaConfigType[contents.type] == null) {
+  if (
+    contents.monorepo == null &&
+    (contents.type == null || AncaConfigType[contents.type] == null)
+  ) {
     contents.type = (
       await promptOptions("\nChoose project type:", [
         { label: "API", name: "api" },
@@ -61,7 +64,10 @@ export async function fixAncaConfig(development: AncaDevelopment) {
     ).name as AncaConfigType;
   }
 
-  if (contents.stack == null || AncaConfigStack[contents.stack] == null) {
+  if (
+    contents.monorepo == null &&
+    (contents.stack == null || AncaConfigStack[contents.stack] == null)
+  ) {
     contents.stack = (
       await promptOptions("\nChoose project stack:", [
         { label: "Nodejs", name: "nodejs" },

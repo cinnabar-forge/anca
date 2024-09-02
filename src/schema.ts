@@ -58,6 +58,8 @@ export interface AncaDevelopment {
   data?: AncaDevelopmentWorkfolderData;
   folderPath?: string;
   fullPath: string;
+  monorepoFullPath?: string;
+  monorepoPart?: AncaConfigMonorepoData;
   state?: AncaDevelopmentState;
 }
 
@@ -108,11 +110,24 @@ export interface AncaConfigNamings {
   textShort?: string;
 }
 
+export interface AncaConfigMonorepoData {
+  development?: AncaDevelopmentConfig;
+  namings?: AncaConfigNamings;
+  stack?: AncaConfigStack;
+  type?: AncaConfigType;
+}
+
+export interface AncaConfigMonorepo {
+  data: AncaConfigMonorepoData;
+  name: string;
+}
+
 export interface AncaConfig {
   authors?: AncaConfigAuthor[];
   deployment?: AncaDeploymentConfig;
   development?: AncaDevelopmentConfig;
   downloadBinariesUrl?: string;
+  monorepo?: AncaConfigMonorepo[];
   namings?: AncaConfigNamings;
   organizations?: AncaConfigOrganization[];
   stack?: AncaConfigStack;
@@ -321,7 +336,7 @@ export const ANCA_CONFIG_SCHEMA = {
       type: "string",
     },
   },
-  required: ["namings", "stack", "type"],
+  required: ["namings"],
   type: "object",
 };
 

@@ -4,6 +4,7 @@ import path from "path";
 import {
   ANCA_WORKFOLDER_SCHEMA,
   Anca,
+  AncaConfig,
   AncaDeployment,
   AncaDevelopment,
   AncaWorkfolder,
@@ -12,12 +13,26 @@ import { checkExistence, verifyAjv } from "./utils.js";
 
 let instance: Anca;
 
+const configsCache = new Map<string, AncaConfig>();
+
 /**
  * Gets current Anca instance
  * @returns Anca instance
  */
 export function getInstance(): Anca {
   return instance;
+}
+
+/**
+ *
+ * @param fullPath
+ */
+function getMonorepo(fullPath: string) {
+  const ancaJson = path.join(fullPath, "anca.json");
+  if (!configsCache.has(fullPath) && fs.existsSync(ancaJson)) {
+    configsCache.set(fullPath, JSON.parse(fs.readFileSync(ancaJson, "utf-8")));
+  }
+  return configsCache.get(fullPath)?.monorepo;
 }
 
 /**
@@ -66,6 +81,19 @@ export function loadAndValidateConfig(
       fullPath,
     };
     instance.developments.push(developmentInstance);
+    const monorepo = getMonorepo(fullPath);
+    if (monorepo) {
+      for (const part of monorepo) {
+        const developmentInstancePart: AncaDevelopment = {
+          data: development,
+          folderPath: path.resolve(folderPath, part.name),
+          fullPath: path.resolve(fullPath, part.name),
+          monorepoFullPath: fullPath,
+          monorepoPart: part.data,
+        };
+        instance.developments.push(developmentInstancePart);
+      }
+    }
   }
 }
 
@@ -85,6 +113,17 @@ export async function loadProjects(projectPaths: string[]) {
       fullPath,
     };
     instance.developments.push(developmentInstance);
+    const monorepo = getMonorepo(fullPath);
+    if (monorepo) {
+      for (const part of monorepo) {
+        const developmentInstancePart: AncaDevelopment = {
+          fullPath: path.resolve(fullPath, part.name),
+          monorepoFullPath: fullPath,
+          monorepoPart: part.data,
+        };
+        instance.developments.push(developmentInstancePart);
+      }
+    }
   }
 }
 
