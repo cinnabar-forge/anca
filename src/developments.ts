@@ -1,4 +1,3 @@
-import fs from "fs";
 import path from "path";
 import pc from "picocolors";
 
@@ -32,12 +31,7 @@ import { checkReadmeMd } from "./actions/readme.js";
 import { checkForGit, getGit } from "./git.js";
 import { getDevelopmentMeta } from "./meta.js";
 import { AncaDevelopment, AncaDevelopmentState } from "./schema.js";
-import {
-  checkExistence,
-  readFolderFile,
-  readFolderJsonFile,
-  writeFolderJsonFile,
-} from "./utils.js";
+import { checkExistence, readFolderFile, readFolderJsonFile } from "./utils.js";
 
 /**
  *
@@ -104,7 +98,7 @@ export async function getDevelopmentStatus(development: AncaDevelopment) {
  * @param {AncaDevelopment} development
  */
 export async function syncDevelopment(development: AncaDevelopment) {
-  if (development.data.gitOrigin == null) {
+  if (development.data?.gitOrigin == null) {
     return;
   }
   const folderExists = await checkExistence(development.fullPath);
@@ -125,7 +119,7 @@ export async function syncDevelopment(development: AncaDevelopment) {
 export function getDevelopmentDisplayName(
   development: AncaDevelopment,
 ): string {
-  return `${development.state?.config.namings?.text || development.data.name}${pc.dim(" (" + development.data.folder + ")")}`;
+  return `${development.state?.config.namings?.text || development.data?.name || development.fullPath}${pc.dim(" (" + (development.data?.folder || "-") + ")")}`;
 }
 
 /**
@@ -182,13 +176,13 @@ export async function refreshDevelopmentState(
     await checkNodeJsToDevelopmentPack(development);
   }
 
-  const folder = path.join(".", "data", "tmp", development.data.folder);
-  fs.mkdirSync(folder, { recursive: true });
-  await writeFolderJsonFile(
-    folder,
-    development.data.name + ".json",
-    development,
-  );
+  // const folder = path.join(".", "data", "tmp", development.data.folder);
+  // fs.mkdirSync(folder, { recursive: true });
+  // await writeFolderJsonFile(
+  //   folder,
+  //   development.data.name + ".json",
+  //   development,
+  // );
 }
 
 /**

@@ -70,6 +70,25 @@ export function loadAndValidateConfig(
 }
 
 /**
+ *
+ * @param projectPaths
+ */
+export async function loadProjects(projectPaths: string[]) {
+  instance = {
+    deployments: [],
+    developments: [],
+  };
+
+  for (const projectPath of projectPaths) {
+    const fullPath = path.resolve(projectPath);
+    const developmentInstance: AncaDevelopment = {
+      fullPath,
+    };
+    instance.developments.push(developmentInstance);
+  }
+}
+
+/**
  * Creates folders in the workfolder
  * @param workfolderPath
  */
@@ -80,7 +99,10 @@ export async function createFolders(workfolderPath: string) {
   }
 
   for (const development of getInstance().developments) {
-    if (!(await checkExistence(development.folderPath))) {
+    if (
+      development.folderPath &&
+      !(await checkExistence(development.folderPath))
+    ) {
       await fs.promises.mkdir(development.folderPath, { recursive: true });
     }
   }

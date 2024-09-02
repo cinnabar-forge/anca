@@ -41,10 +41,12 @@ export async function fixAncaConfig(development: AncaDevelopment) {
   }
 
   if (contents.namings == null) {
-    contents.namings = { text: development.data.name };
+    contents.namings = {
+      text: development.data?.name || "Unnamed development",
+    };
   }
-  if (contents.namings.text == null) {
-    contents.namings.text = development.data.name;
+  if (contents.namings?.text == null) {
+    contents.namings.text = development.data?.name || "Unnamed development";
   }
 
   if (contents.type == null || AncaConfigType[contents.type] == null) {

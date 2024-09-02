@@ -55,8 +55,8 @@ export interface AncaDevelopmentState {
 }
 
 export interface AncaDevelopment {
-  data: AncaDevelopmentWorkfolderData;
-  folderPath: string;
+  data?: AncaDevelopmentWorkfolderData;
+  folderPath?: string;
   fullPath: string;
   state?: AncaDevelopmentState;
 }

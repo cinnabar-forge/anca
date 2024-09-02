@@ -14,6 +14,11 @@ export function setupCli() {
         name: "config",
       },
       {
+        label: "Paths to specific project(s) (overrides --config)",
+        letter: "p",
+        name: "project",
+      },
+      {
         label: "Specify the path to the main workfolder",
         letter: "w",
         name: "workfolder",
@@ -21,13 +26,13 @@ export function setupCli() {
     ],
   });
 
-  if (cli.config == null) {
+  if (cli.config == null && cli.project == null) {
     throw new Error(
       "Please specify the path to the workfolder files (--config)",
     );
   }
 
-  if (cli.workfolder == null) {
+  if (cli.workfolder == null && cli.project == null) {
     throw new Error(
       "Please specify the path to the main workfolder (--workfolder)",
     );
