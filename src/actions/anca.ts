@@ -52,9 +52,11 @@ export async function fixAncaConfig(development: AncaDevelopment) {
   if (contents.type == null || AncaConfigType[contents.type] == null) {
     contents.type = (
       await promptOptions("\nChoose project type:", [
+        { label: "API", name: "api" },
         { label: "App", name: "app" },
         { label: "Library", name: "library" },
         { label: "Project (other)", name: "project" },
+        { label: "Web", name: "web" },
       ])
     ).name as AncaConfigType;
   }

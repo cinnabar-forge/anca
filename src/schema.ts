@@ -74,14 +74,15 @@ export interface AncaWorkfolder {
 
 export enum AncaConfigStack {
   nodejs = "nodejs",
-  python = "python",
   unsupported = "unsupported",
 }
 
 export enum AncaConfigType {
+  api = "api",
   app = "app",
   library = "library",
   project = "project",
+  web = "web",
 }
 
 export interface AncaConfigAuthor {
@@ -316,7 +317,7 @@ export const ANCA_CONFIG_SCHEMA = {
       type: "string",
     },
     type: {
-      enum: ["app", "library", "project"],
+      enum: ["api", "app", "library", "project", "web"],
       type: "string",
     },
   },
