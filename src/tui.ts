@@ -170,7 +170,11 @@ async function showDevelopmentActions(
         ] as NodejsPackageJson;
         if (fileContents != null) {
           const rebuildFile: NodejsPackageJson = {};
-          await updateNodejsPackageJsonDependencies(rebuildFile, development);
+          await updateNodejsPackageJsonDependencies(
+            rebuildFile,
+            development,
+            false,
+          );
           await updateNodejsPackageJsonDevDependencies(
             rebuildFile,
             development,

@@ -29,7 +29,7 @@
     "build:bundle": "node esbuild.js full",
     "build:dev": "tsc",
     "build:sea": "node sea.build.js",
-    "dev": "tsc-watch",
+    "dev": "node esbuild.js watch '-p .'",
     "fix": "prettier . --write && eslint --fix .",
     "format": "prettier . --write",
     "lint": "eslint --fix .",
@@ -44,7 +44,7 @@
     "markdown-it": "14.1.0",
     "mergician": "2.0.2",
     "node-fetch": "3.3.2",
-    "picocolors": "1.0.1",
+    "picocolors": "1.1.0",
     "simple-git": "3.26.0"
   },
   "devDependencies": {
@@ -54,12 +54,11 @@
     "@types/diff": "5.2.2",
     "@types/markdown-it": "14.1.2",
     "@types/mocha": "10.0.7",
-    "@types/node": "22.5.2",
+    "@types/node": "22.5.3",
     "chai": "5.1.1",
     "esbuild": "0.23.1",
     "mocha": "10.7.3",
     "pre-commit": "1.2.2",
-    "tsc-watch": "6.2.0",
     "typescript": "5.5.4"
   },
   "engines": {

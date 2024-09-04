@@ -411,12 +411,12 @@ async function addNodeJsToDevelopmentPack(development: AncaDevelopment) {
   await addFileToPack(development, ".prettierignore");
   await addFileToPack(development, ".prettierrc");
 
-  await addFileToPack(
-    development,
-    development.state.config.type === "library"
-      ? "tsup.config.js"
-      : "esbuild.js",
-  );
+  if (
+    development.state.config.type === "api" ||
+    development.state.config.type === "app"
+  ) {
+    await addFileToPack(development, "esbuild.js");
+  }
   await addFileToPack(development, "eslint.config.js");
   await addJsonFileToPack(development, "package.json");
   if (development.state.config.type === "app") {
@@ -424,6 +424,9 @@ async function addNodeJsToDevelopmentPack(development: AncaDevelopment) {
     await addJsonFileToPack(development, "sea.config.json");
   }
   await addJsonFileToPack(development, "tsconfig.json");
+  if (development.state.config.type === "library") {
+    await addFileToPack(development, "tsup.config.js");
+  }
 }
 
 /**
@@ -450,7 +453,8 @@ async function checkNodeJsToDevelopmentPack(development: AncaDevelopment) {
   }
 
   if (
-    development.state.config.type === "app" &&
+    (development.state.config.type === "api" ||
+      development.state.config.type === "app") &&
     !(await checkNodejsEsbuildJs(development))
   ) {
     development.state.issues.push("nodejsEsbuildSetToDefault");

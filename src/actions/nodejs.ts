@@ -84,13 +84,14 @@ const packageNameOrder = [
   "pre-commit",
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const SCRIPTS_API: Record<string, string> = {
-  build: "node ../esbuild.js",
-  dev: 'tsc-watch --onSuccess "node ./build/dev/src/index.js"',
-  fix: "prettier . --write --ignore-path ../.gitignore --ignore-path ../.prettierignore && eslint --fix .",
-  format:
-    "prettier . --write --ignore-path ../.gitignore --ignore-path ../.prettierignore",
+  build: "node esbuild.js",
+  "build:bundle": "node esbuild.js full",
+  "build:dev": "tsc",
+  "build:sea": "node sea.build.js",
+  dev: "node esbuild.js watch",
+  fix: "prettier . --write && eslint --fix .",
+  format: "prettier . --write",
   lint: "eslint --fix .",
   "migration:down": "knex migrate:rollback",
   "migration:ls": "npx knex migrate:list",
@@ -98,7 +99,7 @@ const SCRIPTS_API: Record<string, string> = {
   "migration:up": "knex migrate:latest",
   prepack: "npm run build",
   start: "node dist/index.js",
-  test: "prettier . -c && eslint --max-warnings 0 . && tsc && mocha './build/dev/test'",
+  test: "prettier . -c && eslint --max-warnings 0 . && tsc",
 };
 
 const SCRIPTS_APP: Record<string, string> = {
@@ -106,7 +107,7 @@ const SCRIPTS_APP: Record<string, string> = {
   "build:bundle": "node esbuild.js full",
   "build:dev": "tsc",
   "build:sea": "node sea.build.js",
-  dev: "tsc-watch",
+  dev: "node esbuild.js watch",
   fix: "prettier . --write && eslint --fix .",
   format: "prettier . --write",
   lint: "eslint --fix .",
@@ -124,11 +125,27 @@ const SCRIPTS_LIB: Record<string, string> = {
   test: "prettier . -c && eslint --max-warnings 0 . && tsc && mocha './build/dev/test'",
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const DEPENDENCIES_API: string[] = [];
+const DEPENDENCIES_API: string[] = [
+  "dotenv",
+  "express",
+  "express-session",
+  "knex",
+  "passport",
+  "passport-local",
+  "swagger-ui-express",
+  "winston",
+];
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const DEV_DEPENDENCIES_API: string[] = [];
+const DEV_DEPENDENCIES_API: string[] = [
+  "@cinnabar-forge/eslint-plugin",
+  "@types/express",
+  "@types/express-session",
+  "@types/passport",
+  "@types/passport-local",
+  "@types/swagger-ui-express",
+  "esbuild",
+  "typescript",
+];
 
 const DEV_DEPENDENCIES_APP: string[] = [
   "@cinnabar-forge/eslint-plugin",
@@ -140,7 +157,6 @@ const DEV_DEPENDENCIES_APP: string[] = [
   "esbuild",
   "mocha",
   "pre-commit",
-  "tsc-watch",
   "typescript",
 ];
 
@@ -155,10 +171,13 @@ const DEV_DEPENDENCIES_LIB: string[] = [
   "mocha",
   "pre-commit",
   "sinon",
-  "tsc-watch",
   "tsup",
   "typescript",
 ];
+
+const FORBIDDEN_DEPENDENCIES: Record<string, string> = {
+  "tsc-watch": "esbuild",
+};
 
 const PRECOMMIT = ["test"];
 
@@ -252,7 +271,7 @@ export async function checkNodejsPackageJson(
     hasRepository(contents, full) &&
     hasScripts(contents, config) &&
     hasConfig(contents) &&
-    hasDependencies(contents) &&
+    hasDependencies(contents, config) &&
     hasDevDependencies(contents, config) &&
     hasPeerDependencies(contents) &&
     hasPeerDependenciesMeta(contents) &&
@@ -265,7 +284,7 @@ export async function checkNodejsPackageJson(
     hasPrivate(contents) &&
     hasPublishConfig(contents) &&
     hasWorkspaces(contents) &&
-    hasPreCommit(contents, development.monorepoPart ? true : false) &&
+    hasPreCommit(contents, development) &&
     checkPackageJsonOrder(contents)
   );
 }
@@ -449,15 +468,26 @@ function hasRepository(contents: NodejsPackageJson, full: boolean) {
  * @param config
  */
 function hasScripts(contents: NodejsPackageJson, config: AncaConfig) {
-  if (config.type === "app") {
-    for (const key in SCRIPTS_APP) {
-      if (contents.scripts == null || contents.scripts[key] == null) {
-        return false;
-      }
-    }
-  } else if (config.type === "library") {
-    for (const key in SCRIPTS_LIB) {
-      if (contents.scripts == null || contents.scripts[key] == null) {
+  const scripts =
+    config.type === "api"
+      ? SCRIPTS_API
+      : config.type === "app"
+        ? SCRIPTS_APP
+        : config.type === "library"
+          ? SCRIPTS_LIB
+          : {};
+
+  if (
+    config.type === "api" ||
+    config.type === "app" ||
+    config.type === "library"
+  ) {
+    for (const key in scripts) {
+      if (
+        contents.scripts == null ||
+        (contents.scripts[key] !== scripts[key] &&
+          !contents.scripts[key].startsWith(scripts[key]))
+      ) {
         return false;
       }
     }
@@ -479,9 +509,25 @@ function hasConfig(contents: NodejsPackageJson) {
 /**
  *
  * @param contents
+ * @param config
  */
-function hasDependencies(contents: NodejsPackageJson) {
-  contents;
+function hasDependencies(contents: NodejsPackageJson, config: AncaConfig) {
+  const dependencies = config.type === "api" ? DEPENDENCIES_API : null;
+
+  if (dependencies == null) {
+    return true;
+  }
+
+  for (const key of dependencies) {
+    if (
+      contents.dependencies == null ||
+      contents.dependencies[key] == null ||
+      FORBIDDEN_DEPENDENCIES[key]
+    ) {
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -491,25 +537,29 @@ function hasDependencies(contents: NodejsPackageJson) {
  * @param config
  */
 function hasDevDependencies(contents: NodejsPackageJson, config: AncaConfig) {
-  if (config.type === "app") {
-    for (const key of DEV_DEPENDENCIES_APP) {
-      if (
-        contents.devDependencies == null ||
-        contents.devDependencies[key] == null
-      ) {
-        return false;
-      }
-    }
-  } else if (config.type === "library") {
-    for (const key of DEV_DEPENDENCIES_LIB) {
-      if (
-        contents.devDependencies == null ||
-        contents.devDependencies[key] == null
-      ) {
-        return false;
-      }
+  const dependencies =
+    config.type === "api"
+      ? DEV_DEPENDENCIES_API
+      : config.type === "app"
+        ? DEV_DEPENDENCIES_APP
+        : config.type === "library"
+          ? DEV_DEPENDENCIES_LIB
+          : null;
+
+  if (dependencies == null) {
+    return true;
+  }
+
+  for (const key of dependencies) {
+    if (
+      contents.devDependencies == null ||
+      contents.devDependencies[key] == null ||
+      FORBIDDEN_DEPENDENCIES[key]
+    ) {
+      return false;
     }
   }
+
   return true;
 }
 
@@ -614,10 +664,13 @@ function hasWorkspaces(contents: NodejsPackageJson) {
 /**
  *
  * @param contents
- * @param isMonorepoPart
+ * @param development
  */
-function hasPreCommit(contents: NodejsPackageJson, isMonorepoPart: boolean) {
-  return isMonorepoPart || contents["pre-commit"] != null;
+function hasPreCommit(
+  contents: NodejsPackageJson,
+  development: AncaDevelopment,
+) {
+  return development.monorepoPart != null || contents["pre-commit"] != null;
 }
 
 /**
@@ -686,7 +739,7 @@ export async function fixNodejsPackageJson(
   await fixPackageRepository(rebuildFile, contents, full);
   await fixPackageScripts(rebuildFile, contents, config);
   await fixPackageConfig(rebuildFile, contents);
-  await updateNodejsPackageJsonDependencies(rebuildFile, development);
+  await updateNodejsPackageJsonDependencies(rebuildFile, development, true);
   await updateNodejsPackageJsonDevDependencies(rebuildFile, development, true);
   await fixPackagePeerDependencies(rebuildFile, contents);
   await fixPackagePeerDependenciesMeta(rebuildFile, contents);
@@ -699,7 +752,7 @@ export async function fixNodejsPackageJson(
   await fixPackagePrivate(rebuildFile, contents);
   await fixPackagePublishConfig(rebuildFile, contents);
   await fixPackageWorkspaces(rebuildFile, contents);
-  await fixPackagePreCommit(rebuildFile, contents);
+  await fixPackagePreCommit(rebuildFile, contents, development);
 
   for (const key in contents) {
     if (rebuildFile[key] == null && contents[key] != null) {
@@ -1024,6 +1077,7 @@ async function fixPackageRepository(
   contents: NodejsPackageJson,
   full: boolean,
 ) {
+  "ed";
   if (full && contents.repository == null) {
     rebuildFile.repository = {
       type: "git",
@@ -1045,25 +1099,24 @@ async function fixPackageScripts(
   contents: NodejsPackageJson,
   config: AncaConfig,
 ) {
+  const scripts =
+    config.type === "api"
+      ? SCRIPTS_API
+      : config.type === "app"
+        ? SCRIPTS_APP
+        : config.type === "library"
+          ? SCRIPTS_LIB
+          : {};
+
   if (contents.scripts == null) {
-    rebuildFile.scripts = config.type === "app" ? SCRIPTS_APP : SCRIPTS_LIB;
+    rebuildFile.scripts = scripts;
   } else {
     rebuildFile.scripts = {};
-    if (config.type === "app") {
-      for (const key in SCRIPTS_APP) {
-        if (contents.scripts[key] == null) {
-          rebuildFile.scripts[key] = SCRIPTS_APP[key];
-        } else {
-          rebuildFile.scripts[key] = contents.scripts[key];
-        }
-      }
-    } else {
-      for (const key in SCRIPTS_LIB) {
-        if (contents.scripts[key] == null) {
-          rebuildFile.scripts[key] = SCRIPTS_LIB[key];
-        } else {
-          rebuildFile.scripts[key] = contents.scripts[key];
-        }
+    for (const key in scripts) {
+      if (scripts[key]) {
+        rebuildFile.scripts[key] = scripts[key];
+      } else {
+        rebuildFile.scripts[key] = contents.scripts[key];
       }
     }
   }
@@ -1086,10 +1139,12 @@ async function fixPackageConfig(
  *
  * @param rebuildFile
  * @param development
+ * @param changePackages add or remove packages to comply presets
  */
 export async function updateNodejsPackageJsonDependencies(
   rebuildFile: NodejsPackageJson,
   development: AncaDevelopment,
+  changePackages: boolean,
 ) {
   if (development.state == null) {
     return;
@@ -1107,7 +1162,12 @@ export async function updateNodejsPackageJsonDependencies(
 
   rebuildFile.dependencies = {};
 
-  const allDependencies = Object.keys(contents.dependencies);
+  const allDependencies = changePackages
+    ? new Set([
+        ...(development.state.config.type === "api" ? DEPENDENCIES_API : []),
+        ...Object.keys(contents.dependencies),
+      ])
+    : Object.keys(contents.dependencies);
 
   const allDependenciesList = Array.from(allDependencies).sort();
 
@@ -1125,8 +1185,10 @@ export async function updateNodejsPackageJsonDependencies(
           `Updating dep '${pkg}' from ${contents.dependencies[pkg]} to ${fetchedVersions[pkg]}`,
         );
       }
-      rebuildFile.dependencies[pkg] =
-        fetchedVersions[pkg] || contents.dependencies[pkg];
+      if (!changePackages || !FORBIDDEN_DEPENDENCIES[pkg]) {
+        rebuildFile.dependencies[pkg] =
+          fetchedVersions[pkg] || contents.dependencies[pkg];
+      }
     }
   } catch (error) {
     console.error("Error updating dependencies:", error);
@@ -1137,12 +1199,12 @@ export async function updateNodejsPackageJsonDependencies(
  *
  * @param rebuildFile
  * @param development
- * @param addPredefined
+ * @param changePackages add or remove packages to comply presets
  */
 export async function updateNodejsPackageJsonDevDependencies(
   rebuildFile: NodejsPackageJson,
   development: AncaDevelopment,
-  addPredefined: boolean,
+  changePackages: boolean,
 ) {
   if (development.state == null) {
     return;
@@ -1160,13 +1222,15 @@ export async function updateNodejsPackageJsonDevDependencies(
 
   rebuildFile.devDependencies = {};
 
-  const allDevDependencies = addPredefined
+  const allDevDependencies = changePackages
     ? new Set([
-        ...(development.state.config.type === "app"
-          ? DEV_DEPENDENCIES_APP
-          : development.state.config.type === "library"
-            ? DEV_DEPENDENCIES_LIB
-            : []),
+        ...(development.state.config.type === "api"
+          ? DEV_DEPENDENCIES_API
+          : development.state.config.type === "app"
+            ? DEV_DEPENDENCIES_APP
+            : development.state.config.type === "library"
+              ? DEV_DEPENDENCIES_LIB
+              : []),
         ...Object.keys(contents.devDependencies),
       ])
     : Object.keys(contents.devDependencies);
@@ -1187,8 +1251,10 @@ export async function updateNodejsPackageJsonDevDependencies(
           `Updating dev-dep '${pkg}' from ${contents.devDependencies[pkg]} to ${fetchedVersions[pkg]}`,
         );
       }
-      rebuildFile.devDependencies[pkg] =
-        fetchedVersions[pkg] || contents.devDependencies[pkg];
+      if (!changePackages || !FORBIDDEN_DEPENDENCIES[pkg]) {
+        rebuildFile.devDependencies[pkg] =
+          fetchedVersions[pkg] || contents.devDependencies[pkg];
+      }
     }
   } catch (error) {
     console.error("Error updating devDependencies:", error);
@@ -1337,15 +1403,19 @@ async function fixPackageWorkspaces(
  *
  * @param rebuildFile
  * @param contents
+ * @param development
  */
 async function fixPackagePreCommit(
   rebuildFile: NodejsPackageJson,
   contents: NodejsPackageJson,
+  development: AncaDevelopment,
 ) {
   if (contents["pre-commit"] == null) {
-    contents["pre-commit"] = PRECOMMIT;
+    contents["pre-commit"] =
+      development.monorepoPart == null ? PRECOMMIT : null;
   } else {
-    rebuildFile["pre-commit"] = contents["pre-commit"];
+    rebuildFile["pre-commit"] =
+      development.monorepoPart == null ? contents["pre-commit"] : null;
   }
 }
 
