@@ -32,8 +32,10 @@ import {
   fixNodejsSeaBuildJs,
   fixNodejsSeaConfigJson,
 } from "./actions/nodejs-sea.js";
+import { fixNodejsSrc, fixNodejsTest } from "./actions/nodejs-src.js";
 import { fixNodejsTsconfigJson } from "./actions/nodejs-tsconfig.js";
 import { fixNodejsTsupConfigJs } from "./actions/nodejs-tsup.js";
+import { fixOpenapiJson } from "./actions/openapi.js";
 import { fixReadmeMd } from "./actions/readme.js";
 import { CINNABAR_PROJECT_VERSION } from "./cinnabar.js";
 import { getInstance } from "./config.js";
@@ -235,6 +237,20 @@ async function showDevelopmentActions(
       },
       label: "[sea.config.json] Set to default",
     },
+    nodejsSrcSetToDefault: {
+      action: async () => {
+        await fixNodejsSrc(development);
+        await backHere();
+      },
+      label: "[src/index.ts] Set to default",
+    },
+    nodejsTestSetToDefault: {
+      action: async () => {
+        await fixNodejsTest(development);
+        await backHere();
+      },
+      label: "[test/index.test.ts] Set to default",
+    },
     nodejsTsconfigSetToDefault: {
       action: async () => {
         await fixNodejsTsconfigJson(development);
@@ -248,6 +264,13 @@ async function showDevelopmentActions(
         await backHere();
       },
       label: "[tsup.config.js] Set to default",
+    },
+    openapiJsonSetToDefault: {
+      action: async () => {
+        await fixOpenapiJson(development);
+        await backHere();
+      },
+      label: "[openapi.json] Set to default",
     },
     readmeSetToDefault: {
       action: async () => {

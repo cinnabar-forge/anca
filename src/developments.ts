@@ -26,8 +26,10 @@ import {
   checkNodejsSeaBuildJs,
   checkNodejsSeaConfigJson,
 } from "./actions/nodejs-sea.js";
+import { checkNodejsSrc, checkNodejsTest } from "./actions/nodejs-src.js";
 import { checkNodejsTsconfigJson } from "./actions/nodejs-tsconfig.js";
 import { checkNodejsTsupConfigJs } from "./actions/nodejs-tsup.js";
+import { checkOpenapiJson } from "./actions/openapi.js";
 import { checkReadmeMd } from "./actions/readme.js";
 import { checkForGit, getGit } from "./git.js";
 import { getDevelopmentMeta } from "./meta.js";
@@ -204,6 +206,7 @@ export async function refreshDevelopmentState(
   await addCommonToDevelopmentPack(development);
   await addDevcontainersToDevelopmentPack(development);
   await addGithubActionsToDevelopmentPack(development);
+  await addOpenapiJsonToDevelopmentPack(development);
   await addNodeJsToDevelopmentPack(development);
 
   state.meta = getDevelopmentMeta(development);
@@ -211,6 +214,7 @@ export async function refreshDevelopmentState(
   await checkCommonToDevelopmentPack(development);
   await checkDevcontainersToDevelopmentPack(development);
   await checkGithubActionsToDevelopmentPack(development);
+  await checkOpenapiJsonDevelopmentPack(development);
   await checkNodeJsToDevelopmentPack(development);
 }
 
@@ -397,6 +401,44 @@ async function checkGithubActionsToDevelopmentPack(
  *
  * @param development
  */
+async function addOpenapiJsonToDevelopmentPack(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
+  }
+  if (development.state.config.monorepo != null) {
+    return;
+  }
+  if (development.state.config.stack !== "nodejs") {
+    return;
+  }
+
+  await addJsonFileToPack(development, "openapi.json");
+}
+
+/**
+ *
+ * @param development
+ */
+async function checkOpenapiJsonDevelopmentPack(development: AncaDevelopment) {
+  if (development.state == null) {
+    return;
+  }
+  if (development.state.config.monorepo != null) {
+    return;
+  }
+  if (development.state.config.stack !== "nodejs") {
+    return;
+  }
+
+  if (!(await checkOpenapiJson(development))) {
+    development.state.issues.push("openapiJsonSetToDefault");
+  }
+}
+
+/**
+ *
+ * @param development
+ */
 async function addNodeJsToDevelopmentPack(development: AncaDevelopment) {
   if (development.state == null) {
     return;
@@ -407,6 +449,9 @@ async function addNodeJsToDevelopmentPack(development: AncaDevelopment) {
   if (development.state.config.stack !== "nodejs") {
     return;
   }
+
+  await addFileToPack(development, "./src/index.ts");
+  await addFileToPack(development, "./test/index.test.ts");
 
   await addFileToPack(development, ".prettierignore");
   await addFileToPack(development, ".prettierrc");
@@ -442,6 +487,14 @@ async function checkNodeJsToDevelopmentPack(development: AncaDevelopment) {
   }
   if (development.state.config.stack !== "nodejs") {
     return;
+  }
+
+  if (!(await checkNodejsSrc(development))) {
+    development.state.issues.push("nodejsSrcSetToDefault");
+  }
+
+  if (!(await checkNodejsTest(development))) {
+    development.state.issues.push("nodejsTestSetToDefault");
   }
 
   if (!(await checkNodejsPrettierIgnore(development))) {

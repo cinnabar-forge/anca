@@ -35,8 +35,11 @@ export type AncaAction =
   | "nodejsPrettierRcSetToDefault"
   | "nodejsSeaBuildJsSetToDefault"
   | "nodejsSeaConfigJsonSetToDefault"
+  | "nodejsSrcSetToDefault"
+  | "nodejsTestSetToDefault"
   | "nodejsTsconfigSetToDefault"
   | "nodejsTsupConfigJsSetToDefault"
+  | "openapiJsonSetToDefault"
   | "readmeSetToDefault";
 
 export interface AncaMeta {
