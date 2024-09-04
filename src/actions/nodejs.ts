@@ -486,7 +486,7 @@ function hasScripts(contents: NodejsPackageJson, config: AncaConfig) {
       if (
         contents.scripts == null ||
         (contents.scripts[key] !== scripts[key] &&
-          !contents.scripts[key].startsWith(scripts[key]))
+          !contents.scripts[key]?.startsWith(scripts[key]))
       ) {
         return false;
       }
