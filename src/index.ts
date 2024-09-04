@@ -1,7 +1,9 @@
 import { setupCli } from "./cli.js";
 import {
   createFolders,
+  getConfigFromGithub,
   loadAndValidateConfig,
+  loadEmpty,
   loadProjects,
 } from "./config.js";
 import { showMainMenu } from "./tui.js";
@@ -15,9 +17,14 @@ async function main() {
   try {
     if (options.project) {
       await loadProjects(options.project);
-    } else {
-      loadAndValidateConfig(options.workfolder[0], options.config);
+    } else if (options.workfolder) {
+      loadAndValidateConfig(
+        options.workfolder[0],
+        options.github ? getConfigFromGithub(options.github) : options.config,
+      );
       await createFolders(options.workfolder[0]);
+    } else {
+      loadEmpty();
     }
 
     showMainMenu();

@@ -14,6 +14,11 @@ export function setupCli() {
         name: "config",
       },
       {
+        label: "GitHub repositories to use",
+        letter: "g",
+        name: "github",
+      },
+      {
         label: "Paths to specific project(s) (overrides --config)",
         letter: "p",
         name: "project",
@@ -26,16 +31,17 @@ export function setupCli() {
     ],
   });
 
-  if (cli.config == null && cli.project == null) {
-    throw new Error(
-      "Please specify the path to the workfolder files (--config)",
-    );
-  }
-
-  if (cli.workfolder == null && cli.project == null) {
+  const throwWorkfolder = () => {
     throw new Error(
       "Please specify the path to the main workfolder (--workfolder)",
     );
+  };
+
+  // eslint-disable-next-line sonarjs/no-collapsible-if
+  if (cli.github != null || cli.config != null) {
+    if (cli.workfolder == null) {
+      throwWorkfolder();
+    }
   }
 
   return cli;

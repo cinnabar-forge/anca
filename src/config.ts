@@ -36,6 +36,40 @@ function getMonorepo(fullPath: string) {
 }
 
 /**
+ *
+ * @param githubUrls
+ */
+export function getConfigFromGithub(githubUrls: string[]) {
+  const config: AncaWorkfolder = {
+    ancaDataVersion: 0,
+    deployments: [],
+    developments: [],
+  };
+  for (const githubUrl of githubUrls) {
+    const splitted = githubUrl.split("/");
+    const owner = splitted[splitted.length - 2];
+    const repo = splitted[splitted.length - 1];
+    console.log(githubUrl, splitted, owner, repo);
+    config.developments.push({
+      folder: owner,
+      gitOrigin: `https://github.com/${owner}/${repo}.git`,
+      name: repo,
+    });
+  }
+  return config;
+}
+
+/**
+ *
+ */
+export function loadEmpty() {
+  instance = {
+    deployments: [],
+    developments: [],
+  };
+}
+
+/**
  * Loads and validates config
  * @param {string} workfolderPath path to work folder
  * @param {string[]} configsPath paths to config files
