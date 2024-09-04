@@ -7,9 +7,14 @@ import fetch from "node-fetch";
 export async function fetchNpmPackagesVersion(
   packagesName: string[],
 ): Promise<Record<string, string>> {
+  if (packagesName.length === 0) {
+    return {};
+  }
   const baseUrl = "https://npm-versions.cinnabar.ru/versions";
   const query = `?packages=${packagesName.join(",")}`;
   const url = `${baseUrl}${query}`;
+
+  console.log("Requesting from Cinnabar Forge NPM Cache:", url);
 
   try {
     const response = await fetch(url);

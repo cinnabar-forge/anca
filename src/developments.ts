@@ -103,7 +103,9 @@ export async function getDevelopmentStatus(development: AncaDevelopment) {
   ) {
     statuses.unshift(
       development.state.config.monorepo != null
-        ? "monorepo"
+        ? development.state.config.stack
+          ? `${development.state.config.stack} monorepo`
+          : "monorepo"
         : `${development.state.config.stack || "unsupported"} ${development.state.config.type || "project"}`,
     );
   }
@@ -158,10 +160,21 @@ export async function refreshDevelopmentState(
     "anca.json",
   )) as AncaConfig | null;
 
-  if (config != null && development.monorepoPart != null) {
-    config = mergician(config, development.monorepoPart);
-    config.monorepo = undefined;
-    console.log(config);
+  if (config != null) {
+    if (development.monorepoPart != null) {
+      config = mergician(config, development.monorepoPart);
+      config.monorepo = undefined;
+    } else if (config.monorepo != null && config.stack == null) {
+      const stacks = new Set<string>();
+      for (const part of config.monorepo) {
+        if (part.data.stack != null) {
+          stacks.add(part.data.stack);
+        }
+      }
+      if (stacks.size === 1) {
+        config.stack = stacks.values().next().value;
+      }
+    }
   }
 
   const state: AncaDevelopmentState = {
@@ -191,26 +204,14 @@ export async function refreshDevelopmentState(
   await addCommonToDevelopmentPack(development);
   await addDevcontainersToDevelopmentPack(development);
   await addGithubActionsToDevelopmentPack(development);
-  if (state.config.stack === "nodejs") {
-    await addNodeJsToDevelopmentPack(development);
-  }
+  await addNodeJsToDevelopmentPack(development);
 
   state.meta = getDevelopmentMeta(development);
 
   await checkCommonToDevelopmentPack(development);
   await checkDevcontainersToDevelopmentPack(development);
   await checkGithubActionsToDevelopmentPack(development);
-  if (state.config.stack === "nodejs") {
-    await checkNodeJsToDevelopmentPack(development);
-  }
-
-  // const folder = path.join(".", "data", "tmp", development.data.folder);
-  // fs.mkdirSync(folder, { recursive: true });
-  // await writeFolderJsonFile(
-  //   folder,
-  //   development.data.name + ".json",
-  //   development,
-  // );
+  await checkNodeJsToDevelopmentPack(development);
 }
 
 /**
@@ -249,6 +250,9 @@ async function addMetaToDevelopmentPack(development: AncaDevelopment) {
   if (development.state == null) {
     return;
   }
+  if (development.monorepoPart != null) {
+    return;
+  }
 
   await addFileToPack(development, "cinnabar.json");
   await addFileToPack(development, "version.json");
@@ -260,6 +264,9 @@ async function addMetaToDevelopmentPack(development: AncaDevelopment) {
  */
 async function addCommonToDevelopmentPack(development: AncaDevelopment) {
   if (development.state == null) {
+    return;
+  }
+  if (development.monorepoPart != null) {
     return;
   }
 
@@ -275,6 +282,9 @@ async function addCommonToDevelopmentPack(development: AncaDevelopment) {
  */
 async function checkCommonToDevelopmentPack(development: AncaDevelopment) {
   if (development.state == null) {
+    return;
+  }
+  if (development.monorepoPart != null) {
     return;
   }
 
@@ -303,6 +313,9 @@ async function addDevcontainersToDevelopmentPack(development: AncaDevelopment) {
   if (development.state == null) {
     return;
   }
+  if (development.monorepoPart != null) {
+    return;
+  }
 
   await addJsonFileToPack(development, ".devcontainer/devcontainer.json");
   await addFileToPack(development, ".devcontainer/Dockerfile");
@@ -316,6 +329,9 @@ async function checkDevcontainersToDevelopmentPack(
   development: AncaDevelopment,
 ) {
   if (development.state == null) {
+    return;
+  }
+  if (development.monorepoPart != null) {
     return;
   }
 
@@ -336,6 +352,9 @@ async function addGithubActionsToDevelopmentPack(development: AncaDevelopment) {
   if (development.state == null) {
     return;
   }
+  if (development.monorepoPart != null) {
+    return;
+  }
   if (development.state.config.stack !== "nodejs") {
     return;
   }
@@ -352,6 +371,9 @@ async function checkGithubActionsToDevelopmentPack(
   development: AncaDevelopment,
 ) {
   if (development.state == null) {
+    return;
+  }
+  if (development.monorepoPart != null) {
     return;
   }
   if (development.state.config.stack !== "nodejs") {
@@ -379,12 +401,16 @@ async function addNodeJsToDevelopmentPack(development: AncaDevelopment) {
   if (development.state == null) {
     return;
   }
+  if (development.state.config.monorepo != null) {
+    return;
+  }
   if (development.state.config.stack !== "nodejs") {
     return;
   }
 
   await addFileToPack(development, ".prettierignore");
   await addFileToPack(development, ".prettierrc");
+
   await addFileToPack(
     development,
     development.state.config.type === "library"
@@ -393,7 +419,7 @@ async function addNodeJsToDevelopmentPack(development: AncaDevelopment) {
   );
   await addFileToPack(development, "eslint.config.js");
   await addJsonFileToPack(development, "package.json");
-  if (development.state.config.type !== "library") {
+  if (development.state.config.type === "app") {
     await addFileToPack(development, "sea.build.js");
     await addJsonFileToPack(development, "sea.config.json");
   }
@@ -406,6 +432,9 @@ async function addNodeJsToDevelopmentPack(development: AncaDevelopment) {
  */
 async function checkNodeJsToDevelopmentPack(development: AncaDevelopment) {
   if (development.state == null) {
+    return;
+  }
+  if (development.state.config.monorepo != null) {
     return;
   }
   if (development.state.config.stack !== "nodejs") {
@@ -421,7 +450,7 @@ async function checkNodeJsToDevelopmentPack(development: AncaDevelopment) {
   }
 
   if (
-    development.state.config.type !== "library" &&
+    development.state.config.type === "app" &&
     !(await checkNodejsEsbuildJs(development))
   ) {
     development.state.issues.push("nodejsEsbuildSetToDefault");
@@ -439,7 +468,7 @@ async function checkNodeJsToDevelopmentPack(development: AncaDevelopment) {
   }
   development.state.actions.push("nodejsPackageJsonCheckUpdates");
 
-  if (development.state.config.type !== "library") {
+  if (development.state.config.type === "app") {
     if (!(await checkNodejsSeaBuildJs(development))) {
       development.state.issues.push("nodejsSeaBuildJsSetToDefault");
     }

@@ -17,6 +17,7 @@ import { fixLicenseMd } from "./actions/license.js";
 import {
   NodejsPackageJson,
   fixNodejsPackageJson,
+  installNodejsDependencies,
   updateNodejsPackageJsonDependencies,
   updateNodejsPackageJsonDevDependencies,
   writeNodejsPackageJson,
@@ -173,10 +174,12 @@ async function showDevelopmentActions(
           await updateNodejsPackageJsonDevDependencies(
             rebuildFile,
             development,
+            false,
           );
           fileContents.dependencies = rebuildFile.dependencies;
           fileContents.devDependencies = rebuildFile.devDependencies;
           await writeNodejsPackageJson(development);
+          await installNodejsDependencies(development);
         }
         await backHere();
       },
@@ -186,6 +189,7 @@ async function showDevelopmentActions(
       action: async () => {
         await fixNodejsPackageJson(development, false);
         await writeNodejsPackageJson(development);
+        await installNodejsDependencies(development);
         await backHere();
       },
       label: "[package.json] Fix",
@@ -194,6 +198,7 @@ async function showDevelopmentActions(
       action: async () => {
         await fixNodejsPackageJson(development, true);
         await writeNodejsPackageJson(development);
+        await installNodejsDependencies(development);
         await backHere();
       },
       label: "[package.json] Fix & add optional fields",

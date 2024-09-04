@@ -1,4 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { exec } from "child_process";
 import { promptText } from "clivo";
 import { isDeepStrictEqual } from "util";
 
@@ -83,6 +84,23 @@ const packageNameOrder = [
   "pre-commit",
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const SCRIPTS_API: Record<string, string> = {
+  build: "node ../esbuild.js",
+  dev: 'tsc-watch --onSuccess "node ./build/dev/src/index.js"',
+  fix: "prettier . --write --ignore-path ../.gitignore --ignore-path ../.prettierignore && eslint --fix .",
+  format:
+    "prettier . --write --ignore-path ../.gitignore --ignore-path ../.prettierignore",
+  lint: "eslint --fix .",
+  "migration:down": "knex migrate:rollback",
+  "migration:ls": "npx knex migrate:list",
+  "migration:restart": "knex migrate:rollback && knex migrate:latest",
+  "migration:up": "knex migrate:latest",
+  prepack: "npm run build",
+  start: "node dist/index.js",
+  test: "prettier . -c && eslint --max-warnings 0 . && tsc && mocha './build/dev/test'",
+};
+
 const SCRIPTS_APP: Record<string, string> = {
   build: "node esbuild.js",
   "build:bundle": "node esbuild.js full",
@@ -105,6 +123,12 @@ const SCRIPTS_LIB: Record<string, string> = {
   prepack: "npm run build",
   test: "prettier . -c && eslint --max-warnings 0 . && tsc && mocha './build/dev/test'",
 };
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const DEPENDENCIES_API: string[] = [];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const DEV_DEPENDENCIES_API: string[] = [];
 
 const DEV_DEPENDENCIES_APP: string[] = [
   "@cinnabar-forge/eslint-plugin",
@@ -241,7 +265,7 @@ export async function checkNodejsPackageJson(
     hasPrivate(contents) &&
     hasPublishConfig(contents) &&
     hasWorkspaces(contents) &&
-    hasPreCommit(contents) &&
+    hasPreCommit(contents, development.monorepoPart ? true : false) &&
     checkPackageJsonOrder(contents)
   );
 }
@@ -590,9 +614,10 @@ function hasWorkspaces(contents: NodejsPackageJson) {
 /**
  *
  * @param contents
+ * @param isMonorepoPart
  */
-function hasPreCommit(contents: NodejsPackageJson) {
-  return contents["pre-commit"] != null;
+function hasPreCommit(contents: NodejsPackageJson, isMonorepoPart: boolean) {
+  return isMonorepoPart || contents["pre-commit"] != null;
 }
 
 /**
@@ -662,7 +687,7 @@ export async function fixNodejsPackageJson(
   await fixPackageScripts(rebuildFile, contents, config);
   await fixPackageConfig(rebuildFile, contents);
   await updateNodejsPackageJsonDependencies(rebuildFile, development);
-  await updateNodejsPackageJsonDevDependencies(rebuildFile, development);
+  await updateNodejsPackageJsonDevDependencies(rebuildFile, development, true);
   await fixPackagePeerDependencies(rebuildFile, contents);
   await fixPackagePeerDependenciesMeta(rebuildFile, contents);
   await fixPackageBundleDependencies(rebuildFile, contents);
@@ -683,6 +708,26 @@ export async function fixNodejsPackageJson(
   }
 
   development.state.jsonFiles["package.json"] = rebuildFile;
+}
+
+/**
+ *
+ * @param development
+ */
+export async function installNodejsDependencies(development: AncaDevelopment) {
+  // eslint-disable-next-line security/detect-child-process
+  exec(`cd ${development.fullPath} && npm i`, (error, stdout, stderr) => {
+    if (error) {
+      console.log(
+        `package.json has been updated, but can't use 'npm i', please use it in ${development.fullPath} to install dependencies manually`,
+      );
+      return;
+    }
+    console.log(`npm install output: ${stdout}`);
+    if (stderr) {
+      console.error(`npm install errors: ${stderr}`);
+    }
+  });
 }
 
 /**
@@ -1062,25 +1107,26 @@ export async function updateNodejsPackageJsonDependencies(
 
   rebuildFile.dependencies = {};
 
-  const predefinedDependencies: string[] = [];
-
-  const allDependencies = new Set([
-    ...predefinedDependencies,
-    ...Object.keys(contents.dependencies),
-  ]);
+  const allDependencies = Object.keys(contents.dependencies);
 
   const allDependenciesList = Array.from(allDependencies).sort();
 
   try {
-    const fetchedVersions = await fetchNpmPackagesVersion(allDependenciesList);
+    const fetchedVersions = await fetchNpmPackagesVersion(
+      allDependenciesList.filter((dep: string) => !dep.includes("file:")),
+    );
 
     for (const pkg of allDependenciesList) {
-      if (fetchedVersions[pkg] !== contents.dependencies[pkg]) {
+      if (
+        fetchedVersions[pkg] !== contents.dependencies[pkg] &&
+        fetchedVersions[pkg]
+      ) {
         console.log(
           `Updating dep '${pkg}' from ${contents.dependencies[pkg]} to ${fetchedVersions[pkg]}`,
         );
       }
-      rebuildFile.dependencies[pkg] = fetchedVersions[pkg];
+      rebuildFile.dependencies[pkg] =
+        fetchedVersions[pkg] || contents.dependencies[pkg];
     }
   } catch (error) {
     console.error("Error updating dependencies:", error);
@@ -1091,10 +1137,12 @@ export async function updateNodejsPackageJsonDependencies(
  *
  * @param rebuildFile
  * @param development
+ * @param addPredefined
  */
 export async function updateNodejsPackageJsonDevDependencies(
   rebuildFile: NodejsPackageJson,
   development: AncaDevelopment,
+  addPredefined: boolean,
 ) {
   if (development.state == null) {
     return;
@@ -1112,30 +1160,35 @@ export async function updateNodejsPackageJsonDevDependencies(
 
   rebuildFile.devDependencies = {};
 
-  const predefinedDevDependencies =
-    development.state.config.type === "app"
-      ? DEV_DEPENDENCIES_APP
-      : DEV_DEPENDENCIES_LIB;
-
-  const allDevDependencies = new Set([
-    ...predefinedDevDependencies,
-    ...Object.keys(contents.devDependencies),
-  ]);
+  const allDevDependencies = addPredefined
+    ? new Set([
+        ...(development.state.config.type === "app"
+          ? DEV_DEPENDENCIES_APP
+          : development.state.config.type === "library"
+            ? DEV_DEPENDENCIES_LIB
+            : []),
+        ...Object.keys(contents.devDependencies),
+      ])
+    : Object.keys(contents.devDependencies);
 
   const allDevDependenciesList = Array.from(allDevDependencies).sort();
 
   try {
     const fetchedVersions = await fetchNpmPackagesVersion(
-      allDevDependenciesList,
+      allDevDependenciesList.filter((dep: string) => !dep.includes("file:")),
     );
 
     for (const pkg of allDevDependenciesList) {
-      if (fetchedVersions[pkg] !== contents.devDependencies[pkg]) {
+      if (
+        fetchedVersions[pkg] !== contents.devDependencies[pkg] &&
+        fetchedVersions[pkg]
+      ) {
         console.log(
           `Updating dev-dep '${pkg}' from ${contents.devDependencies[pkg]} to ${fetchedVersions[pkg]}`,
         );
       }
-      rebuildFile.devDependencies[pkg] = fetchedVersions[pkg];
+      rebuildFile.devDependencies[pkg] =
+        fetchedVersions[pkg] || contents.devDependencies[pkg];
     }
   } catch (error) {
     console.error("Error updating devDependencies:", error);
