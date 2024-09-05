@@ -9,10 +9,11 @@ export interface AncaDeployment {
 }
 
 export interface AncaDevelopmentWorkfolderData {
-  folder: string;
   gitOrigin?: string;
   gitProds?: string[];
   name: string;
+  owner: string;
+  resource: string;
 }
 
 export type AncaAction =
@@ -189,9 +190,6 @@ export const ANCA_WORKFOLDER_SCHEMA = {
       description: "List of development projects",
       items: {
         properties: {
-          folder: {
-            type: "string",
-          },
           gitOrigin: {
             type: "string",
           },
@@ -207,8 +205,14 @@ export const ANCA_WORKFOLDER_SCHEMA = {
           name: {
             type: "string",
           },
+          owner: {
+            type: "string",
+          },
+          resource: {
+            type: "string",
+          },
         },
-        required: ["folder", "name"],
+        required: ["resource", "owner", "name"],
         type: "object",
       },
       type: "array",

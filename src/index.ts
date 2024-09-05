@@ -5,6 +5,7 @@ import {
   loadAndValidateConfig,
   loadEmpty,
   loadProjects,
+  readConfigFile,
 } from "./config.js";
 import { showMainMenu } from "./tui.js";
 
@@ -20,7 +21,11 @@ async function main() {
     } else if (options.workfolder) {
       loadAndValidateConfig(
         options.workfolder[0],
-        options.github ? getConfigFromGithub(options.github) : options.config,
+        options.github
+          ? getConfigFromGithub(options.github)
+          : options.config
+            ? readConfigFile(options.config[0])
+            : {},
       );
       await createFolders(options.workfolder[0]);
     } else {

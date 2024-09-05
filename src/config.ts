@@ -51,9 +51,10 @@ export function getConfigFromGithub(githubUrls: string[]) {
     const repo = splitted[splitted.length - 1];
     console.log(githubUrl, splitted, owner, repo);
     config.developments.push({
-      folder: owner,
-      gitOrigin: `https://github.com/${owner}/${repo}.git`,
+      gitOrigin: `git@github.com:${owner}/${repo}.git`,
       name: repo,
+      owner,
+      resource: "github.com",
     });
   }
   return config;
@@ -70,18 +71,22 @@ export function loadEmpty() {
 }
 
 /**
+ *
+ * @param configPath
+ */
+export function readConfigFile(configPath: string) {
+  return JSON.parse(fs.readFileSync(configPath, "utf-8"));
+}
+
+/**
  * Loads and validates config
  * @param {string} workfolderPath path to work folder
- * @param {string[]} configsPath paths to config files
+ * @param {AncaWorkfolder} configContents paths to config files
  */
 export function loadAndValidateConfig(
   workfolderPath: string,
-  configsPath: string[],
+  configContents: AncaWorkfolder,
 ) {
-  const configContents: AncaWorkfolder = JSON.parse(
-    fs.readFileSync(configsPath[0], "utf-8"),
-  );
-
   verifyAjv(ANCA_WORKFOLDER_SCHEMA, configContents);
 
   instance = {
@@ -106,7 +111,8 @@ export function loadAndValidateConfig(
     const folderPath = path.resolve(
       workfolderPath,
       "developments",
-      development.folder,
+      development.resource,
+      development.owner,
     );
     const fullPath = path.resolve(folderPath, development.name);
     const developmentInstance: AncaDevelopment = {
@@ -129,6 +135,52 @@ export function loadAndValidateConfig(
       }
     }
   }
+}
+
+/**
+ *
+ * @param config
+ * @param currentPath
+ */
+async function traverseDirectory(config: AncaWorkfolder, currentPath: string) {
+  const entries = await fs.promises.readdir(currentPath, {
+    withFileTypes: true,
+  });
+
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      const entryPath = path.join(currentPath, entry.name);
+      const parts = entryPath.split(path.sep);
+
+      if (parts.length >= 4) {
+        const resource = parts[parts.length - 3];
+        const owner = parts[parts.length - 2];
+        const repo = parts[parts.length - 1];
+
+        config.developments.push({
+          name: repo,
+          owner,
+          resource,
+        });
+      } else {
+        await traverseDirectory(config, entryPath);
+      }
+    }
+  }
+}
+
+/**
+ *
+ * @param workfolderPath
+ */
+export async function loadWorkfolder(workfolderPath: string) {
+  const config: AncaWorkfolder = {
+    ancaDataVersion: 0,
+    deployments: [],
+    developments: [],
+  };
+
+  await traverseDirectory(config, workfolderPath);
 }
 
 /**

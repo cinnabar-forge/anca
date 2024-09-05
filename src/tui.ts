@@ -302,8 +302,8 @@ async function showDevelopmentActions(
   state.actions.forEach((code) => map(code, false));
 
   await promptMenu(
-    development.data?.name && development.data?.folder
-      ? `\n[${development.data.name.toUpperCase()} at ${development.data.folder.toUpperCase()}] (${(await getDevelopmentStatus(development)).join(", ")})`
+    development.data?.name && development.data?.owner
+      ? `\n[${development.data.name.toUpperCase()} at ${development.data.owner.toUpperCase()}] (${(await getDevelopmentStatus(development)).join(", ")})`
       : `\n[${development.fullPath}] (${(await getDevelopmentStatus(development)).join(", ")})`,
     menu,
   );

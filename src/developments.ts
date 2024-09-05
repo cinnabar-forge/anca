@@ -142,7 +142,7 @@ export async function syncDevelopment(development: AncaDevelopment) {
 export function getDevelopmentDisplayName(
   development: AncaDevelopment,
 ): string {
-  return `${development.state?.config.namings?.text || development.data?.name || development.fullPath.split("/").pop()}${pc.dim(" (" + (development.data?.folder || development.fullPath) + ")")}`;
+  return `${development.state?.config.namings?.text || development.data?.name || development.fullPath.split("/").pop()}${pc.dim(" (" + (development.data?.owner || development.fullPath) + ")")}`;
 }
 
 /**
