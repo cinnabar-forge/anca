@@ -12,6 +12,7 @@ const rules = {
   "jsdoc/require-returns-type": "off",
   "security/detect-non-literal-fs-filename": "off",
   "security/detect-object-injection": "off",
+  "sonarjs/prefer-single-boolean-return": "off",
 };
 
 // [ANCA-ANCHOR-CUSTOM-CONTENT-END]

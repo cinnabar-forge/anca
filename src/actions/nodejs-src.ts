@@ -36,7 +36,7 @@ export async function checkNodejsSrc(development: AncaDevelopment) {
     return false;
   }
 
-  return contents === getSrcContents(development);
+  return true;
 }
 
 /**
@@ -48,12 +48,12 @@ export async function checkNodejsTest(development: AncaDevelopment) {
     return;
   }
   const contents = development.state.files[TEST_FILE_PATH];
-  console.log(contents);
+
   if (contents == null) {
     return false;
   }
 
-  return contents === getTestContents(development);
+  return true;
 }
 
 /**

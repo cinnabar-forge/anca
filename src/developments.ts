@@ -411,6 +411,9 @@ async function addOpenapiJsonToDevelopmentPack(development: AncaDevelopment) {
   if (development.state.config.stack !== "nodejs") {
     return;
   }
+  if (development.state.config.type !== "api") {
+    return;
+  }
 
   await addJsonFileToPack(development, "openapi.json");
 }
@@ -427,6 +430,9 @@ async function checkOpenapiJsonDevelopmentPack(development: AncaDevelopment) {
     return;
   }
   if (development.state.config.stack !== "nodejs") {
+    return;
+  }
+  if (development.state.config.type !== "api") {
     return;
   }
 
