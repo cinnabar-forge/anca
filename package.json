@@ -48,13 +48,13 @@
     "simple-git": "3.26.0"
   },
   "devDependencies": {
-    "@cinnabar-forge/eslint-plugin": "0.6.1",
+    "@cinnabar-forge/eslint-plugin": "0.7.0",
     "@cinnabar-forge/meta": "0.3.1",
     "@types/chai": "4.3.19",
     "@types/diff": "5.2.2",
     "@types/markdown-it": "14.1.2",
     "@types/mocha": "10.0.7",
-    "@types/node": "22.5.3",
+    "@types/node": "22.5.4",
     "chai": "5.1.1",
     "esbuild": "0.23.1",
     "mocha": "10.7.3",
