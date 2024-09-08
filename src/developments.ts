@@ -439,6 +439,7 @@ async function checkOpenapiJsonDevelopmentPack(development: AncaDevelopment) {
   if (!(await checkOpenapiJson(development))) {
     development.state.issues.push("openapiJsonSetToDefault");
   }
+  development.state.actions.push("nodejsOpenapiSetToDefault");
 }
 
 /**

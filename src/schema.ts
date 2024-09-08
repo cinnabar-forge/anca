@@ -29,6 +29,7 @@ export type AncaAction =
   | "licenseSetToDefault"
   | "nodejsEsbuildSetToDefault"
   | "nodejsEslintSetToDefault"
+  | "nodejsOpenapiSetToDefault"
   | "nodejsPackageJsonCheckUpdates"
   | "nodejsPackageJsonFix"
   | "nodejsPackageJsonFixFull"

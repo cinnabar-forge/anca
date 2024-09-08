@@ -47,6 +47,7 @@ import {
 } from "./developments.js";
 import { AncaAction, AncaDevelopment } from "./schema.js";
 import { checkExistence } from "./utils.js";
+import { generateNodejsOpenapiFiles } from "./actions/nodejs-openapi.js";
 
 interface ClivoAction {
   action: () => Promise<void>;
@@ -164,6 +165,13 @@ async function showDevelopmentActions(
         await backHere();
       },
       label: "[eslint.config.js] Set to default",
+    },
+    nodejsOpenapiSetToDefault: {
+      action: async () => {
+        await generateNodejsOpenapiFiles(development);
+        await backHere();
+      },
+      label: "[openapi] Set to default",
     },
     nodejsPackageJsonCheckUpdates: {
       action: async () => {

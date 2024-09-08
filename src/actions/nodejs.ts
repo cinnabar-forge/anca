@@ -42,7 +42,6 @@ export interface NodejsPackageJson {
 
 // eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
 interface NodejsPackageJson2 extends NodejsPackageJson {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 

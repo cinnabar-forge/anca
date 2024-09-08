@@ -5,6 +5,7 @@ import cinnabarPlugin from "@cinnabar-forge/eslint-plugin";
 const files = ["src/**/*.ts"];
 const ignores = ["bin/**/*", "build/**/*", "dist/**/*"];
 const rules = {
+  "@typescript-eslint/no-explicit-any": "off",
   "@typescript-eslint/no-unused-expressions": "off",
   "jsdoc/require-param-description": "off",
   "jsdoc/require-param-type": "off",

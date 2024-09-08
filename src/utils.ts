@@ -127,7 +127,12 @@ export async function readFolderJsonFile(
  * @param first
  * @param second
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+/**
+ *
+ * @param first
+ * @param second
+ */
 export function isSubset(first: any, second: any): boolean {
   for (const key of Object.keys(first)) {
     if (typeof first[key] === "object" && first[key] !== null) {
@@ -224,4 +229,13 @@ export function verifyAjv(schema: AnySchema, data: unknown) {
 export function isAjvValid(schema: AnySchema, data: unknown) {
   const validate = new Ajv().compile(schema);
   return validate(data);
+}
+
+/**
+ *
+ * @param str
+ */
+export function capitalize(str: string): string {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
