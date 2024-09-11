@@ -5,6 +5,18 @@ import path from "path";
 import { AncaDevelopment } from "../schema.js";
 import { capitalize, readFolderJsonFile } from "../utils.js";
 
+interface ModelData {
+  name: string;
+  array?: boolean;
+}
+
+interface ModelsByFile {
+  request?: ModelData;
+  params?: ModelData;
+  query?: ModelData;
+  response?: ModelData;
+}
+
 /**
  * Generate a fallback file name based on the method and api path
  * @param operationId
@@ -16,7 +28,9 @@ function generateOperationName(
   method: string,
   apiPath: string,
 ): string {
-  const sanitizedOperationId = sanitizeOperationId(operationId) || null;
+  const sanitizedOperationId = operationId
+    ? sanitizeOperationId(operationId)
+    : null;
   if (sanitizedOperationId) {
     return sanitizedOperationId;
   }
@@ -32,12 +46,15 @@ function generateOperationName(
  */
 function sanitizeOperationId(operationId: string): string {
   const parts = operationId.split(/[^a-zA-Z0-9]/).filter(Boolean);
-  const camelCaseId = parts
-    .map((part, index) => {
-      if (index === 0) return part.toLowerCase();
-      return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
-    })
-    .join("");
+  const camelCaseId =
+    parts.length > 1
+      ? parts
+          .map((part, index) => {
+            if (index === 0) return part.toLowerCase();
+            return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+          })
+          .join("")
+      : operationId;
 
   if (/^\d/.test(camelCaseId)) {
     return (
@@ -46,6 +63,18 @@ function sanitizeOperationId(operationId: string): string {
   }
 
   return camelCaseId;
+}
+
+/**
+ * Get model data as string
+ * @param modelData
+ */
+function getModelData(modelData: ModelData | undefined | null): string {
+  return modelData
+    ? modelData.array
+      ? `Array<${modelData.name}>`
+      : modelData.name
+    : "unknown";
 }
 
 /**
@@ -61,51 +90,89 @@ function generateTypeScriptModels(development: AncaDevelopment, openapi: any) {
 
   const schemaComponents = openapi.components?.schemas || {};
   const models: Record<string, string> = {};
+  const modelsByFile: Record<string, ModelsByFile> = {};
+  const modelsByArray: Record<string, string> = {};
 
   const processSchema = function (schema: any, modelName: string) {
     console.log(modelName, schema);
     if (models[modelName]) {
       console.log("Model already exists", modelName);
-      return;
+      return true;
     }
+    let hasParams = false;
     const properties = Object.keys(schema.properties || {})
       .map((propertyName) => {
+        if (!hasParams) {
+          hasParams = true;
+        }
+        hasParams = true;
         const propertySchema = schema.properties[propertyName];
         const propertyType = getPropertyType(propertySchema);
         return `${propertyName}: ${propertyType};`;
       })
       .join("\n  ");
 
-    models[modelName] = `interface ${modelName} {
+    if (hasParams) {
+      models[modelName] = `export interface ${modelName} {
   ${properties}
 }
 `;
+    }
+
+    return hasParams;
   };
 
   let count = 0;
 
-  const processReferableSchema = function (schema: any, fallbackName?: string) {
-    if (!schema.$ref && schema.type === "object") {
-      processSchema(schema, fallbackName || `Generic${count++}`);
+  const processReferableSchema = function (
+    schema: any,
+    fallbackName: string,
+  ): string | false {
+    if (schema.$ref) {
+      const refParts = schema.$ref.split("/");
+      console.log("ref", refParts);
+      return refParts[refParts.length - 1];
     }
+    if (schema.type === "array" && schema.items && schema.items.$ref) {
+      const refParts = schema.items.$ref.split("/");
+      modelsByArray[fallbackName] = refParts[refParts.length - 1];
+      console.log("ref in array", refParts);
+      return refParts[refParts.length - 1];
+    }
+    if (schema.type === "object") {
+      const name = fallbackName || `Generic${count++}`;
+      console.log("object", name);
+      if (processSchema(schema, name)) {
+        return name;
+      }
+    }
+    console.log("no schema, only", schema.type);
+    return false;
   };
+
+  console.log("\n", "predefined models");
 
   // preparing predefined schemas to be reused later
   Object.keys(schemaComponents).forEach((modelName) => {
     const schema = schemaComponents[modelName];
     const interfaceName = `${capitalize(modelName)}`;
-    processSchema(schema, interfaceName);
+    processReferableSchema(schema, interfaceName);
   });
 
   Object.keys(openapi.paths).forEach((apiPath) => {
     Object.keys(openapi.paths[apiPath]).forEach((method) => {
-      console.log(apiPath, method);
+      console.log("\n", apiPath, method);
       const operation = openapi.paths[apiPath][method];
       const fileName = generateOperationName(
         operation.operationId,
         method,
         apiPath,
       );
+
+      if (!modelsByFile[fileName]) {
+        modelsByFile[fileName] = {};
+      }
+
       const requestBody = operation.requestBody;
       const parameters = operation.parameters;
       const responses = operation.responses;
@@ -115,13 +182,21 @@ function generateTypeScriptModels(development: AncaDevelopment, openapi: any) {
         requestBody.content &&
         requestBody.content["application/json"]
       ) {
-        processReferableSchema(
+        const name = processReferableSchema(
           requestBody.content["application/json"].schema,
-          capitalize(fileName + "JsonRequest"),
+          capitalize(fileName + "Request"),
         );
+        console.log("requestBody", (name && modelsByArray[name]) || name);
+        if (name) {
+          modelsByFile[fileName].request = {
+            array: modelsByArray[name] ? true : false,
+            name: modelsByArray[name] || name,
+          };
+        }
       }
 
       if (parameters) {
+        console.log("parameters");
         const schemaParams: Record<string, any> = {
           type: "object",
           properties: {},
@@ -137,18 +212,32 @@ function generateTypeScriptModels(development: AncaDevelopment, openapi: any) {
             schemaQuery.properties[parameter.name] = parameter.schema;
           }
         });
-        processSchema(schemaParams, `${capitalize(fileName)}Params`);
-        processSchema(schemaQuery, `${capitalize(fileName)}Query`);
+        const paramsModel = `${capitalize(fileName)}Params`;
+        const queryModel = `${capitalize(fileName)}Query`;
+        if (processSchema(schemaParams, paramsModel)) {
+          modelsByFile[fileName].params = { name: paramsModel };
+        }
+        if (processSchema(schemaQuery, queryModel)) {
+          modelsByFile[fileName].query = { name: queryModel };
+        }
       }
 
       if (responses) {
+        console.log("responses");
         Object.keys(responses).forEach((responseStatus) => {
           const response = responses[responseStatus];
           if (response.content && response.content["application/json"]) {
-            processReferableSchema(
+            const name = processReferableSchema(
               response.content["application/json"].schema,
-              capitalize(fileName + responseStatus + "JsonResponse"),
+              capitalize(fileName + "Response"),
             );
+            console.log("responseModel", (name && modelsByArray[name]) || name);
+            if (name) {
+              modelsByFile[fileName].response = {
+                array: modelsByArray[name] ? true : false,
+                name: modelsByArray[name] || name,
+              };
+            }
           }
         });
       }
@@ -160,6 +249,8 @@ function generateTypeScriptModels(development: AncaDevelopment, openapi: any) {
     const modelFile = path.join(modelsDir, `${modelName}.ts`);
     fs.writeFileSync(modelFile, modelContent);
   });
+
+  return { models, modelsByFile };
 }
 
 /**
@@ -202,7 +293,7 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
     return;
   }
 
-  generateTypeScriptModels(development, openapi);
+  const { modelsByFile } = generateTypeScriptModels(development, openapi);
 
   const controllersDir = path.join(development.fullPath, "src", "controllers");
   const servicesDir = path.join(development.fullPath, "src", "services");
@@ -270,18 +361,33 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
       );
     }
 
+    const fileModelData = modelsByFile[fileName];
+
     controllerContent += `import { Request, Response } from 'express';\n`;
+    controllerContent += `import { ${fileName} } from "../services/${fileName}.js";\n`;
+    if (fileModelData?.request) {
+      controllerContent += `import { ${fileModelData.request.name} } from "../models/${fileModelData.request.name}.js";\n`;
+    }
+    if (fileModelData?.params) {
+      controllerContent += `import { ${fileModelData.params.name} } from "../models/${fileModelData.params.name}.js";\n`;
+    }
+    if (fileModelData?.query) {
+      controllerContent += `import { ${fileModelData.query.name} } from "../models/${fileModelData.query.name}.js";\n`;
+    }
+    if (fileModelData?.response) {
+      controllerContent += `import { ${fileModelData.response.name} } from "../models/${fileModelData.response.name}.js";\n`;
+    }
+
     controllerContent += `\n`;
-    controllerContent += `import { ${fileName} } from "../services/${fileName}.js";\n\n`;
     controllerContent += `/**\n`;
     controllerContent += ` * ${operation.summary || ""}\n`;
     controllerContent += ` * @param req\n`;
     controllerContent += ` * @param res\n`;
     controllerContent += ` */\n`;
-    controllerContent += `export default async function (req: Request, res: Response) {\n`;
+    controllerContent += `export default async function (req: Request<${getModelData(fileModelData?.params)}, ${"unknown"}, ${getModelData(fileModelData?.request)}, ${getModelData(fileModelData?.query)}>, res: Response<${getModelData(fileModelData?.response)}>) {\n`;
     controllerContent += `  try {\n`;
-    controllerContent += `    const result = await ${fileName}();\n`;
-    controllerContent += `    res.json(result);\n`;
+    controllerContent += `    const result: ${getModelData(fileModelData?.response)} = await ${fileName}();\n`;
+    controllerContent += `    res.status(${operation.responses[200] ? 200 : 500}).json(result);\n`;
     controllerContent += `  } catch (error) {\n`;
     controllerContent += `    console.error(error);\n`;
     controllerContent += `    res.status(500).json({ message: 'Internal Server Error' });\n`;
