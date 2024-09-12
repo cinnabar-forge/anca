@@ -8,7 +8,7 @@ const FILE_PATH = "openapi.json";
  * @param development
  */
 function getContents(development: AncaDevelopment) {
-  return "json content of openapi " + development.fullPath;
+  return `{"openapi": "3.0.0", "info": {"title": "${development.fullPath}", "version": "0.0.0"}}`;
 }
 
 /**
