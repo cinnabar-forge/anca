@@ -78,14 +78,60 @@ function getModelData(modelData: ModelData | undefined | null): string {
 }
 
 /**
+ *
+ * @param development
+ */
+function getDevelopmentModelsPath(development: AncaDevelopment): {
+  filePath: string;
+  codePath: string;
+  isFile: boolean;
+  isModule: boolean;
+} {
+  const openapiConfig = development.state?.config.development?.nodejsOpenapi;
+
+  const modelsRelativeLocation =
+    openapiConfig?.modelsLocation || "./src/models";
+
+  return {
+    codePath: openapiConfig?.modelsModule || modelsRelativeLocation,
+    filePath: path.join(
+      development.monorepoFullPath || development.fullPath,
+      modelsRelativeLocation,
+    ),
+    isFile: openapiConfig?.modelsLocation
+      ? openapiConfig?.modelsLocationType === "file"
+      : false,
+    isModule: openapiConfig?.modelsModule != null,
+  };
+}
+
+/**
+ *
+ * @param development
+ * @param model
+ */
+function getCodeModelPath(development: AncaDevelopment, model: string) {
+  const modelsLocation = getDevelopmentModelsPath(development);
+
+  return modelsLocation.isModule
+    ? modelsLocation.codePath
+    : modelsLocation.isFile
+      ? modelsLocation.filePath
+      : path.resolve(modelsLocation.codePath, `${model}.js`);
+}
+
+/**
  * Generate TypeScript models (interfaces) based on OpenAPI schema
  * @param development
  * @param openapi
  */
 function generateTypeScriptModels(development: AncaDevelopment, openapi: any) {
-  const modelsDir = path.join(development.fullPath, "src", "models");
-  if (!fs.existsSync(modelsDir)) {
-    fs.mkdirSync(modelsDir);
+  const modelsLocation = getDevelopmentModelsPath(development);
+
+  console.log("generateTypeScriptModels", "modelsLocation", modelsLocation);
+
+  if (!modelsLocation.isFile && !fs.existsSync(modelsLocation.filePath)) {
+    fs.mkdirSync(modelsLocation.filePath);
   }
 
   const schemaComponents = openapi.components?.schemas || {};
@@ -253,11 +299,20 @@ function generateTypeScriptModels(development: AncaDevelopment, openapi: any) {
     });
   }
 
-  Object.keys(models).forEach((modelName) => {
-    const modelContent = models[modelName];
-    const modelFile = path.join(modelsDir, `${modelName}.ts`);
-    fs.writeFileSync(modelFile, modelContent);
-  });
+  if (modelsLocation.isFile) {
+    let modelContent = "";
+    Object.keys(models).forEach((modelName) => {
+      modelContent += models[modelName];
+      modelContent += "\n";
+    });
+    fs.writeFileSync(modelsLocation.filePath, modelContent);
+  } else {
+    Object.keys(models).forEach((modelName) => {
+      const modelContent = models[modelName];
+      const modelFile = path.join(modelsLocation.filePath, `${modelName}.ts`);
+      fs.writeFileSync(modelFile, modelContent);
+    });
+  }
 
   return { models, modelsByFile };
 }
@@ -366,7 +421,7 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
 
     let responsesImportContent = "";
     fileModelData?.response?.forEach((responseModelData) => {
-      responsesImportContent += `import { ${responseModelData.name} } from "../models/${responseModelData.name}.js";\n`;
+      responsesImportContent += `import { ${responseModelData.name} } from "${getCodeModelPath(development, responseModelData.name)}";\n`;
     });
 
     const responsesTypesContent =
@@ -399,13 +454,13 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
     controllerContent += `import { Request, Response } from 'express';\n`;
     controllerContent += `import { ${fileName} } from "../services/${fileName}.js";\n`;
     if (fileModelData?.request) {
-      controllerContent += `import { ${fileModelData.request.name} } from "../models/${fileModelData.request.name}.js";\n`;
+      controllerContent += `import { ${fileModelData.request.name} } from "${getCodeModelPath(development, fileModelData.request.name)}";\n`;
     }
     if (fileModelData?.params) {
-      controllerContent += `import { ${fileModelData.params.name} } from "../models/${fileModelData.params.name}.js";\n`;
+      controllerContent += `import { ${fileModelData.params.name} } from "${getCodeModelPath(development, fileModelData.params.name)}";\n`;
     }
     if (fileModelData?.query) {
-      controllerContent += `import { ${fileModelData.query.name} } from "../models/${fileModelData.query.name}.js";\n`;
+      controllerContent += `import { ${fileModelData.query.name} } from "${getCodeModelPath(development, fileModelData.query.name)}";\n`;
     }
     if (responsesImportContent) {
       controllerContent += responsesImportContent;

@@ -59,6 +59,7 @@ export async function fixAncaConfig(development: AncaDevelopment) {
         { label: "App", name: "app" },
         { label: "Library", name: "library" },
         { label: "Project (other)", name: "project" },
+        { label: "Typescript Declarations", name: "dts" },
         { label: "Web", name: "web" },
       ])
     ).name as AncaConfigType;

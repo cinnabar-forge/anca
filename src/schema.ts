@@ -87,6 +87,7 @@ export enum AncaConfigStack {
 export enum AncaConfigType {
   api = "api",
   app = "app",
+  dts = "dts",
   library = "library",
   project = "project",
   web = "web",
@@ -148,6 +149,12 @@ export interface AncaNodejsSeaModules {
   sqlite3?: boolean;
 }
 
+export interface AncaNodejsOpenapi {
+  modelsLocation?: string;
+  modelsModule?: string;
+  modelsLocationType?: "file" | "folder";
+}
+
 export interface AncaReadmeUsageSection {
   code?: string[];
   description?: string;
@@ -164,6 +171,7 @@ export interface AncaReadme {
 
 export interface AncaDevelopmentConfig {
   nodejsSeaModules?: AncaNodejsSeaModules;
+  nodejsOpenapi?: AncaNodejsOpenapi;
   readme?: AncaReadme;
 }
 
@@ -340,7 +348,7 @@ export const ANCA_CONFIG_SCHEMA = {
       type: "string",
     },
     type: {
-      enum: ["api", "app", "library", "project", "web"],
+      enum: ["api", "app", "dts", "library", "project", "web"],
       type: "string",
     },
   },
