@@ -128,10 +128,8 @@ const DEPENDENCIES_API: string[] = [
   "dotenv",
   "express",
   "express-session",
+  "jsonwebtoken",
   "knex",
-  "passport",
-  "passport-local",
-  "swagger-ui-express",
   "winston",
 ];
 
@@ -139,9 +137,7 @@ const DEV_DEPENDENCIES_API: string[] = [
   "@cinnabar-forge/eslint-plugin",
   "@types/express",
   "@types/express-session",
-  "@types/passport",
-  "@types/passport-local",
-  "@types/swagger-ui-express",
+  "@types/jsonwebtoken",
   "esbuild",
   "typescript",
 ];

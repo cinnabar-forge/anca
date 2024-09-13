@@ -121,6 +121,30 @@ function getCodeModelPath(development: AncaDevelopment, model: string) {
 }
 
 /**
+ *
+ * @param development
+ */
+function generateTypeScriptEssentialModels(development: AncaDevelopment) {
+  const modelsLocation = path.resolve(development.fullPath, "./src/models");
+
+  console.log(
+    "generateTypeScriptEssentialModels",
+    "modelsLocation",
+    modelsLocation,
+  );
+
+  fs.writeFileSync(
+    path.join(modelsLocation, "ServiceResponse.ts"),
+    `export interface ServiceResponse<T, C> {
+  code: C;
+  data: T;
+  error?: string;
+}
+`,
+  );
+}
+
+/**
  * Generate TypeScript models (interfaces) based on OpenAPI schema
  * @param development
  * @param openapi
@@ -357,6 +381,8 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
     return;
   }
 
+  generateTypeScriptEssentialModels(development);
+
   const { modelsByFile } = generateTypeScriptModels(development, openapi);
 
   const controllersDir = path.join(development.fullPath, "src", "controllers");
@@ -372,6 +398,7 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
   }
 
   let routesImports = "";
+  let routesAuth = false;
   let routesFunctions = "";
 
   const pathsMethods: {
@@ -380,6 +407,7 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
     method: string;
     operation: any;
     apiPath: string;
+    responseCodes: string;
   }[] = [];
 
   if (openapi.paths) {
@@ -396,102 +424,119 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
               apiPath,
             );
             const functionName = `route${capitalize(fileName)}`;
+
+            const responseCodes: Set<number> = new Set<number>();
+            if (operation.responses) {
+              Object.keys(operation.responses).forEach((code: string) => {
+                responseCodes.add(parseInt(code) || 500);
+              });
+            }
+
+            if (responseCodes.size === 0) {
+              responseCodes.add(200);
+            }
+
             pathsMethods.push({
               apiPath,
               fileName,
               functionName,
               method,
               operation,
+              responseCodes: Array.from(responseCodes).sort().join(" | "),
             });
 
-            routesFunctions += `router.${method}("${apiPath}", ${functionName});\n`;
+            if (!routesAuth) {
+              routesAuth = true;
+              routesImports += `import { isAuthenticated } from "./middleware/isAuthenticated.js";\n`;
+            }
+
+            routesFunctions += `router.${method}("${apiPath}", ${operation.security ? "isAuthenticated, " : ""}${functionName});\n`;
           });
       });
   }
 
   pathsMethods.sort((a, b) => a.fileName.localeCompare(b.fileName));
 
-  pathsMethods.forEach(({ fileName, functionName, operation }) => {
-    routesImports += `import ${functionName} from "./controllers/${fileName}.js";\n`;
+  pathsMethods.forEach(
+    ({ fileName, functionName, operation, responseCodes }) => {
+      routesImports += `import ${functionName} from "./controllers/${fileName}.js";\n`;
 
-    const controllerFile = path.join(controllersDir, `${fileName}.ts`);
-    const serviceFile = path.join(servicesDir, `${fileName}.ts`);
+      const controllerFile = path.join(controllersDir, `${fileName}.ts`);
+      const serviceFile = path.join(servicesDir, `${fileName}.ts`);
 
-    const fileModelData = modelsByFile[fileName];
+      const fileModelData = modelsByFile[fileName];
 
-    let responsesImportContent = "";
-    fileModelData?.response?.forEach((responseModelData) => {
-      responsesImportContent += `import { ${responseModelData.name} } from "${getCodeModelPath(development, responseModelData.name)}";\n`;
-    });
+      let responsesImportContent = `import { ServiceResponse } from "../models/ServiceResponse.js";\n`;
+      fileModelData?.response?.forEach((responseModelData) => {
+        responsesImportContent += `import { ${responseModelData.name} } from "${getCodeModelPath(development, responseModelData.name)}";\n`;
+      });
+      const responsesTypesContent =
+        fileModelData?.response?.map(getModelData).join(" | ") || "unknown";
 
-    const responsesTypesContent =
-      fileModelData?.response?.map(getModelData).join(" | ") || "unknown";
+      // eslint-disable-next-line sonarjs/no-gratuitous-expressions, no-constant-condition
+      if (true) {
+        // !fs.existsSync(serviceFile)
+        let serviceContent = "";
 
-    // eslint-disable-next-line sonarjs/no-gratuitous-expressions, no-constant-condition
-    if (true) {
-      // !fs.existsSync(serviceFile)
-      let serviceContent = "";
-
-      if (responsesImportContent) {
         serviceContent += responsesImportContent;
         serviceContent += `\n`;
+
+        serviceContent += "/**\n";
+        serviceContent += ` * ${operation.summary || ""}\n`;
+        serviceContent += " */\n";
+        serviceContent += `export async function ${fileName}(): Promise<ServiceResponse<${responsesTypesContent}, ${responseCodes}>> {\n`;
+        serviceContent += `  // This stub is generated if this file doesn't exist.\n`;
+        serviceContent += `  // You can change body of this function, but it should comply with controllers' call.\n`;
+        serviceContent += `  return { code: 200, data: ${responsesTypesContent.includes("[]") ? "[]" : responsesTypesContent !== "unknown" ? "{}" : "null"} };\n`;
+        serviceContent += `}\n`;
+
+        fs.writeFileSync(serviceFile, serviceContent);
       }
 
-      serviceContent += "/**\n";
-      serviceContent += ` * ${operation.summary || ""}\n`;
-      serviceContent += " */\n";
-      serviceContent += `export async function ${fileName}(): Promise<${responsesTypesContent}> {\n`;
-      serviceContent += `  // This stub is generated if this file doesn't exist.\n`;
-      serviceContent += `  // You can change body of this function, but it should comply with controllers' call.\n`;
-      serviceContent += `  return ${responsesTypesContent.includes("[]") ? "[]" : responsesTypesContent !== "unknown" ? "{}" : "null"};\n`;
-      serviceContent += `}\n`;
+      let controllerContent = "";
 
-      fs.writeFileSync(serviceFile, serviceContent);
-    }
+      controllerContent += `import { Request, Response } from 'express';\n`;
+      controllerContent += `import { ${fileName} } from "../services/${fileName}.js";\n`;
+      if (fileModelData?.request) {
+        controllerContent += `import { ${fileModelData.request.name} } from "${getCodeModelPath(development, fileModelData.request.name)}";\n`;
+      }
+      if (fileModelData?.params) {
+        controllerContent += `import { ${fileModelData.params.name} } from "${getCodeModelPath(development, fileModelData.params.name)}";\n`;
+      }
+      if (fileModelData?.query) {
+        controllerContent += `import { ${fileModelData.query.name} } from "${getCodeModelPath(development, fileModelData.query.name)}";\n`;
+      }
+      if (responsesImportContent) {
+        controllerContent += responsesImportContent;
+      }
 
-    let controllerContent = "";
-
-    controllerContent += `import { Request, Response } from 'express';\n`;
-    controllerContent += `import { ${fileName} } from "../services/${fileName}.js";\n`;
-    if (fileModelData?.request) {
-      controllerContent += `import { ${fileModelData.request.name} } from "${getCodeModelPath(development, fileModelData.request.name)}";\n`;
-    }
-    if (fileModelData?.params) {
-      controllerContent += `import { ${fileModelData.params.name} } from "${getCodeModelPath(development, fileModelData.params.name)}";\n`;
-    }
-    if (fileModelData?.query) {
-      controllerContent += `import { ${fileModelData.query.name} } from "${getCodeModelPath(development, fileModelData.query.name)}";\n`;
-    }
-    if (responsesImportContent) {
-      controllerContent += responsesImportContent;
-    }
-
-    controllerContent += `\n`;
-    controllerContent += `/**\n`;
-    controllerContent += ` * ${operation.summary || ""}\n`;
-    controllerContent += ` * @param req\n`;
-    controllerContent += ` * @param res\n`;
-    controllerContent += ` */\n`;
-    controllerContent += `export default async function (req: Request<${getModelData(fileModelData?.params)}, ${"unknown"}, ${getModelData(fileModelData?.request)}, ${getModelData(fileModelData?.query)}>, res: Response<${responsesTypesContent}>) {\n`;
-    controllerContent += `  try {\n`;
-    controllerContent += `    const result: ${responsesTypesContent} = await ${fileName}();\n`;
-    switch (operation.responses && operation.responses[200]?.content.type) {
-      case "application/json":
-        controllerContent += `    res.status(200).json(result);\n`;
-        break;
-      case "application/xml":
-        controllerContent += `    res.status(200).xml(result);\n`;
-        break;
-      default:
-        controllerContent += `    res.status(200).send(result);\n`;
-    }
-    controllerContent += `  } catch (error) {\n`;
-    controllerContent += `    console.error(error);\n`;
-    controllerContent += `    res.end();\n`;
-    controllerContent += `  }\n`;
-    controllerContent += `}\n`;
-    fs.writeFileSync(controllerFile, controllerContent);
-  });
+      controllerContent += `\n`;
+      controllerContent += `/**\n`;
+      controllerContent += ` * ${operation.summary || ""}\n`;
+      controllerContent += ` * @param req\n`;
+      controllerContent += ` * @param res\n`;
+      controllerContent += ` */\n`;
+      controllerContent += `export default async function (req: Request<${getModelData(fileModelData?.params)}, ${"unknown"}, ${getModelData(fileModelData?.request)}, ${getModelData(fileModelData?.query)}>, res: Response<${responsesTypesContent}>) {\n`;
+      controllerContent += `  try {\n`;
+      controllerContent += `    const result: ServiceResponse<${responsesTypesContent}, ${responseCodes}> = await ${fileName}();\n`;
+      switch (operation.responses && operation.responses[200]?.content.type) {
+        case "application/json":
+          controllerContent += `    res.status(result.code).json(result.data);\n`;
+          break;
+        case "application/xml":
+          controllerContent += `    res.status(result.code).xml(result.data);\n`;
+          break;
+        default:
+          controllerContent += `    res.status(result.code).send(result.data);\n`;
+      }
+      controllerContent += `  } catch (error) {\n`;
+      controllerContent += `    console.error(error);\n`;
+      controllerContent += `    res.end();\n`;
+      controllerContent += `  }\n`;
+      controllerContent += `}\n`;
+      fs.writeFileSync(controllerFile, controllerContent);
+    },
+  );
 
   fs.writeFileSync(
     routesFile,

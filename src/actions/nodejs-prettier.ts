@@ -30,6 +30,9 @@ CHANGELOG.md
 
 # Anca
 anca.json
+esbuild.js
+eslint.config.js
+openapi.json
 `;
 
 const RC_FILE_PATH = ".prettierrc";
