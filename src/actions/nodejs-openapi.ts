@@ -403,6 +403,7 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
 
   const pathsMethods: {
     fileName: string;
+    firstResponseCode: number;
     functionName: string;
     method: string;
     operation: any;
@@ -428,7 +429,7 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
             const responseCodes: Set<number> = new Set<number>();
             if (operation.responses) {
               Object.keys(operation.responses).forEach((code: string) => {
-                responseCodes.add(parseInt(code) || 500);
+                responseCodes.add(parseInt(code) || 200);
               });
             }
 
@@ -436,13 +437,16 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
               responseCodes.add(200);
             }
 
+            const sortedResponseCodes = Array.from(responseCodes).sort();
+
             pathsMethods.push({
               apiPath,
               fileName,
+              firstResponseCode: sortedResponseCodes[0],
               functionName,
               method,
               operation,
-              responseCodes: Array.from(responseCodes).sort().join(" | "),
+              responseCodes: sortedResponseCodes.join(" | "),
             });
 
             if (!routesAuth) {
@@ -458,7 +462,13 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
   pathsMethods.sort((a, b) => a.fileName.localeCompare(b.fileName));
 
   pathsMethods.forEach(
-    ({ fileName, functionName, operation, responseCodes }) => {
+    ({
+      fileName,
+      firstResponseCode,
+      functionName,
+      operation,
+      responseCodes,
+    }) => {
       routesImports += `import ${functionName} from "./controllers/${fileName}.js";\n`;
 
       const controllerFile = path.join(controllersDir, `${fileName}.ts`);
@@ -473,6 +483,38 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
       const responsesTypesContent =
         fileModelData?.response?.map(getModelData).join(" | ") || "unknown";
 
+      let serviceArgumentsFunc = "";
+      let serviceArgumentsCall = "";
+      let serviceArgumentsJsdoc = "";
+
+      let controllerContent = "";
+
+      controllerContent += `import { Request, Response } from 'express';\n`;
+      controllerContent += `import { ${fileName} } from "../services/${fileName}.js";\n`;
+
+      if (fileModelData?.request) {
+        responsesImportContent += `import { ${fileModelData.request.name} } from "${getCodeModelPath(development, fileModelData.request.name)}";\n`;
+        serviceArgumentsFunc += `request: ${fileModelData.request.name}`;
+        serviceArgumentsJsdoc += ` * @param request\n`;
+        serviceArgumentsCall += `req.body`;
+      }
+      if (fileModelData?.params) {
+        responsesImportContent += `import { ${fileModelData.params.name} } from "${getCodeModelPath(development, fileModelData.params.name)}";\n`;
+        serviceArgumentsFunc += `${serviceArgumentsFunc ? ", " : ""}params: ${fileModelData.params.name}`;
+        serviceArgumentsJsdoc += ` * @param params\n`;
+        serviceArgumentsCall += `${serviceArgumentsCall ? ", " : ""}req.params`;
+      }
+      if (fileModelData?.query) {
+        responsesImportContent += `import { ${fileModelData.query.name} } from "${getCodeModelPath(development, fileModelData.query.name)}";\n`;
+        serviceArgumentsFunc += `${serviceArgumentsFunc ? ", " : ""}query: ${fileModelData.query.name}`;
+        serviceArgumentsJsdoc += ` * @param query\n`;
+        serviceArgumentsCall += `${serviceArgumentsCall ? ", " : ""}req.query`;
+      }
+
+      if (responsesImportContent) {
+        controllerContent += responsesImportContent;
+      }
+
       // eslint-disable-next-line sonarjs/no-gratuitous-expressions, no-constant-condition
       if (true) {
         // !fs.existsSync(serviceFile)
@@ -483,31 +525,19 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
 
         serviceContent += "/**\n";
         serviceContent += ` * ${operation.summary || ""}\n`;
+        serviceContent += serviceArgumentsJsdoc;
         serviceContent += " */\n";
-        serviceContent += `export async function ${fileName}(): Promise<ServiceResponse<${responsesTypesContent}, ${responseCodes}>> {\n`;
+        if (serviceArgumentsFunc) {
+          serviceContent +=
+            "// eslint-disable-next-line @typescript-eslint/no-unused-vars\n";
+        }
+        serviceContent += `export async function ${fileName}(${serviceArgumentsFunc}): Promise<ServiceResponse<${responsesTypesContent}, ${responseCodes}>> {\n`;
         serviceContent += `  // This stub is generated if this file doesn't exist.\n`;
         serviceContent += `  // You can change body of this function, but it should comply with controllers' call.\n`;
-        serviceContent += `  return { code: 200, data: ${responsesTypesContent.includes("[]") ? "[]" : responsesTypesContent !== "unknown" ? "{}" : "null"} };\n`;
+        serviceContent += `  return { code: ${firstResponseCode}, data: ${responsesTypesContent.includes("[]") ? "[]" : responsesTypesContent !== "unknown" ? "{}" : "null"} };\n`;
         serviceContent += `}\n`;
 
         fs.writeFileSync(serviceFile, serviceContent);
-      }
-
-      let controllerContent = "";
-
-      controllerContent += `import { Request, Response } from 'express';\n`;
-      controllerContent += `import { ${fileName} } from "../services/${fileName}.js";\n`;
-      if (fileModelData?.request) {
-        controllerContent += `import { ${fileModelData.request.name} } from "${getCodeModelPath(development, fileModelData.request.name)}";\n`;
-      }
-      if (fileModelData?.params) {
-        controllerContent += `import { ${fileModelData.params.name} } from "${getCodeModelPath(development, fileModelData.params.name)}";\n`;
-      }
-      if (fileModelData?.query) {
-        controllerContent += `import { ${fileModelData.query.name} } from "${getCodeModelPath(development, fileModelData.query.name)}";\n`;
-      }
-      if (responsesImportContent) {
-        controllerContent += responsesImportContent;
       }
 
       controllerContent += `\n`;
@@ -518,8 +548,11 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
       controllerContent += ` */\n`;
       controllerContent += `export default async function (req: Request<${getModelData(fileModelData?.params)}, ${"unknown"}, ${getModelData(fileModelData?.request)}, ${getModelData(fileModelData?.query)}>, res: Response<${responsesTypesContent}>) {\n`;
       controllerContent += `  try {\n`;
-      controllerContent += `    const result: ServiceResponse<${responsesTypesContent}, ${responseCodes}> = await ${fileName}();\n`;
-      switch (operation.responses && operation.responses[200]?.content.type) {
+      controllerContent += `    const result: ServiceResponse<${responsesTypesContent}, ${responseCodes}> = await ${fileName}(${serviceArgumentsCall});\n`;
+      switch (
+        operation.responses &&
+        operation.responses[firstResponseCode]?.content?.type
+      ) {
         case "application/json":
           controllerContent += `    res.status(result.code).json(result.data);\n`;
           break;
