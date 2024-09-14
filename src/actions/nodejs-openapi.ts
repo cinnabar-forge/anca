@@ -1,9 +1,16 @@
 import crypto from "crypto";
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
+import prettier from "prettier/standalone";
+import prettierEstree from "prettier/plugins/estree";
+import prettierTypescript from "prettier/plugins/typescript";
 
 import { AncaDevelopment } from "../schema.js";
-import { capitalize, readFolderJsonFile } from "../utils.js";
+import {
+  capitalize,
+  getHttpCodeFunctionText,
+  readFolderJsonFile,
+} from "../utils.js";
 
 interface ModelData {
   name: string;
@@ -16,6 +23,8 @@ interface ModelsByFile {
   query?: ModelData;
   response?: ModelData[];
 }
+
+const prettierPlugins = [prettierEstree, prettierTypescript];
 
 /**
  * Generate a fallback file name based on the method and api path
@@ -85,7 +94,6 @@ function getDevelopmentModelsPath(development: AncaDevelopment): {
   filePath: string;
   codePath: string;
   isFile: boolean;
-  isModule: boolean;
 } {
   const openapiConfig = development.state?.config.development?.nodejsOpenapi;
 
@@ -101,7 +109,6 @@ function getDevelopmentModelsPath(development: AncaDevelopment): {
     isFile: openapiConfig?.modelsLocation
       ? openapiConfig?.modelsLocationType === "file"
       : false,
-    isModule: openapiConfig?.modelsModule != null,
   };
 }
 
@@ -113,18 +120,16 @@ function getDevelopmentModelsPath(development: AncaDevelopment): {
 function getCodeModelPath(development: AncaDevelopment, model: string) {
   const modelsLocation = getDevelopmentModelsPath(development);
 
-  return modelsLocation.isModule
+  return modelsLocation.isFile
     ? modelsLocation.codePath
-    : modelsLocation.isFile
-      ? modelsLocation.filePath
-      : path.resolve(modelsLocation.codePath, `${model}.js`);
+    : path.resolve(modelsLocation.codePath, `${model}.js`);
 }
 
 /**
  *
  * @param development
  */
-function generateTypeScriptEssentialModels(development: AncaDevelopment) {
+async function generateTypeScriptEssentialModels(development: AncaDevelopment) {
   const modelsLocation = path.resolve(development.fullPath, "./src/models");
 
   console.log(
@@ -133,14 +138,18 @@ function generateTypeScriptEssentialModels(development: AncaDevelopment) {
     modelsLocation,
   );
 
-  fs.writeFileSync(
+  await fs.writeFile(
     path.join(modelsLocation, "ServiceResponse.ts"),
-    `export interface ServiceResponse<T, C> {
+    await prettier.format(
+      `export interface ServiceResponse<T, C> {
   code: C;
   data: T;
   error?: string;
+  redirectUrl?: string;
 }
 `,
+      { parser: "typescript", plugins: prettierPlugins },
+    ),
   );
 }
 
@@ -149,13 +158,16 @@ function generateTypeScriptEssentialModels(development: AncaDevelopment) {
  * @param development
  * @param openapi
  */
-function generateTypeScriptModels(development: AncaDevelopment, openapi: any) {
+async function generateTypeScriptModels(
+  development: AncaDevelopment,
+  openapi: any,
+) {
   const modelsLocation = getDevelopmentModelsPath(development);
 
   console.log("generateTypeScriptModels", "modelsLocation", modelsLocation);
 
-  if (!modelsLocation.isFile && !fs.existsSync(modelsLocation.filePath)) {
-    fs.mkdirSync(modelsLocation.filePath);
+  if (!modelsLocation.isFile) {
+    fs.mkdir(modelsLocation.filePath, { recursive: true });
   }
 
   const schemaComponents = openapi.components?.schemas || {};
@@ -300,7 +312,13 @@ function generateTypeScriptModels(development: AncaDevelopment, openapi: any) {
             if (response.content && response.content["application/json"]) {
               const name = processReferableSchema(
                 response.content["application/json"].schema,
-                capitalize(fileName + "Response"),
+                capitalize(
+                  fileName +
+                    (responseStatus
+                      ? getHttpCodeFunctionText(responseStatus)
+                      : responseStatus) +
+                    "Response",
+                ),
               );
               console.log(
                 "responseModel",
@@ -329,12 +347,24 @@ function generateTypeScriptModels(development: AncaDevelopment, openapi: any) {
       modelContent += models[modelName];
       modelContent += "\n";
     });
-    fs.writeFileSync(modelsLocation.filePath, modelContent);
+    await fs.writeFile(
+      modelsLocation.filePath,
+      await prettier.format(modelContent, {
+        parser: "typescript",
+        plugins: prettierPlugins,
+      }),
+    );
   } else {
-    Object.keys(models).forEach((modelName) => {
+    Object.keys(models).forEach(async (modelName) => {
       const modelContent = models[modelName];
       const modelFile = path.join(modelsLocation.filePath, `${modelName}.ts`);
-      fs.writeFileSync(modelFile, modelContent);
+      await fs.writeFile(
+        modelFile,
+        await prettier.format(modelContent, {
+          parser: "typescript",
+          plugins: prettierPlugins,
+        }),
+      );
     });
   }
 
@@ -381,21 +411,16 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
     return;
   }
 
-  generateTypeScriptEssentialModels(development);
+  await generateTypeScriptEssentialModels(development);
 
-  const { modelsByFile } = generateTypeScriptModels(development, openapi);
+  const { modelsByFile } = await generateTypeScriptModels(development, openapi);
 
   const controllersDir = path.join(development.fullPath, "src", "controllers");
   const servicesDir = path.join(development.fullPath, "src", "services");
   const routesFile = path.join(development.fullPath, "src", "routes.ts");
 
-  if (!fs.existsSync(controllersDir)) {
-    fs.mkdirSync(controllersDir);
-  }
-
-  if (!fs.existsSync(servicesDir)) {
-    fs.mkdirSync(servicesDir);
-  }
+  fs.mkdir(controllersDir, { recursive: true });
+  fs.mkdir(servicesDir, { recursive: true });
 
   let routesImports = "";
   let routesAuth = false;
@@ -449,7 +474,7 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
               responseCodes: sortedResponseCodes.join(" | "),
             });
 
-            if (!routesAuth) {
+            if (!routesAuth && operation.security) {
               routesAuth = true;
               routesImports += `import { isAuthenticated } from "./middleware/isAuthenticated.js";\n`;
             }
@@ -462,7 +487,7 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
   pathsMethods.sort((a, b) => a.fileName.localeCompare(b.fileName));
 
   pathsMethods.forEach(
-    ({
+    async ({
       fileName,
       firstResponseCode,
       functionName,
@@ -537,7 +562,13 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
         serviceContent += `  return { code: ${firstResponseCode}, data: ${responsesTypesContent.includes("[]") ? "[]" : responsesTypesContent !== "unknown" ? "{}" : "null"} };\n`;
         serviceContent += `}\n`;
 
-        fs.writeFileSync(serviceFile, serviceContent);
+        await fs.writeFile(
+          serviceFile,
+          await prettier.format(serviceContent, {
+            parser: "typescript",
+            plugins: prettierPlugins,
+          }),
+        );
       }
 
       controllerContent += `\n`;
@@ -567,13 +598,20 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
       controllerContent += `    res.end();\n`;
       controllerContent += `  }\n`;
       controllerContent += `}\n`;
-      fs.writeFileSync(controllerFile, controllerContent);
+      await fs.writeFile(
+        controllerFile,
+        await prettier.format(controllerContent, {
+          parser: "typescript",
+          plugins: prettierPlugins,
+        }),
+      );
     },
   );
 
-  fs.writeFileSync(
+  await fs.writeFile(
     routesFile,
-    `import express from 'express';
+    await prettier.format(
+      `import express from 'express';
 
 ${routesImports}
 const router = express.Router();
@@ -581,5 +619,7 @@ const router = express.Router();
 ${routesFunctions}
 export default router;
 `,
+      { parser: "typescript", plugins: prettierPlugins },
+    ),
   );
 }

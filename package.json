@@ -45,6 +45,7 @@
     "mergician": "2.0.2",
     "node-fetch": "3.3.2",
     "picocolors": "1.1.0",
+    "prettier": "3.3.3",
     "simple-git": "3.26.0"
   },
   "devDependencies": {
