@@ -37,9 +37,7 @@ function generateOperationName(
   method: string,
   apiPath: string,
 ): string {
-  const sanitizedOperationId = operationId
-    ? sanitizeOperationId(operationId)
-    : null;
+  const sanitizedOperationId = operationId ? camelCaseText(operationId) : null;
   if (sanitizedOperationId) {
     return sanitizedOperationId;
   }
@@ -50,25 +48,24 @@ function generateOperationName(
 
 /**
  * Sanitize the operationId to camelCase and remove non-alphanumeric characters
- * @param operationId
+ * @param text
+ * @param pascalCase
  * @returns sanitized operationId
  */
-function sanitizeOperationId(operationId: string): string {
-  const parts = operationId.split(/[^a-zA-Z0-9]/).filter(Boolean);
+function camelCaseText(text: string, pascalCase?: boolean): string {
+  const parts = text.split(/[^a-zA-Z0-9]/).filter(Boolean);
   const camelCaseId =
     parts.length > 1
       ? parts
           .map((part, index) => {
-            if (index === 0) return part.toLowerCase();
+            if (index === 0 && !pascalCase) return part.toLowerCase();
             return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
           })
           .join("")
-      : operationId;
+      : text;
 
   if (/^\d/.test(camelCaseId)) {
-    return (
-      "operation" + camelCaseId.charAt(0).toUpperCase() + camelCaseId.slice(1)
-    );
+    return camelCaseId.charAt(0).toUpperCase() + camelCaseId.slice(1);
   }
 
   return camelCaseId;
@@ -141,9 +138,10 @@ async function generateTypeScriptEssentialModels(development: AncaDevelopment) {
   await fs.writeFile(
     path.join(modelsLocation, "ServiceResponse.ts"),
     await prettier.format(
-      `export interface ServiceResponse<T, C> {
-  code: C;
-  data: T;
+      `export interface ServiceResponse<D, S, T = undefined> {
+  code: S;
+  data: D;
+  type?: T;
   error?: string;
   redirectUrl?: string;
 }
@@ -260,22 +258,21 @@ async function generateTypeScriptModels(
         const parameters = operation.parameters;
         const responses = operation.responses;
 
-        if (
-          requestBody &&
-          requestBody.content &&
-          requestBody.content["application/json"]
-        ) {
-          const name = processReferableSchema(
-            requestBody.content["application/json"].schema,
-            capitalize(fileName + "Request"),
-          );
-          console.log("requestBody", (name && modelsByArray[name]) || name);
-          if (name) {
-            modelsByFile[fileName].request = {
-              array: modelsByArray[name] ? true : false,
-              name: modelsByArray[name] || name,
-            };
-          }
+        if (requestBody && requestBody.content) {
+          Object.keys(requestBody.content).forEach((contentType) => {
+            const sanitizedContentType = camelCaseText(contentType, true);
+            const name = processReferableSchema(
+              requestBody.content[contentType].schema,
+              capitalize(fileName + sanitizedContentType + "Request"),
+            );
+            console.log("requestBody", (name && modelsByArray[name]) || name);
+            if (name) {
+              modelsByFile[fileName].request = {
+                array: modelsByArray[name] ? true : false,
+                name: modelsByArray[name] || name,
+              };
+            }
+          });
         }
 
         if (parameters) {
@@ -309,31 +306,35 @@ async function generateTypeScriptModels(
           console.log("responses");
           Object.keys(responses).forEach((responseStatus) => {
             const response = responses[responseStatus];
-            if (response.content && response.content["application/json"]) {
-              const name = processReferableSchema(
-                response.content["application/json"].schema,
-                capitalize(
-                  fileName +
-                    (responseStatus
-                      ? getHttpCodeFunctionText(responseStatus)
-                      : responseStatus) +
-                    "Response",
-                ),
-              );
-              console.log(
-                "responseModel",
-                responseStatus,
-                (name && modelsByArray[name]) || name,
-              );
-              if (name) {
-                if (modelsByFile[fileName].response == null) {
-                  modelsByFile[fileName].response = [];
+            if (response.content) {
+              Object.keys(response.content).forEach((contentType) => {
+                const sanitizedContentType = camelCaseText(contentType, true);
+                const name = processReferableSchema(
+                  response.content[contentType].schema,
+                  capitalize(
+                    fileName +
+                      (responseStatus
+                        ? getHttpCodeFunctionText(responseStatus)
+                        : responseStatus) +
+                      sanitizedContentType +
+                      "Response",
+                  ),
+                );
+                console.log(
+                  "responseModel",
+                  responseStatus,
+                  (name && modelsByArray[name]) || name,
+                );
+                if (name) {
+                  if (modelsByFile[fileName].response == null) {
+                    modelsByFile[fileName].response = [];
+                  }
+                  modelsByFile[fileName].response.push({
+                    array: modelsByArray[name] ? true : false,
+                    name: modelsByArray[name] || name,
+                  });
                 }
-                modelsByFile[fileName].response.push({
-                  array: modelsByArray[name] ? true : false,
-                  name: modelsByArray[name] || name,
-                });
-              }
+              });
             }
           });
         }
@@ -429,11 +430,13 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
   const pathsMethods: {
     fileName: string;
     firstResponseCode: number;
+    firstResponseContent: string;
     functionName: string;
     method: string;
     operation: any;
     apiPath: string;
     responseCodes: string;
+    responseContent: string;
   }[] = [];
 
   if (openapi.paths) {
@@ -452,9 +455,16 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
             const functionName = `route${capitalize(fileName)}`;
 
             const responseCodes: Set<number> = new Set<number>();
+            const responseContent: Set<string> = new Set<string>();
             if (operation.responses) {
               Object.keys(operation.responses).forEach((code: string) => {
                 responseCodes.add(parseInt(code) || 200);
+                const response = operation.responses[code];
+                if (response.content) {
+                  Object.keys(response.content).forEach((contentType) => {
+                    responseContent.add(contentType);
+                  });
+                }
               });
             }
 
@@ -463,15 +473,21 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
             }
 
             const sortedResponseCodes = Array.from(responseCodes).sort();
+            const responseContentArray = Array.from(responseContent);
 
             pathsMethods.push({
               apiPath,
               fileName,
               firstResponseCode: sortedResponseCodes[0],
+              firstResponseContent: responseContentArray[0],
               functionName,
               method,
               operation,
               responseCodes: sortedResponseCodes.join(" | "),
+              responseContent:
+                responseContentArray.length > 0
+                  ? ', "' + responseContentArray.join(`" | "`) + '"'
+                  : "",
             });
 
             if (!routesAuth && operation.security) {
@@ -490,9 +506,11 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
     async ({
       fileName,
       firstResponseCode,
+      firstResponseContent,
       functionName,
       operation,
       responseCodes,
+      responseContent,
     }) => {
       routesImports += `import ${functionName} from "./controllers/${fileName}.js";\n`;
 
@@ -556,10 +574,10 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
           serviceContent +=
             "// eslint-disable-next-line @typescript-eslint/no-unused-vars\n";
         }
-        serviceContent += `export async function ${fileName}(${serviceArgumentsFunc}): Promise<ServiceResponse<${responsesTypesContent}, ${responseCodes}>> {\n`;
+        serviceContent += `export async function ${fileName}(${serviceArgumentsFunc}): Promise<ServiceResponse<${responsesTypesContent}, ${responseCodes}${responseContent}>> {\n`;
         serviceContent += `  // This stub is generated if this file doesn't exist.\n`;
         serviceContent += `  // You can change body of this function, but it should comply with controllers' call.\n`;
-        serviceContent += `  return { code: ${firstResponseCode}, data: ${responsesTypesContent.includes("[]") ? "[]" : responsesTypesContent !== "unknown" ? "{}" : "null"} };\n`;
+        serviceContent += `  return { code: ${firstResponseCode}, type: ${firstResponseContent ? '"' + firstResponseContent + '"' : "undefined"}, data: ${responsesTypesContent.includes("[]") ? "[]" : responsesTypesContent !== "unknown" ? "{}" : "null"} };\n`;
         serviceContent += `}\n`;
 
         await fs.writeFile(
@@ -579,7 +597,7 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
       controllerContent += ` */\n`;
       controllerContent += `export default async function (req: Request<${getModelData(fileModelData?.params)}, ${"unknown"}, ${getModelData(fileModelData?.request)}, ${getModelData(fileModelData?.query)}>, res: Response<${responsesTypesContent}>) {\n`;
       controllerContent += `  try {\n`;
-      controllerContent += `    const result: ServiceResponse<${responsesTypesContent}, ${responseCodes}> = await ${fileName}(${serviceArgumentsCall});\n`;
+      controllerContent += `    const result: ServiceResponse<${responsesTypesContent}, ${responseCodes}${responseContent}> = await ${fileName}(${serviceArgumentsCall});\n`;
       switch (
         operation.responses &&
         operation.responses[firstResponseCode]?.content?.type
