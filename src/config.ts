@@ -2,8 +2,8 @@ import fs from "fs";
 import path from "path";
 
 import {
-  ANCA_WORKFOLDER_SCHEMA,
   Anca,
+  ANCA_WORKFOLDER_SCHEMA,
   AncaConfig,
   AncaDeployment,
   AncaDevelopment,

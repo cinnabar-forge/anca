@@ -3,6 +3,8 @@ import fs from "fs";
 import MarkdownIt from "markdown-it";
 import path from "path";
 
+import { AncaConfigAuthor } from "./schema.js";
+
 const HTTP_CODES: Record<number | string, string> = {
   100: "Continue", // Informational
   101: "SwitchingProtocols",
@@ -317,4 +319,26 @@ export function isAjvValid(schema: AnySchema, data: unknown) {
 export function capitalize(str: string): string {
   if (!str) return str;
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * Format the author line for the Markdown file
+ * @param author
+ */
+export function formatAuthorLine(author: AncaConfigAuthor): string {
+  let authorLine = `- ${author.name}`;
+  if (author.github) {
+    authorLine += ` ([@${author.github}](https://github.com/${author.github}))`;
+  } else if (author.url) {
+    authorLine += ` — <${author.url}>`;
+  } else if (author.email) {
+    authorLine += ` — <${author.email}>`;
+  }
+  if (author.status != null && author.status !== "active") {
+    authorLine += ` — ${author.status}`;
+  }
+  if (author.text) {
+    authorLine += ` — ${author.text}`;
+  }
+  return authorLine;
 }

@@ -1,9 +1,5 @@
-import {
-  AncaDevelopment,
-  AncaReadmeUsageSection,
-  formatAuthorLine,
-} from "../schema.js";
-import { writeFolderFile } from "../utils.js";
+import { AncaDevelopment, AncaReadmeUsageSection } from "../schema.js";
+import { formatAuthorLine, writeFolderFile } from "../utils.js";
 
 const FILE_PATH = "README.md";
 

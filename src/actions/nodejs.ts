@@ -15,13 +15,13 @@ export interface NodeJsPackageAuthor {
 
 export interface NodejsPackageJson {
   author?: NodeJsPackageAuthor | null;
-  bin?: Record<string, string> | null;
+  bin?: null | Record<string, string>;
   bugs?: null | string;
   contributors?: NodeJsPackageAuthor[] | null;
-  dependencies?: Record<string, string> | null;
+  dependencies?: null | Record<string, string>;
   description?: null | string;
-  devDependencies?: Record<string, string> | null;
-  engines?: Record<string, string> | null;
+  devDependencies?: null | Record<string, string>;
+  engines?: null | Record<string, string>;
   files?: null | string[];
   funding?: null | string;
   homepage?: null | string;
@@ -34,7 +34,7 @@ export interface NodejsPackageJson {
     type: string;
     url: string;
   } | null;
-  scripts?: Record<string, string> | null;
+  scripts?: null | Record<string, string>;
   type?: null | string;
   types?: null | string;
   version?: null | string;

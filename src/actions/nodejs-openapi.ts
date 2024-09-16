@@ -1,9 +1,9 @@
 import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
-import prettier from "prettier/standalone";
 import prettierEstree from "prettier/plugins/estree";
 import prettierTypescript from "prettier/plugins/typescript";
+import prettier from "prettier/standalone";
 
 import { AncaDevelopment } from "../schema.js";
 import {
@@ -13,14 +13,14 @@ import {
 } from "../utils.js";
 
 interface ModelData {
-  name: string;
   array?: boolean;
+  name: string;
 }
 
 interface ModelsByFile {
-  request?: ModelData;
   params?: ModelData;
   query?: ModelData;
+  request?: ModelData;
   response?: ModelData[];
 }
 
@@ -75,7 +75,7 @@ function camelCaseText(text: string, pascalCase?: boolean): string {
  * Get model data as string
  * @param modelData
  */
-function getModelData(modelData: ModelData | undefined | null): string {
+function getModelData(modelData: ModelData | null | undefined): string {
   return modelData
     ? modelData.array
       ? `${modelData.name}[]`
@@ -88,8 +88,8 @@ function getModelData(modelData: ModelData | undefined | null): string {
  * @param development
  */
 function getDevelopmentModelsPath(development: AncaDevelopment): {
-  filePath: string;
   codePath: string;
+  filePath: string;
   isFile: boolean;
 } {
   const openapiConfig = development.state?.config.development?.nodejsOpenapi;
@@ -207,7 +207,7 @@ async function generateTypeScriptModels(
   const processReferableSchema = function (
     schema: any,
     fallbackName: string,
-  ): string | false {
+  ): false | string {
     if (schema.$ref) {
       const refParts = schema.$ref.split("/");
       console.log("ref", refParts);
@@ -278,12 +278,12 @@ async function generateTypeScriptModels(
         if (parameters) {
           console.log("parameters");
           const schemaParams: Record<string, any> = {
-            type: "object",
             properties: {},
+            type: "object",
           };
           const schemaQuery: Record<string, any> = {
-            type: "object",
             properties: {},
+            type: "object",
           };
           parameters.forEach((parameter: any) => {
             if (parameter.in === "path") {
@@ -428,13 +428,13 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
   let routesFunctions = "";
 
   const pathsMethods: {
+    apiPath: string;
     fileName: string;
     firstResponseCode: number;
     firstResponseContent: string;
     functionName: string;
     method: string;
     operation: any;
-    apiPath: string;
     responseCodes: string;
     responseContent: string;
   }[] = [];

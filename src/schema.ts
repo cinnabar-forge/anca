@@ -22,10 +22,10 @@ export type AncaAction =
   | "devcontainerDockerfileSetToDefault"
   | "devcontainerJsonSetToDefault"
   | "gitClone"
-  | "gitIgnoreSetToDefault"
   | "githubActionsOtherFilesRemove"
   | "githubActionsReleaseSetToDefault"
   | "githubActionsTestSetToDefault"
+  | "gitIgnoreSetToDefault"
   | "licenseSetToDefault"
   | "nodejsEsbuildSetToDefault"
   | "nodejsEslintSetToDefault"
@@ -151,8 +151,8 @@ export interface AncaNodejsSeaModules {
 
 export interface AncaNodejsOpenapi {
   modelsLocation?: string;
-  modelsModule?: string;
   modelsLocationType?: "file" | "folder";
+  modelsModule?: string;
 }
 
 export interface AncaReadmeUsageSection {
@@ -170,8 +170,8 @@ export interface AncaReadme {
 }
 
 export interface AncaDevelopmentConfig {
-  nodejsSeaModules?: AncaNodejsSeaModules;
   nodejsOpenapi?: AncaNodejsOpenapi;
+  nodejsSeaModules?: AncaNodejsSeaModules;
   readme?: AncaReadme;
 }
 
@@ -355,25 +355,3 @@ export const ANCA_CONFIG_SCHEMA = {
   required: ["namings"],
   type: "object",
 };
-
-/**
- * Format the author line for the Markdown file
- * @param author
- */
-export function formatAuthorLine(author: AncaConfigAuthor): string {
-  let authorLine = `- ${author.name}`;
-  if (author.github) {
-    authorLine += ` ([@${author.github}](https://github.com/${author.github}))`;
-  } else if (author.url) {
-    authorLine += ` — <${author.url}>`;
-  } else if (author.email) {
-    authorLine += ` — <${author.email}>`;
-  }
-  if (author.status != null && author.status !== "active") {
-    authorLine += ` — ${author.status}`;
-  }
-  if (author.text) {
-    authorLine += ` — ${author.text}`;
-  }
-  return authorLine;
-}

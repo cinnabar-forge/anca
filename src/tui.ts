@@ -15,15 +15,16 @@ import {
 } from "./actions/github-actions.js";
 import { fixLicenseMd } from "./actions/license.js";
 import {
-  NodejsPackageJson,
   fixNodejsPackageJson,
   installNodejsDependencies,
+  NodejsPackageJson,
   updateNodejsPackageJsonDependencies,
   updateNodejsPackageJsonDevDependencies,
   writeNodejsPackageJson,
 } from "./actions/nodejs.js";
 import { fixNodejsEsbuildJs } from "./actions/nodejs-esbuild.js";
 import { fixNodejsEslintConfigJs } from "./actions/nodejs-eslint.js";
+import { generateNodejsOpenapiFiles } from "./actions/nodejs-openapi.js";
 import {
   fixNodejsPrettierIgnore,
   fixNodejsPrettierRc,
@@ -47,7 +48,6 @@ import {
 } from "./developments.js";
 import { AncaAction, AncaDevelopment } from "./schema.js";
 import { checkExistence } from "./utils.js";
-import { generateNodejsOpenapiFiles } from "./actions/nodejs-openapi.js";
 
 interface ClivoAction {
   action: () => Promise<void>;
@@ -117,13 +117,6 @@ async function showDevelopmentActions(
       },
       label: "[git] Clone",
     },
-    gitIgnoreSetToDefault: {
-      action: async () => {
-        await fixGitIgnore(development);
-        await backHere();
-      },
-      label: "[.gitignore] Set to default",
-    },
     githubActionsOtherFilesRemove: {
       action: async () => {
         await fixGithubActionsOtherFiles(development);
@@ -144,6 +137,13 @@ async function showDevelopmentActions(
         await backHere();
       },
       label: "[.github/workflows/test.yml] Set to default",
+    },
+    gitIgnoreSetToDefault: {
+      action: async () => {
+        await fixGitIgnore(development);
+        await backHere();
+      },
+      label: "[.gitignore] Set to default",
     },
     licenseSetToDefault: {
       action: async () => {

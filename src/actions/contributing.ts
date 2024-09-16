@@ -1,9 +1,5 @@
-import {
-  AncaConfigAuthor,
-  AncaDevelopment,
-  formatAuthorLine,
-} from "../schema.js";
-import { writeFolderFile } from "../utils.js";
+import { AncaConfigAuthor, AncaDevelopment } from "../schema.js";
+import { formatAuthorLine, writeFolderFile } from "../utils.js";
 
 const COMMON_PART = `# Contributing
 
