@@ -136,6 +136,7 @@ export interface AncaConfig {
   monorepo?: AncaConfigMonorepo[];
   namings?: AncaConfigNamings;
   organizations?: AncaConfigOrganization[];
+  public?: boolean;
   stack?: AncaConfigStack;
   type?: AncaConfigType;
 }
@@ -187,6 +188,9 @@ export const ANCA_WORKFOLDER_SCHEMA = {
       items: {
         properties: {
           code: {
+            type: "string",
+          },
+          gitOrigin: {
             type: "string",
           },
         },
@@ -298,6 +302,14 @@ export const ANCA_CONFIG_SCHEMA = {
     },
     development: {
       properties: {
+        nodejsOpenapi: {
+          properties: {
+            modelsLocation: { type: "string" },
+            modelsLocationType: { enum: ["file", "folder"], type: "string" },
+            modelsModule: { type: "string" },
+          },
+          type: "object",
+        },
         nodejsSeaModules: {
           properties: {
             sqlite3: { type: "boolean" },
@@ -333,6 +345,35 @@ export const ANCA_CONFIG_SCHEMA = {
     downloadBinariesUrl: {
       type: "string",
     },
+    monorepo: {
+      items: {
+        properties: {
+          data: {
+            properties: {
+              development: {
+                $ref: "#/properties/development",
+              },
+              namings: {
+                $ref: "#/properties/namings",
+              },
+              stack: {
+                enum: ["nodejs", "unsupported"],
+                type: "string",
+              },
+              type: {
+                enum: ["api", "app", "dts", "library", "project", "web"],
+                type: "string",
+              },
+            },
+            type: "object",
+          },
+          name: { type: "string" },
+        },
+        required: ["data", "name"],
+        type: "object",
+      },
+      type: "array",
+    },
     namings: {
       properties: {
         npmPackage: { type: "string" },
@@ -342,6 +383,21 @@ export const ANCA_CONFIG_SCHEMA = {
       },
       required: ["text"],
       type: "object",
+    },
+    organizations: {
+      items: {
+        properties: {
+          name: { type: "string" },
+          text: { type: "string" },
+          url: { type: "string" },
+        },
+        required: ["name"],
+        type: "object",
+      },
+      type: "array",
+    },
+    public: {
+      type: "boolean",
     },
     stack: {
       enum: ["nodejs", "unsupported"],
