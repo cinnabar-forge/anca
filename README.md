@@ -14,6 +14,18 @@ Organize workspaces and manage projects deployment fast and easy with Anca, Proj
 npm install -g anca
 ```
 
+### Bundled script
+
+[Get the latest bundled script](https://github.com/cinnabar-forge/anca/releases/latest).
+
+This script has everything to run the project without any extra dependencies. You need Node.js binary to run it.
+
+### Binary
+
+[Get the latest binaries](https://github.com/cinnabar-forge/anca/releases/latest).
+
+If you want to use the app with a command line, rename it to `anca` or `anca.exe` and add the location to `PATH`.
+
 ## Contributing
 
 Visit [`CONTRIBUTING.md`](CONTRIBUTING.md).

@@ -1,3 +1,3 @@
-FROM docker.io/node:22.6.0
+FROM docker.io/node:22.8.0
 
 USER node

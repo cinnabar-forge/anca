@@ -15,7 +15,7 @@ jobs:
         name: "Checkout repo"
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.6.0
+          node-version: 22.8.0
           registry-url: https://registry.npmjs.org/
         name: "Install Node.js"
       - run: npm ci
@@ -26,6 +26,34 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
         name: "Build distribution bundle and publish to registry"
+  build-bundle:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    env:
+      ANCA_CI: true
+    name: Build bundle
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout repo
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.8.0
+        name: Install Node.js
+      - run: npm ci
+        name: Install dependencies
+      - run: npm run build:bundle
+        name: Build bundle
+      - run: |
+          mv build/bundle/index.js build/bundle/${{ github.event.repository.name }}-${{ github.ref_name }}.js
+        shell: bash
+        name: Rename bundle
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/bundle/${{ github.event.repository.name }}-${{ github.ref_name }}.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        name: Attach bundle to release
   build-executables:
     permissions: write-all
     runs-on: ${{ matrix.os }}
@@ -40,7 +68,7 @@ jobs:
         name: Checkout repo
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.6.0
+          node-version: 22.8.0
         name: Install Node.js
       - run: npm ci
         name: Install dependencies
