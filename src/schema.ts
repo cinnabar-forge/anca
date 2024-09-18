@@ -110,6 +110,7 @@ export interface AncaConfigOrganization {
 }
 
 export interface AncaConfigNamings {
+  bin?: string;
   npmPackage?: string;
   text: string;
   textLong?: string;
@@ -130,6 +131,7 @@ export interface AncaConfigMonorepo {
 
 export interface AncaConfig {
   authors?: AncaConfigAuthor[];
+  cinnabarMeta?: any;
   deployment?: AncaDeploymentConfig;
   development?: AncaDevelopmentConfig;
   downloadBinariesUrl?: string;
@@ -376,6 +378,7 @@ export const ANCA_CONFIG_SCHEMA = {
     },
     namings: {
       properties: {
+        bin: { type: "string" },
         npmPackage: { type: "string" },
         text: { type: "string" },
         textLong: { type: "string" },

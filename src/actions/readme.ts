@@ -12,9 +12,15 @@ function getContents(development: AncaDevelopment) {
     return "";
   }
 
-  const appName = development.state.config.namings?.text ?? "New App";
-  const packageName =
-    development.state.config.namings?.npmPackage ?? "@anca/new-app";
+  const config = development.state.config;
+
+  if (config == null) {
+    return "";
+  }
+
+  const appName = config.namings?.text ?? "New App";
+  const binName = config.namings?.bin ?? "new-app";
+  const packageName = config.namings?.npmPackage ?? "@anca/new-app";
 
   const lines = [];
 
@@ -30,13 +36,13 @@ function getContents(development: AncaDevelopment) {
     lines.push(`${development.state.meta.description}`);
   }
 
-  if (development.state.config.development?.readme?.description) {
-    lines.push(...development.state.config.development.readme.description);
+  if (config.development?.readme?.description) {
+    lines.push(...config.development.readme.description);
   }
 
-  if (development.state.config.development?.readme?.features) {
+  if (config.development?.readme?.features) {
     lines.push(`## Features`);
-    development.state.config.development.readme.features.forEach((feature) => {
+    config.development.readme.features.forEach((feature) => {
       lines.push(`- ${feature}`);
     });
   }
@@ -44,33 +50,53 @@ function getContents(development: AncaDevelopment) {
   lines.push(`## Installation`);
 
   if (
-    development.state.config.stack === "nodejs" &&
+    config.stack === "nodejs" &&
     development.state.jsonFiles["package.json"] != null
   ) {
-    const binName = development.state.meta?.name;
+    const isPublic = config.public;
+
+    if (isPublic) {
+      lines.push(`### npm`);
+      if (config.type === "app") {
+        lines.push(`\`\`\`bash\nnpm install -g ${packageName}\n\`\`\``);
+      } else {
+        lines.push(`\`\`\`bash\nnpm install ${packageName}\n\`\`\``);
+      }
+    }
+
+    const latestUrl =
+      config.cinnabarMeta?.repo?.value &&
+      `https://github.com/${config.cinnabarMeta?.repo?.value}/releases/latest`;
 
     if (
-      development.state.config.type === "app" &&
-      development.state.config.downloadBinariesUrl
+      (config.type === "api" ||
+        config.type === "app" ||
+        config.type === "project" ||
+        config.type === "web") &&
+      latestUrl
     ) {
-      lines.push(`### Binary`);
+      lines.push(`### Bundled script`);
+      lines.push(`[Get the latest bundled script](${latestUrl}).`);
       lines.push(
-        `[Get the latest binaries](${development.state.config.downloadBinariesUrl}).`,
-      );
-      lines.push(
-        `If you want to use the app with a command line, rename it to \`${binName}\` or \`${binName}.exe\` and add the location to \`PATH\`.`,
+        `This script has everything to run the project without any extra dependencies. You need Node.js binary to run it.`,
       );
     }
 
-    lines.push(`### npm`);
-    if (development.state.config.type === "app") {
-      lines.push(`\`\`\`bash\nnpm install -g ${packageName}\n\`\`\``);
-    } else {
-      lines.push(`\`\`\`bash\nnpm install ${packageName}\n\`\`\``);
+    if (config.type === "app") {
+      const binariesUrl = config.downloadBinariesUrl || latestUrl;
+
+      if (binariesUrl) {
+        lines.push(`### Binary`);
+
+        lines.push(`[Get the latest binaries](${binariesUrl}).`);
+        lines.push(
+          `If you want to use the app with a command line, rename it to \`${binName}\` or \`${binName}.exe\` and add the location to \`PATH\`.`,
+        );
+      }
     }
   }
 
-  if (development.state.config.development?.readme?.usage) {
+  if (config.development?.readme?.usage) {
     lines.push(`## Usage`);
 
     const generateUsageSection = (
@@ -95,14 +121,14 @@ function getContents(development: AncaDevelopment) {
       });
     };
 
-    generateUsageSection(development.state.config.development.readme.usage, 3);
+    generateUsageSection(config.development.readme.usage, 3);
   }
 
   lines.push(`## Contributing`);
   lines.push(`Visit [\`CONTRIBUTING.md\`](CONTRIBUTING.md).`);
 
-  if (development.state.config.authors) {
-    const maintainers = development.state.config.authors.filter(
+  if (config.authors) {
+    const maintainers = config.authors.filter(
       (author) =>
         (author.type === "author" || author.type === "maintainer") &&
         author.status !== "retired",

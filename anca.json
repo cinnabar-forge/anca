@@ -13,8 +13,8 @@
     "dataVersion": 0,
     "version": {
       "latest": "0.1.0-dev.2",
-      "latestNext": "0.1.0-dev.2+next.20240916_072645",
-      "timestamp": 1726471605
+      "latestNext": "0.1.0-dev.2+next.20240918_093908",
+      "timestamp": 1726652348
     },
     "files": [
       {
@@ -50,6 +50,7 @@
     "readme": {}
   },
   "namings": {
+    "bin": "anca",
     "npmPackage": "anca",
     "text": "Anca",
     "textLong": "Anca Project Manager"

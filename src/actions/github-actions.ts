@@ -8,14 +8,20 @@ import {
   NODEJS_22_VERSION,
 } from "./utils/variables.js";
 
-const RELEASE_NODEJS = `name: Release
+const NAME_RELEASE = `name: Release`;
+const NAME_TEST = `name: Test`;
 
-on:
+const ON_RELEASE = `on:
   release:
-    types: [created]
+    types: [created]`;
 
-jobs:
-  publish-npm:
+const ON_PUSH = `on:
+  push:
+    branches: ["**"]`;
+
+const JOBS = `jobs:`;
+
+const JOBS_PUBLISH_NPM = `  publish-npm:
     runs-on: ubuntu-latest
     env:
       ANCA_CI: true
@@ -35,38 +41,38 @@ jobs:
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: \${{secrets.npm_token}}
-        name: "Build distribution bundle and publish to registry"
-`;
+        name: "Build distribution bundle and publish to registry"`;
 
-const RELEASE_NODEJS_APP = `name: Release
-
-on:
-  release:
-    types: [created]
-
-jobs:
-  publish-npm:
+const JOBS_BUILD_BUNDLE = `  build-bundle:
+    permissions: write-all
     runs-on: ubuntu-latest
     env:
       ANCA_CI: true
-    name: "Publish package to npm registry"
+    name: Build bundle
     steps:
       - uses: actions/checkout@v4
-        name: "Checkout repo"
+        name: Checkout repo
       - uses: actions/setup-node@v4
         with:
           node-version: ${NODEJS_22_VERSION}
-          registry-url: https://registry.npmjs.org/
-        name: "Install Node.js"
+        name: Install Node.js
       - run: npm ci
-        name: "Install dependencies"
-      - run: npm test
-        name: "Run tests"
-      - run: npm publish
+        name: Install dependencies
+      - run: npm run build:bundle
+        name: Build bundle
+      - run: |
+          mv build/bundle/index.js build/bundle/\${{ github.event.repository.name }}-\${{ github.ref_name }}.js
+        shell: bash
+        name: Rename bundle
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/bundle/\${{ github.event.repository.name }}-\${{ github.ref_name }}.js
         env:
-          NODE_AUTH_TOKEN: \${{secrets.npm_token}}
-        name: "Build distribution bundle and publish to registry"
-  build-executables:
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+        name: Attach bundle to release`;
+
+const JOBS_BUILD_EXECUTABLES = `  build-executables:
     permissions: write-all
     runs-on: \${{ matrix.os }}
     strategy:
@@ -100,17 +106,9 @@ jobs:
             build/sea/\${{ github.event.repository.name }}-\${{ github.ref_name }}-\${{ runner.arch }}\${{ matrix.os == 'windows-latest' && '.exe' || '' }}
         env:
           GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
-        name: Attach executables to release
-`;
+        name: Attach executables to release`;
 
-const TEST_NODEJS = `name: Test
-
-on:
-  push:
-    branches: ["**"]
-
-jobs:
-  test-commit:
+const JOBS_TEST_COMMIT = `  test-commit:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -127,7 +125,21 @@ jobs:
       - run: npm ci
         name: "Install dependencies"
       - run: npm test
-        name: "Run tests"
+        name: "Run tests"`;
+
+const RELEASE_NODEJS_BEGIN = `${NAME_RELEASE}
+
+${ON_RELEASE}
+
+${JOBS}
+`;
+
+const TEST_NODEJS = `${NAME_TEST}
+
+${ON_PUSH}
+
+${JOBS}
+${JOBS_TEST_COMMIT}
 `;
 
 const RELEASE_FILE_PATH = ".github/workflows/release.yml";
@@ -147,6 +159,29 @@ async function createGithubActionsFolders(fullPath: string) {
  *
  * @param development
  */
+function getReleaseContents(development: AncaDevelopment) {
+  let contents = RELEASE_NODEJS_BEGIN;
+
+  if (development.state?.config.public) {
+    contents += JOBS_PUBLISH_NPM;
+    contents += "\n";
+  }
+
+  contents += JOBS_BUILD_BUNDLE;
+  contents += "\n";
+
+  if (development.state?.config.type === "app") {
+    contents += JOBS_BUILD_EXECUTABLES;
+    contents += "\n";
+  }
+
+  return contents;
+}
+
+/**
+ *
+ * @param development
+ */
 export async function checkGithubActionsRelease(development: AncaDevelopment) {
   if (development.state == null) {
     return;
@@ -155,12 +190,7 @@ export async function checkGithubActionsRelease(development: AncaDevelopment) {
   if (contents == null) {
     return false;
   }
-  return (
-    contents ===
-    (development.state.config.type === "app"
-      ? RELEASE_NODEJS_APP
-      : RELEASE_NODEJS)
-  );
+  return contents === getReleaseContents(development);
 }
 
 /**
@@ -180,6 +210,17 @@ export async function checkGithubActionsTest(development: AncaDevelopment) {
 
 /**
  *
+ * @param _development
+ * @param file
+ */
+function filterGithubActionsFile(_development: AncaDevelopment, file: string) {
+  if (file === "test.yml") return false;
+  if (file === "release.yml") return false;
+  return true;
+}
+
+/**
+ *
  * @param development
  */
 export async function checkGithubActionsOtherFiles(
@@ -189,10 +230,12 @@ export async function checkGithubActionsOtherFiles(
   const files = fs.readdirSync(
     path.join(development.fullPath, ".github", "workflows"),
   );
-  return (
-    files.filter((file) => file !== "release.yml" && file !== "test.yml")
-      .length === 0
-  );
+
+  const test = files.filter((file) => {
+    return filterGithubActionsFile(development, file);
+  });
+
+  return test.length === 0;
 }
 
 /**
@@ -206,9 +249,7 @@ export async function fixGithubActionsRelease(development: AncaDevelopment) {
   await createGithubActionsFolders(development.fullPath);
   fs.writeFileSync(
     path.join(development.fullPath, ".github/workflows/release.yml"),
-    development.state.config.type === "app"
-      ? RELEASE_NODEJS_APP
-      : RELEASE_NODEJS,
+    getReleaseContents(development),
   );
 }
 
@@ -240,7 +281,7 @@ export async function fixGithubActionsOtherFiles(development: AncaDevelopment) {
     path.join(development.fullPath, ".github", "workflows"),
   );
   files.forEach(async (file) => {
-    if (file !== "release.yml" && file !== "test.yml") {
+    if (filterGithubActionsFile(development, file)) {
       fs.rmSync(path.join(development.fullPath, ".github", "workflows", file));
     }
   });
