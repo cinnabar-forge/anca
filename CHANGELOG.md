@@ -8,6 +8,90 @@ Visit the link above to see all unreleased changes.
 
 [comment]: # (Insert new version after this line)
 
+## [0.1.0-dev.3](https://github.com/cinnabar-forge/anca/releases/tag/v0.1.0-dev.3) — 2024-09-18
+
+- add author support ([34ad351])
+- add cli project option ([483ca39])
+- add early monorepo support ([0d2cdfb])
+- add full bundle to nodejs-esbuild action ([4f2dfba])
+- add full package.json fix action (non-issue) ([89e1eaf])
+- add github cli config ([5f8d4ff])
+- add missing fields to config schema ([bae73a3])
+- add monorepo logic to developments ([38fdcca])
+- add more development types ([1cf5b34])
+- add namings to anca.json ([a0feeac])
+- add nodejs-openapi action ([d53df7e])
+- add nodejs-openapi models generation ([5e7f7cd])
+- add nodejs-src action ([df9736b])
+- add openapi stub action ([df9736b])
+- add partial file compliance to nodejs-eslint action ([4f2dfba])
+- add prettier as default dependency ([bee40ac])
+- add public param to config schema ([bae73a3])
+- add test files ([3ced9fd])
+- add types to nodejs-openapi for express generics ([be0ae16])
+- add version check result output ([621c135])
+- comply anca ([4d66224], [4f2dfba], [509943e], [89e1eaf], [f032267])
+- enhance development display status ([89e1eaf])
+- enhance github-actions action ([7e10412])
+- enhance nodejs dependencies and scripts ([1ffa30d])
+- enhance nodejs-openapi action ([31ef4af], [417cc22], [bee40ac], [c622d86], [f76ea8e], [f9d0e48])
+- enhance package.json check logic ([89e1eaf])
+- enhance readme action ([7e10412])
+- fix development name display ([a96d560])
+- fix nodejs action ([9f9d441])
+- fix nodejs-src action ([51133e2])
+- fix npm update checker ([4f2dfba])
+- fix openapi action ([51133e2])
+- include resource to AncaWorkfolder config ([ed0d847])
+- lint sources ([07d084e])
+- move formatAuthorLine to utils ([07d084e])
+- update dependencies update logic ([38fdcca])
+- update eslint ([0849688])
+- update git action ([4f2dfba])
+- update nodejs action ([c622d86])
+- update nodejs versions ([3ac4fd7], [f032267])
+- update nodejs-prettier action ([c622d86])
+- update npm package '@cinnabar-forge/eslint-plugin' to 0.7.1 ([07d084e])
+- update npm packages ([0849688], [1ffa30d], [4f2dfba], [509943e], [71b77eb], [9ed6c0c])
+
+[4d66224]: https://github.com/cinnabar-forge/anca/commit/4d66224
+[7e10412]: https://github.com/cinnabar-forge/anca/commit/7e10412
+[3ced9fd]: https://github.com/cinnabar-forge/anca/commit/3ced9fd
+[bae73a3]: https://github.com/cinnabar-forge/anca/commit/bae73a3
+[07d084e]: https://github.com/cinnabar-forge/anca/commit/07d084e
+[f9d0e48]: https://github.com/cinnabar-forge/anca/commit/f9d0e48
+[bee40ac]: https://github.com/cinnabar-forge/anca/commit/bee40ac
+[3ac4fd7]: https://github.com/cinnabar-forge/anca/commit/3ac4fd7
+[417cc22]: https://github.com/cinnabar-forge/anca/commit/417cc22
+[c622d86]: https://github.com/cinnabar-forge/anca/commit/c622d86
+[31ef4af]: https://github.com/cinnabar-forge/anca/commit/31ef4af
+[f76ea8e]: https://github.com/cinnabar-forge/anca/commit/f76ea8e
+[be0ae16]: https://github.com/cinnabar-forge/anca/commit/be0ae16
+[5e7f7cd]: https://github.com/cinnabar-forge/anca/commit/5e7f7cd
+[d53df7e]: https://github.com/cinnabar-forge/anca/commit/d53df7e
+[51133e2]: https://github.com/cinnabar-forge/anca/commit/51133e2
+[0849688]: https://github.com/cinnabar-forge/anca/commit/0849688
+[ed0d847]: https://github.com/cinnabar-forge/anca/commit/ed0d847
+[5f8d4ff]: https://github.com/cinnabar-forge/anca/commit/5f8d4ff
+[df9736b]: https://github.com/cinnabar-forge/anca/commit/df9736b
+[9f9d441]: https://github.com/cinnabar-forge/anca/commit/9f9d441
+[1ffa30d]: https://github.com/cinnabar-forge/anca/commit/1ffa30d
+[38fdcca]: https://github.com/cinnabar-forge/anca/commit/38fdcca
+[0d2cdfb]: https://github.com/cinnabar-forge/anca/commit/0d2cdfb
+[71b77eb]: https://github.com/cinnabar-forge/anca/commit/71b77eb
+[1cf5b34]: https://github.com/cinnabar-forge/anca/commit/1cf5b34
+[a96d560]: https://github.com/cinnabar-forge/anca/commit/a96d560
+[483ca39]: https://github.com/cinnabar-forge/anca/commit/483ca39
+[a0feeac]: https://github.com/cinnabar-forge/anca/commit/a0feeac
+[34ad351]: https://github.com/cinnabar-forge/anca/commit/34ad351
+[89e1eaf]: https://github.com/cinnabar-forge/anca/commit/89e1eaf
+[4f2dfba]: https://github.com/cinnabar-forge/anca/commit/4f2dfba
+[509943e]: https://github.com/cinnabar-forge/anca/commit/509943e
+[f032267]: https://github.com/cinnabar-forge/anca/commit/f032267
+[9ed6c0c]: https://github.com/cinnabar-forge/anca/commit/9ed6c0c
+[621c135]: https://github.com/cinnabar-forge/anca/commit/621c135
+
+
 ## [0.1.0-dev.2](https://github.com/cinnabar-forge/anca/releases/tag/v0.1.0-dev.2) — 2024-07-28
 
 - add npm cached version fetch and check ([7b55ca9])
@@ -79,4 +163,4 @@ Visit the link above to see all unreleased changes.
 [506c697]: https://github.com/cinnabar-forge/anca/commit/506c697
 
 
-[unreleased]: https://github.com/cinnabar-forge/anca/compare/v0.1.0-dev.2...HEAD
+[unreleased]: https://github.com/cinnabar-forge/anca/compare/v0.1.0-dev.3...HEAD
