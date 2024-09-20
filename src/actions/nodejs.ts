@@ -127,7 +127,7 @@ const SCRIPTS_LIB: Record<string, string> = {
 const DEPENDENCIES_API: string[] = [
   "dotenv",
   "express",
-  "express-session",
+  "helmet",
   "jsonwebtoken",
   "knex",
   "winston",
@@ -136,7 +136,6 @@ const DEPENDENCIES_API: string[] = [
 const DEV_DEPENDENCIES_API: string[] = [
   "@cinnabar-forge/eslint-plugin",
   "@types/express",
-  "@types/express-session",
   "@types/jsonwebtoken",
   "esbuild",
   "typescript",

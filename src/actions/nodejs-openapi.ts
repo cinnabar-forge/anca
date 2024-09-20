@@ -26,6 +26,11 @@ interface ModelsByFile {
 
 const prettierPlugins = [prettierEstree, prettierTypescript];
 
+const contentTypesExpressMapping: Record<string, string> = {
+  "application/json": "json",
+  "application/xml": "xml",
+};
+
 /**
  * Generate a fallback file name based on the method and api path
  * @param operationId
@@ -127,7 +132,7 @@ function getCodeModelPath(development: AncaDevelopment, model: string) {
  * @param development
  */
 async function generateTypeScriptEssentialModels(development: AncaDevelopment) {
-  const modelsLocation = path.resolve(development.fullPath, "./src/models");
+  const modelsLocation = path.resolve(development.fullPath, "./src/types");
 
   console.log(
     "generateTypeScriptEssentialModels",
@@ -136,9 +141,9 @@ async function generateTypeScriptEssentialModels(development: AncaDevelopment) {
   );
 
   await fs.writeFile(
-    path.join(modelsLocation, "ServiceResponse.ts"),
+    path.join(modelsLocation, "anca.ts"),
     await prettier.format(
-      `export interface ServiceResponse<D, S, T = undefined> {
+      `export interface ServiceAmbiguousResponse<D, S, T = undefined> {
   code: S;
   data: D;
   type?: T;
@@ -419,9 +424,14 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
   const controllersDir = path.join(development.fullPath, "src", "controllers");
   const servicesDir = path.join(development.fullPath, "src", "services");
   const routesFile = path.join(development.fullPath, "src", "routes.ts");
+  const typesDir = path.join(development.fullPath, "src", "types", "anca.ts");
+  // const typesFile = path.join(typesDir, "anca.ts");
 
   fs.mkdir(controllersDir, { recursive: true });
   fs.mkdir(servicesDir, { recursive: true });
+  fs.mkdir(typesDir, { recursive: true });
+
+  // let typesInterfaces = "";
 
   let routesImports = "";
   let routesAuth = false;
@@ -433,10 +443,12 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
     firstResponseCode: number;
     firstResponseContent: string;
     functionName: string;
+    isAmbiguous: boolean;
     method: string;
     operation: any;
-    responseCodes: string;
-    responseContent: string;
+    responseCodesCode: string;
+    responseContent: string[];
+    responseContentCode: string;
   }[] = [];
 
   if (openapi.paths) {
@@ -481,10 +493,14 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
               firstResponseCode: sortedResponseCodes[0],
               firstResponseContent: responseContentArray[0],
               functionName,
+              isAmbiguous:
+                sortedResponseCodes.length > 1 ||
+                responseContentArray.length > 1,
               method,
               operation,
-              responseCodes: sortedResponseCodes.join(" | "),
-              responseContent:
+              responseCodesCode: sortedResponseCodes.join(" | "),
+              responseContent: responseContentArray,
+              responseContentCode:
                 responseContentArray.length > 0
                   ? ', "' + responseContentArray.join(`" | "`) + '"'
                   : "",
@@ -495,7 +511,9 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
               routesImports += `import { isAuthenticated } from "./middleware/isAuthenticated.js";\n`;
             }
 
-            routesFunctions += `router.${method}("${apiPath}", ${operation.security ? "isAuthenticated, " : ""}${functionName});\n`;
+            const apiPathExpress = apiPath.replace(/{([^}]+)}/g, ":$1");
+
+            routesFunctions += `router.${method}("${apiPathExpress}", ${operation.security ? "isAuthenticated, " : ""}${functionName});\n`;
           });
       });
   }
@@ -508,9 +526,11 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
       firstResponseCode,
       firstResponseContent,
       functionName,
+      isAmbiguous,
       operation,
-      responseCodes,
+      responseCodesCode,
       responseContent,
+      responseContentCode,
     }) => {
       routesImports += `import ${functionName} from "./controllers/${fileName}.js";\n`;
 
@@ -519,15 +539,27 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
 
       const fileModelData = modelsByFile[fileName];
 
-      let responsesImportContent = `import { ServiceResponse } from "../models/ServiceResponse.js";\n`;
-      fileModelData?.response?.forEach((responseModelData) => {
-        responsesImportContent += `import { ${responseModelData.name} } from "${getCodeModelPath(development, responseModelData.name)}";\n`;
-      });
+      const filterDuplicates = (value: any, index: number, self: any[]) =>
+        self.indexOf(value) === index;
+
+      let responsesImportContent = isAmbiguous
+        ? `import { ServiceAmbiguousResponse } from "../types/anca.js";\n`
+        : "";
+      fileModelData?.response
+        ?.map((value) => value.name)
+        .filter(filterDuplicates)
+        .forEach((responseModelDataName) => {
+          responsesImportContent += `import { ${responseModelDataName} } from "${getCodeModelPath(development, responseModelDataName)}";\n`;
+        });
       const responsesTypesContent =
-        fileModelData?.response?.map(getModelData).join(" | ") || "unknown";
+        fileModelData?.response
+          ?.map(getModelData)
+          .filter(filterDuplicates)
+          .join(" | ") || "unknown";
 
       let serviceArgumentsFunc = "";
-      let serviceArgumentsCall = "";
+      let serviceArgumentsCallCnt = "";
+      let serviceArgumentsCallSrv = "";
       let serviceArgumentsJsdoc = "";
 
       let controllerContent = "";
@@ -539,19 +571,22 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
         responsesImportContent += `import { ${fileModelData.request.name} } from "${getCodeModelPath(development, fileModelData.request.name)}";\n`;
         serviceArgumentsFunc += `request: ${fileModelData.request.name}`;
         serviceArgumentsJsdoc += ` * @param request\n`;
-        serviceArgumentsCall += `req.body`;
+        serviceArgumentsCallSrv += `request`;
+        serviceArgumentsCallCnt += `req.body`;
       }
       if (fileModelData?.params) {
         responsesImportContent += `import { ${fileModelData.params.name} } from "${getCodeModelPath(development, fileModelData.params.name)}";\n`;
         serviceArgumentsFunc += `${serviceArgumentsFunc ? ", " : ""}params: ${fileModelData.params.name}`;
         serviceArgumentsJsdoc += ` * @param params\n`;
-        serviceArgumentsCall += `${serviceArgumentsCall ? ", " : ""}req.params`;
+        serviceArgumentsCallSrv += `${serviceArgumentsCallSrv ? ", " : ""}params`;
+        serviceArgumentsCallCnt += `${serviceArgumentsCallCnt ? ", " : ""}req.params`;
       }
       if (fileModelData?.query) {
         responsesImportContent += `import { ${fileModelData.query.name} } from "${getCodeModelPath(development, fileModelData.query.name)}";\n`;
         serviceArgumentsFunc += `${serviceArgumentsFunc ? ", " : ""}query: ${fileModelData.query.name}`;
         serviceArgumentsJsdoc += ` * @param query\n`;
-        serviceArgumentsCall += `${serviceArgumentsCall ? ", " : ""}req.query`;
+        serviceArgumentsCallSrv += `${serviceArgumentsCallSrv ? ", " : ""}query`;
+        serviceArgumentsCallCnt += `${serviceArgumentsCallCnt ? ", " : ""}req.query`;
       }
 
       if (responsesImportContent) {
@@ -570,14 +605,26 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
         serviceContent += ` * ${operation.summary || ""}\n`;
         serviceContent += serviceArgumentsJsdoc;
         serviceContent += " */\n";
-        if (serviceArgumentsFunc) {
-          serviceContent +=
-            "// eslint-disable-next-line @typescript-eslint/no-unused-vars\n";
+        if (isAmbiguous) {
+          serviceContent += `export async function ${fileName}(${serviceArgumentsFunc}): Promise<ServiceAmbiguousResponse<${responsesTypesContent}, ${responseCodesCode}${responseContentCode}>> {\n`;
+        } else {
+          serviceContent += `export async function ${fileName}(${serviceArgumentsFunc}): Promise<${responsesTypesContent}> {\n`;
         }
-        serviceContent += `export async function ${fileName}(${serviceArgumentsFunc}): Promise<ServiceResponse<${responsesTypesContent}, ${responseCodes}${responseContent}>> {\n`;
+
         serviceContent += `  // This stub is generated if this file doesn't exist.\n`;
-        serviceContent += `  // You can change body of this function, but it should comply with controllers' call.\n`;
-        serviceContent += `  return { code: ${firstResponseCode}, type: ${firstResponseContent ? '"' + firstResponseContent + '"' : "undefined"}, data: ${responsesTypesContent.includes("[]") ? "[]" : responsesTypesContent !== "unknown" ? "{}" : "null"} };\n`;
+        serviceContent += `  // You can change body of this function, but it should comply with controllers' call.\n\n`;
+        serviceContent += `  console.log("${fileName}", ${serviceArgumentsCallSrv});\n\n`;
+
+        const codeData = responsesTypesContent.includes("[]")
+          ? "[]"
+          : responsesTypesContent !== "unknown"
+            ? "{}"
+            : "null";
+        if (isAmbiguous) {
+          serviceContent += `  return { code: ${firstResponseCode}, type: ${firstResponseContent ? '"' + firstResponseContent + '"' : "undefined"}, data: ${codeData} };\n`;
+        } else {
+          serviceContent += `  return ${codeData};\n`;
+        }
         serviceContent += `}\n`;
 
         await fs.writeFile(
@@ -587,6 +634,8 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
             plugins: prettierPlugins,
           }),
         );
+      } else {
+        console.log("Service file already exists", serviceFile);
       }
 
       controllerContent += `\n`;
@@ -597,20 +646,35 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
       controllerContent += ` */\n`;
       controllerContent += `export default async function (req: Request<${getModelData(fileModelData?.params)}, ${"unknown"}, ${getModelData(fileModelData?.request)}, ${getModelData(fileModelData?.query)}>, res: Response<${responsesTypesContent}>) {\n`;
       controllerContent += `  try {\n`;
-      controllerContent += `    const result: ServiceResponse<${responsesTypesContent}, ${responseCodes}${responseContent}> = await ${fileName}(${serviceArgumentsCall});\n`;
-      switch (
-        operation.responses &&
-        operation.responses[firstResponseCode]?.content?.type
-      ) {
-        case "application/json":
-          controllerContent += `    res.status(result.code).json(result.data);\n`;
-          break;
-        case "application/xml":
-          controllerContent += `    res.status(result.code).xml(result.data);\n`;
-          break;
-        default:
-          controllerContent += `    res.status(result.code).send(result.data);\n`;
+      if (isAmbiguous) {
+        controllerContent += `    const result: ServiceAmbiguousResponse<${responsesTypesContent}, ${responseCodesCode}${responseContentCode}> = await ${fileName}(${serviceArgumentsCallCnt});\n`;
+        controllerContent += `    switch (result.type) {\n`;
+        responseContent.forEach((responseContentType) => {
+          controllerContent += `      case "${responseContentType}":\n`;
+          if (contentTypesExpressMapping[responseContentType]) {
+            controllerContent += `        res.status(result.code).${contentTypesExpressMapping[responseContentType]}(result.data);\n`;
+          } else {
+            controllerContent += `        res.status(result.code).contentType("${responseContentType}").send(result.data);\n`;
+          }
+          controllerContent += `        break;\n`;
+        });
+        controllerContent += `      default:\n`;
+        controllerContent += `        res.status(result.code).send(result.data);\n`;
+        controllerContent += `    }\n`;
+      } else {
+        controllerContent += `    const result: ${responsesTypesContent} = await ${fileName}(${serviceArgumentsCallCnt});\n`;
+        switch (firstResponseContent) {
+          case "application/json":
+            controllerContent += `    res.status(${firstResponseCode}).json(result);\n`;
+            break;
+          case "application/xml":
+            controllerContent += `    res.status(${firstResponseCode}).xml(result);\n`;
+            break;
+          default:
+            controllerContent += `    res.status(${firstResponseCode}).send(result);\n`;
+        }
       }
+
       controllerContent += `  } catch (error) {\n`;
       controllerContent += `    console.error(error);\n`;
       controllerContent += `    res.end();\n`;

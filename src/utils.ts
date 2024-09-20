@@ -1,5 +1,5 @@
 import Ajv, { AnySchema } from "ajv";
-import fs from "fs";
+import fs from "fs/promises";
 import MarkdownIt from "markdown-it";
 import path from "path";
 
@@ -90,7 +90,7 @@ export function getHttpCodeFunctionText(code: number | string) {
  */
 export async function checkExistence(filePath: string) {
   try {
-    await fs.promises.access(filePath);
+    await fs.access(filePath);
     return true;
   } catch {
     return false;
@@ -103,7 +103,7 @@ export async function checkExistence(filePath: string) {
  */
 export async function readJsonFile(jsonPath: string): Promise<null | object> {
   try {
-    return JSON.parse(await fs.promises.readFile(jsonPath, "utf-8"));
+    return JSON.parse(await fs.readFile(jsonPath, "utf-8"));
   } catch {
     return null;
   }
@@ -119,7 +119,7 @@ export async function readFolderFile(
   filePath: string,
 ): Promise<null | string> {
   try {
-    return await fs.promises.readFile(path.resolve(folder, filePath), "utf-8");
+    return await fs.readFile(path.resolve(folder, filePath), "utf-8");
   } catch {
     return null;
   }
@@ -137,11 +137,7 @@ export async function writeFolderFile(
   data: string,
 ): Promise<void> {
   try {
-    await fs.promises.writeFile(
-      path.resolve(folder, filePath),
-      data || "",
-      "utf-8",
-    );
+    await fs.writeFile(path.resolve(folder, filePath), data || "", "utf-8");
   } catch (error) {
     console.error(
       `Failed to write file at ${path.resolve(folder, filePath)}:`,
@@ -171,7 +167,7 @@ export async function writeFolderJsonFile(
   data: object,
 ): Promise<void> {
   try {
-    await fs.promises.writeFile(
+    await fs.writeFile(
       path.resolve(folder, filePath),
       stringifyJson(data),
       "utf-8",
@@ -196,7 +192,7 @@ export async function readFolderJsonFile(
 ): Promise<null | object> {
   try {
     return JSON.parse(
-      await fs.promises.readFile(path.resolve(folder, jsonPath), "utf-8"),
+      await fs.readFile(path.resolve(folder, jsonPath), "utf-8"),
     );
   } catch {
     return null;
@@ -247,8 +243,8 @@ export async function isJsonFileSubset(firstPath: string, secondPath: string) {
  * @param secondPath
  */
 export async function isFileSubset(firstPath: string, secondPath: string) {
-  const firstContent = await fs.promises.readFile(firstPath, "utf-8");
-  const secondContent = await fs.promises.readFile(secondPath, "utf-8");
+  const firstContent = await fs.readFile(firstPath, "utf-8");
+  const secondContent = await fs.readFile(secondPath, "utf-8");
 
   if (firstContent == null || secondContent == null) {
     return null;
