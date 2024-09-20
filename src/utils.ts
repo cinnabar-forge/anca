@@ -73,7 +73,7 @@ const HTTP_CODES: Record<number | string, string> = {
   510: "NotExtended",
   511: "NetworkAuthenticationRequired",
 
-  default: "Unknown",
+  default: "Other",
 };
 
 /**
