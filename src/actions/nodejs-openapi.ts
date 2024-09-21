@@ -477,13 +477,21 @@ function generateImportsCodePart(importsDict?: Record<string, ImportsData>) {
     .sort()
     .forEach((importPath) => {
       const importData = importsDict[importPath];
+      let importCodePart = "";
       if (importData.defaultImport) {
-        importsCodePart += `import ${importData.defaultImport} from "${importPath}";\n`;
+        importCodePart += importData.defaultImport;
       }
       if (importData.otherImports) {
-        importData.otherImports.forEach((importName) => {
-          importsCodePart += `import { ${importName} } from "${importPath}";\n`;
+        let importOtherCodePart = "";
+        importData.otherImports.sort().forEach((importName) => {
+          importOtherCodePart += `${importOtherCodePart ? ", " : ""}${importName}`;
         });
+        if (importOtherCodePart) {
+          importCodePart += `${importCodePart ? ", " : ""}{ ${importOtherCodePart} }`;
+        }
+      }
+      if (importCodePart) {
+        importsCodePart += `import ${importCodePart} from "${importPath}";\n`;
       }
     });
   return importsCodePart;
@@ -712,8 +720,12 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
 
       let controllerContent = "";
 
-      addImport(responsesControllerImport, "express", "Request");
-      addImport(responsesControllerImport, "express", "Response");
+      addImport(responsesControllerImport, "express", "Request", {
+        isModule: true,
+      });
+      addImport(responsesControllerImport, "express", "Response", {
+        isModule: true,
+      });
       addImport(
         responsesControllerImport,
         `../services/${fileName}.js`,
