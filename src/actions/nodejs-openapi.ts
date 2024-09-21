@@ -30,10 +30,14 @@ interface ModelsByFile {
   response?: ModelDataResponse[];
 }
 
-type Imports = Record<
-  string,
-  { defaultImport?: string; otherImports?: string[] }
->;
+interface ImportsData {
+  defaultImport?: string;
+  otherImports?: string[];
+}
+interface Imports {
+  files?: Record<string, ImportsData>;
+  modules?: Record<string, ImportsData>;
+}
 
 const prettierPlugins = [prettierEstree, prettierTypescript];
 
@@ -107,6 +111,7 @@ function getDevelopmentModelsPath(development: AncaDevelopment): {
   codePath: string;
   filePath: string;
   isFile: boolean;
+  isModule: boolean;
 } {
   const openapiConfig = development.state?.config.development?.nodejsOpenapi;
 
@@ -122,6 +127,7 @@ function getDevelopmentModelsPath(development: AncaDevelopment): {
     isFile: openapiConfig?.modelsLocation
       ? openapiConfig?.modelsLocationType === "file"
       : false,
+    isModule: openapiConfig?.modelsModule != null,
   };
 }
 
@@ -133,9 +139,12 @@ function getDevelopmentModelsPath(development: AncaDevelopment): {
 function getCodeModelPath(development: AncaDevelopment, model: string) {
   const modelsLocation = getDevelopmentModelsPath(development);
 
-  return modelsLocation.isFile
-    ? modelsLocation.codePath
-    : path.resolve(modelsLocation.codePath, `${model}.js`);
+  return {
+    isModule: modelsLocation.isModule,
+    path: modelsLocation.isFile
+      ? modelsLocation.codePath
+      : path.resolve(modelsLocation.codePath, `${model}.js`),
+  };
 }
 
 /**
@@ -420,44 +429,63 @@ function getPropertyType(propertySchema: any): string {
  * @param imports
  * @param importPath
  * @param importName
- * @param isDefault
+ * @param params
+ * @param params.isDefault
+ * @param params.isModule
  */
 function addImport(
   imports: Imports,
   importPath: string,
   importName: string,
-  isDefault?: boolean,
+  params?: { isDefault?: boolean; isModule?: boolean },
 ) {
-  if (imports[importPath] == null) {
-    imports[importPath] = {};
-  }
-  if (isDefault) {
-    imports[importPath].defaultImport = importName;
-  } else {
-    if (imports[importPath].otherImports == null) {
-      imports[importPath].otherImports = [];
+  let importsDict;
+  if (params?.isModule) {
+    if (imports.modules == null) {
+      imports.modules = {};
     }
-    imports[importPath].otherImports.push(importName);
+    importsDict = imports.modules;
+  } else {
+    if (imports.files == null) {
+      imports.files = {};
+    }
+    importsDict = imports.files;
+  }
+  if (importsDict[importPath] == null) {
+    importsDict[importPath] = {};
+  }
+  if (params?.isDefault) {
+    importsDict[importPath].defaultImport = importName;
+  } else {
+    if (importsDict[importPath].otherImports == null) {
+      importsDict[importPath].otherImports = [];
+    }
+    importsDict[importPath].otherImports.push(importName);
   }
 }
 
 /**
  * Generate imports code part
- * @param imports
+ * @param importsDict
  */
-function generateImportsCodePart(imports: Imports) {
+function generateImportsCodePart(importsDict?: Record<string, ImportsData>) {
   let importsCodePart = "";
-  Object.keys(imports).forEach((importPath) => {
-    const importData = imports[importPath];
-    if (importData.defaultImport) {
-      importsCodePart += `import ${importData.defaultImport} from "${importPath}";\n`;
-    }
-    if (importData.otherImports) {
-      importData.otherImports.forEach((importName) => {
-        importsCodePart += `import { ${importName} } from "${importPath}";\n`;
-      });
-    }
-  });
+  if (!importsDict) {
+    return importsCodePart;
+  }
+  Object.keys(importsDict)
+    .sort()
+    .forEach((importPath) => {
+      const importData = importsDict[importPath];
+      if (importData.defaultImport) {
+        importsCodePart += `import ${importData.defaultImport} from "${importPath}";\n`;
+      }
+      if (importData.otherImports) {
+        importData.otherImports.forEach((importName) => {
+          importsCodePart += `import { ${importName} } from "${importPath}";\n`;
+        });
+      }
+    });
   return importsCodePart;
 }
 
@@ -598,12 +626,9 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
       responseContentTypes,
       responseErrorContentTypes,
     }) => {
-      addImport(
-        routesImports,
-        "./controllers/${fileName}.js",
-        functionName,
-        true,
-      );
+      addImport(routesImports, "./controllers/${fileName}.js", functionName, {
+        isDefault: true,
+      });
 
       const controllerFile = path.join(controllersDir, `${fileName}.ts`);
       const serviceFile = path.join(servicesDir, `${fileName}.ts`);
@@ -620,10 +645,16 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
       const filterDuplicates = (value: any, index: number, self: any[]) =>
         self.indexOf(value) === index;
 
-      const responsesImport: Imports = {};
+      const responsesControllerImport: Imports = {};
+      const responsesServiceImport: Imports = {};
       if (isAmbiguous) {
         addImport(
-          responsesImport,
+          responsesControllerImport,
+          "../types/anca.js",
+          "ServiceAmbiguousResponse",
+        );
+        addImport(
+          responsesServiceImport,
           "../types/anca.js",
           "ServiceAmbiguousResponse",
         );
@@ -633,22 +664,45 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
         ?.map((value) => value.name)
         .filter(filterDuplicates)
         .forEach((responseModelDataName) => {
-          addImport(
-            responsesImport,
-            getCodeModelPath(development, responseModelDataName),
+          const modelPath = getCodeModelPath(
+            development,
             responseModelDataName,
+          );
+          addImport(
+            responsesControllerImport,
+            modelPath.path,
+            responseModelDataName,
+            { isModule: modelPath.isModule },
+          );
+        });
+      fileModelData?.response
+        ?.filter((value) => value.default !== true)
+        .map((value) => value.name)
+        .filter(filterDuplicates)
+        .forEach((responseModelDataName) => {
+          const modelPath = getCodeModelPath(
+            development,
+            responseModelDataName,
+          );
+          addImport(
+            responsesServiceImport,
+            modelPath.path,
+            responseModelDataName,
+            { isModule: modelPath.isModule },
           );
         });
       const responsesTypesCodePart =
         fileModelData?.response
           ?.map(getModelData)
           .filter(filterDuplicates)
+          .sort()
           .join(" | ") || "unknown";
       const responsesServiceTypesCodePart =
         fileModelData?.response
           ?.filter((value) => value.default !== true)
           .map(getModelData)
           .filter(filterDuplicates)
+          .sort()
           .join(" | ") || "unknown";
 
       let serviceArgumentsFunc = "";
@@ -658,25 +712,53 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
 
       let controllerContent = "";
 
-      controllerContent += `import { Request, Response } from 'express';\n`;
-      controllerContent += `import { ${fileName} } from "../services/${fileName}.js";\n`;
+      addImport(responsesControllerImport, "express", "Request");
+      addImport(responsesControllerImport, "express", "Response");
+      addImport(
+        responsesControllerImport,
+        `../services/${fileName}.js`,
+        fileName,
+      );
 
       if (fileModelData?.request) {
-        addImport(
-          responsesImport,
-          getCodeModelPath(development, fileModelData.request.name),
+        const modelPath = getCodeModelPath(
+          development,
           fileModelData.request.name,
         );
+        addImport(
+          responsesControllerImport,
+          modelPath.path,
+          fileModelData.request.name,
+          { isModule: modelPath.isModule },
+        );
+        addImport(
+          responsesServiceImport,
+          modelPath.path,
+          fileModelData.request.name,
+          { isModule: modelPath.isModule },
+        );
+
         serviceArgumentsFunc += `request: ${fileModelData.request.name}`;
         serviceArgumentsJsdoc += ` * @param request\n`;
         serviceArgumentsCallSrv += `request`;
         serviceArgumentsCallCnt += `req.body`;
       }
       if (fileModelData?.params) {
-        addImport(
-          responsesImport,
-          getCodeModelPath(development, fileModelData.params.name),
+        const modelPath = getCodeModelPath(
+          development,
           fileModelData.params.name,
+        );
+        addImport(
+          responsesControllerImport,
+          modelPath.path,
+          fileModelData.params.name,
+          { isModule: modelPath.isModule },
+        );
+        addImport(
+          responsesServiceImport,
+          modelPath.path,
+          fileModelData.params.name,
+          { isModule: modelPath.isModule },
         );
         serviceArgumentsFunc += `${serviceArgumentsFunc ? ", " : ""}params: ${fileModelData.params.name}`;
         serviceArgumentsJsdoc += ` * @param params\n`;
@@ -684,10 +766,21 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
         serviceArgumentsCallCnt += `${serviceArgumentsCallCnt ? ", " : ""}req.params`;
       }
       if (fileModelData?.query) {
-        addImport(
-          responsesImport,
-          getCodeModelPath(development, fileModelData.query.name),
+        const modelPath = getCodeModelPath(
+          development,
           fileModelData.query.name,
+        );
+        addImport(
+          responsesControllerImport,
+          modelPath.path,
+          fileModelData.query.name,
+          { isModule: modelPath.isModule },
+        );
+        addImport(
+          responsesServiceImport,
+          modelPath.path,
+          fileModelData.query.name,
+          { isModule: modelPath.isModule },
         );
         serviceArgumentsFunc += `${serviceArgumentsFunc ? ", " : ""}query: ${fileModelData.query.name}`;
         serviceArgumentsJsdoc += ` * @param query\n`;
@@ -695,8 +788,14 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
         serviceArgumentsCallCnt += `${serviceArgumentsCallCnt ? ", " : ""}req.query`;
       }
 
-      if (responsesImport) {
-        controllerContent += generateImportsCodePart(responsesImport);
+      if (responsesControllerImport) {
+        controllerContent += generateImportsCodePart(
+          responsesControllerImport.modules,
+        );
+        controllerContent += `\n`;
+        controllerContent += generateImportsCodePart(
+          responsesControllerImport.files,
+        );
       }
 
       // eslint-disable-next-line sonarjs/no-gratuitous-expressions, no-constant-condition
@@ -704,8 +803,21 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
         // !fs.existsSync(serviceFile)
         let serviceContent = "";
 
-        serviceContent += generateImportsCodePart(responsesImport);
-        serviceContent += `\n`;
+        if (responsesServiceImport) {
+          serviceContent += generateImportsCodePart(
+            responsesServiceImport.modules,
+          );
+          if (responsesServiceImport.modules) {
+            serviceContent += `\n`;
+          }
+
+          serviceContent += generateImportsCodePart(
+            responsesServiceImport.files,
+          );
+          if (responsesServiceImport.files) {
+            serviceContent += `\n`;
+          }
+        }
 
         serviceContent += "/**\n";
         serviceContent += ` * ${operation.summary || ""}\n`;
@@ -727,7 +839,7 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
             ? "{}"
             : "null";
         if (isAmbiguous) {
-          serviceContent += `  return { code: ${responseCodes[0]}, type: ${responseContentTypes[0] ? '"' + responseContentTypes[0] + '"' : "undefined"}, data: ${codeData} };\n`;
+          serviceContent += `  return { code: ${responseCodes[0]}, data: ${codeData}, type: ${responseContentTypes[0] ? '"' + responseContentTypes[0] + '"' : "undefined"} };\n`;
         } else {
           serviceContent += `  return ${codeData};\n`;
         }
@@ -817,7 +929,8 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
     await prettier.format(
       `import express from 'express';
 
-${generateImportsCodePart(routesImports)}
+${generateImportsCodePart(routesImports.modules)}
+${generateImportsCodePart(routesImports.files)}
 const router = express.Router();
 
 ${routesFunctions}
