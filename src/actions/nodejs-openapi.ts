@@ -127,7 +127,7 @@ function getDevelopmentModelsPath(development: AncaDevelopment): {
     isFile: openapiConfig?.modelsLocation
       ? openapiConfig?.modelsLocationType === "file"
       : false,
-    isModule: openapiConfig?.modelsModule != null,
+    isModule: openapiConfig?.externalModule ? true : false,
   };
 }
 
@@ -634,7 +634,7 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
       responseContentTypes,
       responseErrorContentTypes,
     }) => {
-      addImport(routesImports, "./controllers/${fileName}.js", functionName, {
+      addImport(routesImports, `./controllers/${fileName}.js`, functionName, {
         isDefault: true,
       });
 

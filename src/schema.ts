@@ -153,6 +153,7 @@ export interface AncaNodejsSeaModules {
 }
 
 export interface AncaNodejsOpenapi {
+  externalModule?: boolean;
   modelsLocation?: string;
   modelsLocationType?: "file" | "folder";
   modelsModule?: string;
@@ -306,6 +307,7 @@ export const ANCA_CONFIG_SCHEMA = {
       properties: {
         nodejsOpenapi: {
           properties: {
+            externalModule: { type: "boolean" },
             modelsLocation: { type: "string" },
             modelsLocationType: { enum: ["file", "folder"], type: "string" },
             modelsModule: { type: "string" },
