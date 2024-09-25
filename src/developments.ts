@@ -174,7 +174,7 @@ export async function refreshDevelopmentState(
         }
       }
       if (stacks.size === 1) {
-        config.stack = stacks.values().next().value;
+        config.stack = Object.values(stacks)[0];
       }
     }
   }
