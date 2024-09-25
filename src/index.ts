@@ -7,7 +7,8 @@ import {
   loadProjects,
   readConfigFile,
 } from "./config.js";
-import { Anca } from "./schema.js";
+import { doActionsOnDevelopments } from "./developments.js";
+import { Anca, AncaAction } from "./schema.js";
 import { showDevelopmentActions, showMainMenu } from "./tui.js";
 
 /**
@@ -34,10 +35,24 @@ async function main() {
     }
 
     if (projects) {
-      if (projects.deployments?.length || projects.developments?.length !== 1) {
-        showMainMenu();
+      if (options.action) {
+        if (projects.developments?.length) {
+          await doActionsOnDevelopments(
+            options.action as AncaAction[],
+            projects.developments,
+          );
+        } else {
+          console.error("No developments available");
+        }
       } else {
-        showDevelopmentActions(projects.developments[0]);
+        if (
+          projects.deployments?.length ||
+          projects.developments?.length !== 1
+        ) {
+          await showMainMenu();
+        } else {
+          await showDevelopmentActions(projects.developments[0]);
+        }
       }
     } else {
       console.error("No config file provided");

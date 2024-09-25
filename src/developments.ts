@@ -2,6 +2,7 @@ import { mergician } from "mergician";
 import path from "path";
 import pc from "picocolors";
 
+import { getAction } from "./action.js";
 import { checkAnca } from "./actions/anca.js";
 import { checkContributingMd } from "./actions/contributing.js";
 import {
@@ -33,7 +34,13 @@ import { checkOpenapiJson } from "./actions/openapi.js";
 import { checkReadmeMd } from "./actions/readme.js";
 import { checkForGit, getGit } from "./git.js";
 import { getDevelopmentMeta } from "./meta.js";
-import { AncaConfig, AncaDevelopment, AncaDevelopmentState } from "./schema.js";
+import {
+  ANCA_ACTIONS,
+  AncaAction,
+  AncaConfig,
+  AncaDevelopment,
+  AncaDevelopmentState,
+} from "./schema.js";
 import { checkExistence, readFolderFile, readFolderJsonFile } from "./utils.js";
 
 /**
@@ -555,5 +562,37 @@ async function checkNodeJsToDevelopmentPack(development: AncaDevelopment) {
     !(await checkNodejsTsupConfigJs(development))
   ) {
     development.state.issues.push("nodejsTsupConfigJsSetToDefault");
+  }
+}
+
+/**
+ *
+ * @param actions
+ * @param developments
+ */
+export async function doActionsOnDevelopments(
+  actions: AncaAction[],
+  developments: AncaDevelopment[],
+) {
+  console.log(
+    `\nPerforming ${actions.length} action(s) on ${developments.length} development(s)...\n`,
+  );
+  for (const actionName of actions) {
+    const action = getAction(actionName);
+
+    if (action != null) {
+      console.log(`Performing action '${actionName}'...`);
+      for (const development of developments) {
+        await getDevelopmentStatus(development);
+        if (development.state == null) {
+          continue;
+        }
+        console.log(`...on ${getDevelopmentDisplayName(development)}...`);
+        action.action(development);
+      }
+    } else {
+      console.log(`Action '${actionName}' doesn't exist.`);
+      console.log(`Try: ${ANCA_ACTIONS.join(", ")}`);
+    }
   }
 }

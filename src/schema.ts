@@ -44,6 +44,35 @@ export type AncaAction =
   | "openapiJsonSetToDefault"
   | "readmeSetToDefault";
 
+export const ANCA_ACTIONS: AncaAction[] = [
+  "ancaJsonFix",
+  "contributingSetToDefault",
+  "devcontainerDockerfileSetToDefault",
+  "devcontainerJsonSetToDefault",
+  "gitClone",
+  "githubActionsOtherFilesRemove",
+  "githubActionsReleaseSetToDefault",
+  "githubActionsTestSetToDefault",
+  "gitIgnoreSetToDefault",
+  "licenseSetToDefault",
+  "nodejsEsbuildSetToDefault",
+  "nodejsEslintSetToDefault",
+  "nodejsOpenapiSetToDefault",
+  "nodejsPackageJsonCheckUpdates",
+  "nodejsPackageJsonFix",
+  "nodejsPackageJsonFixFull",
+  "nodejsPrettierIgnoreSetToDefault",
+  "nodejsPrettierRcSetToDefault",
+  "nodejsSeaBuildJsSetToDefault",
+  "nodejsSeaConfigJsonSetToDefault",
+  "nodejsSrcSetToDefault",
+  "nodejsTestSetToDefault",
+  "nodejsTsconfigSetToDefault",
+  "nodejsTsupConfigJsSetToDefault",
+  "openapiJsonSetToDefault",
+  "readmeSetToDefault",
+];
+
 export interface AncaMeta {
   description?: string;
   name?: string;
