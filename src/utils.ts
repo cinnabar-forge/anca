@@ -1,6 +1,5 @@
 import Ajv, { AnySchema } from "ajv";
 import fs from "fs/promises";
-import MarkdownIt from "markdown-it";
 import path from "path";
 
 import { AncaConfigAuthor } from "./schema.js";
@@ -263,24 +262,6 @@ export async function isFileSubset(firstPath: string, secondPath: string) {
     }
   }
   return true;
-}
-
-/**
- *
- * @param markdownItTokens
- */
-export async function convertMarkdownItTokenToCinnabarMarkup(
-  markdownItTokens: MarkdownIt.Token[],
-) {
-  let lastTag = "";
-
-  for (const token of markdownItTokens) {
-    if (token.type === "inline" && lastTag !== "") {
-      console.log(lastTag, token.content);
-      // markup.add(lastTag, token.content);
-    }
-    lastTag = token.tag;
-  }
 }
 
 /**

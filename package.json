@@ -38,10 +38,8 @@
   },
   "dependencies": {
     "ajv": "8.17.1",
-    "cftm": "0.1.0",
     "clivo": "0.5.1",
     "diff": "6.0.0",
-    "markdown-it": "14.1.0",
     "mergician": "2.0.2",
     "node-fetch": "3.3.2",
     "picocolors": "1.1.0",
@@ -53,7 +51,6 @@
     "@cinnabar-forge/meta": "0.3.1",
     "@types/chai": "4.3.19",
     "@types/diff": "5.2.2",
-    "@types/markdown-it": "14.1.2",
     "@types/mocha": "10.0.7",
     "@types/node": "22.5.4",
     "chai": "5.1.1",
