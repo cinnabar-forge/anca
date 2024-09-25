@@ -63,11 +63,11 @@ const APP_NAME_AND_VERSION = `ANCA v${CINNABAR_PROJECT_VERSION}`;
  * @param development
  * @param previousMenu
  */
-async function showDevelopmentActions(
+export async function showDevelopmentActions(
   development: AncaDevelopment,
-  previousMenu: () => Promise<void>,
+  previousMenu?: () => Promise<void>,
 ) {
-  const menu = [{ action: previousMenu, label: "Back" }];
+  const menu = previousMenu ? [{ action: previousMenu, label: "Back" }] : [];
 
   const backHere = async () => {
     development.state = undefined;
@@ -335,7 +335,7 @@ async function showAllDevelopments() {
 
   const state = getInstance();
 
-  for (const development of state.developments) {
+  for (const development of state.developments || []) {
     options.push({
       action: async () => {
         showDevelopmentActions(development, showAllDevelopments);
@@ -355,7 +355,7 @@ async function showLocalDevelopments() {
 
   const state = getInstance();
 
-  for (const development of state.developments) {
+  for (const development of state.developments || []) {
     if (await checkExistence(development.fullPath)) {
       options.push({
         action: async () => {
@@ -377,7 +377,7 @@ async function showProblematicLocalDevelopments() {
 
   const state = getInstance();
 
-  for (const development of state.developments) {
+  for (const development of state.developments || []) {
     if (await checkExistence(development.fullPath)) {
       await refreshDevelopmentState(development);
       if (development.state != null && development.state.issues.length > 0) {

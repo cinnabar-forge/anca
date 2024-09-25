@@ -142,7 +142,6 @@ export async function writeFolderFile(
       `Failed to write file at ${path.resolve(folder, filePath)}:`,
       error,
     );
-    throw error;
   }
 }
 
@@ -176,7 +175,6 @@ export async function writeFolderJsonFile(
       `Failed to write file at ${path.resolve(folder, filePath)}:`,
       error,
     );
-    throw error;
   }
 }
 

@@ -27,6 +27,6 @@ export async function fetchNpmPackagesVersion(
     return data.response;
   } catch (error) {
     console.error("Error fetching package versions:", error);
-    throw error;
   }
+  return {};
 }

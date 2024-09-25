@@ -104,7 +104,7 @@ export function loadAndValidateConfig(
       data: deployment,
       fullPath,
     };
-    instance.deployments.push(deploymentInstance);
+    instance.deployments?.push(deploymentInstance);
   }
 
   for (const development of configContents.developments) {
@@ -120,7 +120,7 @@ export function loadAndValidateConfig(
       folderPath,
       fullPath,
     };
-    instance.developments.push(developmentInstance);
+    instance.developments?.push(developmentInstance);
     const monorepo = getMonorepo(fullPath);
     if (monorepo) {
       for (const part of monorepo) {
@@ -131,10 +131,12 @@ export function loadAndValidateConfig(
           monorepoFullPath: fullPath,
           monorepoPart: part.data,
         };
-        instance.developments.push(developmentInstancePart);
+        instance.developments?.push(developmentInstancePart);
       }
     }
   }
+
+  return instance;
 }
 
 /**
@@ -198,7 +200,7 @@ export async function loadProjects(projectPaths: string[]) {
     const developmentInstance: AncaDevelopment = {
       fullPath,
     };
-    instance.developments.push(developmentInstance);
+    instance.developments?.push(developmentInstance);
     const monorepo = getMonorepo(fullPath);
     if (monorepo) {
       for (const part of monorepo) {
@@ -207,10 +209,12 @@ export async function loadProjects(projectPaths: string[]) {
           monorepoFullPath: fullPath,
           monorepoPart: part.data,
         };
-        instance.developments.push(developmentInstancePart);
+        instance.developments?.push(developmentInstancePart);
       }
     }
   }
+
+  return instance;
 }
 
 /**
@@ -223,7 +227,13 @@ export async function createFolders(workfolderPath: string) {
     await fs.promises.mkdir(deploymentsPath, { recursive: true });
   }
 
-  for (const development of getInstance().developments) {
+  const developments = getInstance().developments;
+
+  if (!developments) {
+    return;
+  }
+
+  for (const development of developments) {
     if (
       development.folderPath &&
       !(await checkExistence(development.folderPath))

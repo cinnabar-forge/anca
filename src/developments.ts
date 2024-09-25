@@ -126,11 +126,15 @@ export async function syncDevelopment(development: AncaDevelopment) {
   const folderExists = await checkExistence(development.fullPath);
   const mailFullPath = getDevelopmentMainFullPath(development);
   const gitExists = await checkForGit(mailFullPath);
+
   if (folderExists && gitExists) {
+    console.log("Fetching to", mailFullPath);
     await getGit().cwd(mailFullPath).fetch();
   } else if (folderExists) {
+    console.log("Init in", mailFullPath);
     await getGit().cwd(mailFullPath).init();
   } else {
+    console.log("Cloning to", mailFullPath);
     await getGit().clone(development.data.gitOrigin, mailFullPath);
   }
 }

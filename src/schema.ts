@@ -69,8 +69,8 @@ export interface AncaDevelopment {
 }
 
 export interface Anca {
-  deployments: AncaDeployment[];
-  developments: AncaDevelopment[];
+  deployments?: AncaDeployment[];
+  developments?: AncaDevelopment[];
 }
 
 export interface AncaWorkfolder {

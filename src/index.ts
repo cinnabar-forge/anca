@@ -7,19 +7,20 @@ import {
   loadProjects,
   readConfigFile,
 } from "./config.js";
-import { showMainMenu } from "./tui.js";
+import { Anca } from "./schema.js";
+import { showDevelopmentActions, showMainMenu } from "./tui.js";
 
 /**
  *
  */
 async function main() {
-  const options = setupCli();
-
   try {
+    let projects: Anca | null = null;
+    const options = setupCli();
     if (options.project) {
-      await loadProjects(options.project);
+      projects = await loadProjects(options.project);
     } else if (options.workfolder) {
-      loadAndValidateConfig(
+      projects = loadAndValidateConfig(
         options.workfolder[0],
         options.github
           ? getConfigFromGithub(options.github)
@@ -32,9 +33,17 @@ async function main() {
       loadEmpty();
     }
 
-    showMainMenu();
+    if (projects) {
+      if (projects.deployments?.length || projects.developments?.length !== 1) {
+        showMainMenu();
+      } else {
+        showDevelopmentActions(projects.developments[0]);
+      }
+    } else {
+      console.error("No config file provided");
+    }
   } catch (error: any) {
-    throw new Error(`Failed to start Anca: ${error.message}`);
+    console.error(`Failed to start Anca: ${error.message}`);
   }
 }
 
