@@ -16,8 +16,10 @@ import {
 import { fixLicenseMd } from "./actions/license.js";
 import {
   fixNodejsPackageJson,
+  getUpdatedPackagesCommitMessage,
   installNodejsDependencies,
   NodejsPackageJson,
+  NpmUpdate,
   updateNodejsPackageJsonDependencies,
   updateNodejsPackageJsonDevDependencies,
   writeNodejsPackageJson,
@@ -180,16 +182,24 @@ async function showDevelopmentActions(
         ] as NodejsPackageJson;
         if (fileContents != null) {
           const rebuildFile: NodejsPackageJson = {};
-          await updateNodejsPackageJsonDependencies(
-            rebuildFile,
-            development,
-            false,
+          const npmUpdate: NpmUpdate =
+            await updateNodejsPackageJsonDependencies(
+              rebuildFile,
+              development,
+              false,
+              true,
+            );
+          npmUpdate.push(
+            ...(await updateNodejsPackageJsonDevDependencies(
+              rebuildFile,
+              development,
+              false,
+              true,
+            )),
           );
-          await updateNodejsPackageJsonDevDependencies(
-            rebuildFile,
-            development,
-            false,
-          );
+          console.log("\nAdd to commit message: \n");
+          console.log(getUpdatedPackagesCommitMessage(npmUpdate));
+          console.log();
           fileContents.dependencies = rebuildFile.dependencies;
           fileContents.devDependencies = rebuildFile.devDependencies;
           await writeNodejsPackageJson(development);

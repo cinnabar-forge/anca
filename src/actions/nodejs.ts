@@ -40,6 +40,8 @@ export interface NodejsPackageJson {
   version?: null | string;
 }
 
+export type NpmUpdate = { name: string; version: string }[];
+
 // eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
 interface NodejsPackageJson2 extends NodejsPackageJson {
   [key: string]: any;
@@ -733,8 +735,18 @@ export async function fixNodejsPackageJson(
   await fixPackageRepository(rebuildFile, contents, full);
   await fixPackageScripts(rebuildFile, contents, config);
   await fixPackageConfig(rebuildFile, contents);
-  await updateNodejsPackageJsonDependencies(rebuildFile, development, true);
-  await updateNodejsPackageJsonDevDependencies(rebuildFile, development, true);
+  await updateNodejsPackageJsonDependencies(
+    rebuildFile,
+    development,
+    true,
+    false,
+  );
+  await updateNodejsPackageJsonDevDependencies(
+    rebuildFile,
+    development,
+    true,
+    false,
+  );
   await fixPackagePeerDependencies(rebuildFile, contents);
   await fixPackagePeerDependenciesMeta(rebuildFile, contents);
   await fixPackageBundleDependencies(rebuildFile, contents);
@@ -1134,20 +1146,23 @@ async function fixPackageConfig(
  * @param rebuildFile
  * @param development
  * @param changePackages add or remove packages to comply presets
+ * @param updateVersions
  */
 export async function updateNodejsPackageJsonDependencies(
   rebuildFile: NodejsPackageJson,
   development: AncaDevelopment,
   changePackages: boolean,
+  updateVersions: boolean,
 ) {
+  const updatedPackages: NpmUpdate = [];
   if (development.state == null) {
-    return;
+    return updatedPackages;
   }
   const contents: NodejsPackageJson | null | undefined =
     development.state.jsonFiles["package.json"];
 
   if (contents == null) {
-    return;
+    return updatedPackages;
   }
 
   if (contents.dependencies == null) {
@@ -1167,7 +1182,13 @@ export async function updateNodejsPackageJsonDependencies(
 
   try {
     const fetchedVersions = await fetchNpmPackagesVersion(
-      allDependenciesList.filter((dep: string) => !dep.includes("file:")),
+      allDependenciesList.filter(
+        (dep: string) =>
+          !dep.includes("file:") &&
+          (updateVersions ||
+            !contents.dependencies ||
+            contents.dependencies[dep] == null),
+      ),
     );
 
     for (const pkg of allDependenciesList) {
@@ -1176,8 +1197,9 @@ export async function updateNodejsPackageJsonDependencies(
         fetchedVersions[pkg]
       ) {
         console.log(
-          `Updating dep '${pkg}' from ${contents.dependencies[pkg]} to ${fetchedVersions[pkg]}`,
+          `${updateVersions ? "Updating" : "Adding"} dep '${pkg}' from ${contents.dependencies[pkg]} to ${fetchedVersions[pkg]}`,
         );
+        updatedPackages.push({ name: pkg, version: fetchedVersions[pkg] });
       }
       if (!changePackages || !FORBIDDEN_DEPENDENCIES[pkg]) {
         rebuildFile.dependencies[pkg] =
@@ -1187,6 +1209,7 @@ export async function updateNodejsPackageJsonDependencies(
   } catch (error) {
     console.error("Error updating dependencies:", error);
   }
+  return updatedPackages;
 }
 
 /**
@@ -1194,20 +1217,23 @@ export async function updateNodejsPackageJsonDependencies(
  * @param rebuildFile
  * @param development
  * @param changePackages add or remove packages to comply presets
+ * @param updateVersions
  */
 export async function updateNodejsPackageJsonDevDependencies(
   rebuildFile: NodejsPackageJson,
   development: AncaDevelopment,
   changePackages: boolean,
+  updateVersions: boolean,
 ) {
+  const updatedPackages: NpmUpdate = [];
   if (development.state == null) {
-    return;
+    return updatedPackages;
   }
   const contents: NodejsPackageJson | null | undefined =
     development.state.jsonFiles["package.json"];
 
   if (contents == null) {
-    return;
+    return updatedPackages;
   }
 
   if (contents.devDependencies == null) {
@@ -1233,7 +1259,13 @@ export async function updateNodejsPackageJsonDevDependencies(
 
   try {
     const fetchedVersions = await fetchNpmPackagesVersion(
-      allDevDependenciesList.filter((dep: string) => !dep.includes("file:")),
+      allDevDependenciesList.filter(
+        (dep: string) =>
+          !dep.includes("file:") &&
+          (updateVersions ||
+            !contents.devDependencies ||
+            contents.devDependencies[dep] == null),
+      ),
     );
 
     for (const pkg of allDevDependenciesList) {
@@ -1242,8 +1274,9 @@ export async function updateNodejsPackageJsonDevDependencies(
         fetchedVersions[pkg]
       ) {
         console.log(
-          `Updating dev-dep '${pkg}' from ${contents.devDependencies[pkg]} to ${fetchedVersions[pkg]}`,
+          `${updateVersions ? "Updating" : "Adding"} dep '${pkg}' from ${contents.devDependencies[pkg]} to ${fetchedVersions[pkg]}`,
         );
+        updatedPackages.push({ name: pkg, version: fetchedVersions[pkg] });
       }
       if (!changePackages || !FORBIDDEN_DEPENDENCIES[pkg]) {
         rebuildFile.devDependencies[pkg] =
@@ -1253,6 +1286,23 @@ export async function updateNodejsPackageJsonDevDependencies(
   } catch (error) {
     console.error("Error updating devDependencies:", error);
   }
+  return updatedPackages;
+}
+
+/**
+ * Get the commit message for the updated packages
+ * @param npmUpdate
+ */
+export function getUpdatedPackagesCommitMessage(npmUpdate: NpmUpdate) {
+  if (!npmUpdate) {
+    return null;
+  }
+  let text = "";
+  const sorted = npmUpdate.sort();
+  for (const pkg of sorted) {
+    text += `update npm package '${pkg.name}' to ${pkg.version}\n`;
+  }
+  return text;
 }
 
 /**
