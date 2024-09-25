@@ -8,6 +8,42 @@ Visit the link above to see all unreleased changes.
 
 [comment]: # (Insert new version after this line)
 
+## [0.1.0-dev.4](https://github.com/cinnabar-forge/anca/releases/tag/v0.1.0-dev.4) — 2024-09-25
+
+- add ability to launch current working folder if anca.json is presented ([359c873])
+- add bulk action support from cli ([3c1cd5e])
+- add commit messages for updating npm packages to nodejs action ([28d37a9])
+- add development display on startup if its only development ([359c873])
+- enhance anca config schema ([8129f23])
+- enhance nodejs action ([8ee803b])
+- enhance nodejs-openapi action ([159ee15], [8129f23], [860a8cf], [8ee803b], [fa23407])
+- enhance utils file ([8ee803b])
+- refactor actions to separate file ([3c1cd5e])
+- remove unused npm packages ([8e91e03])
+- update npm package '@cinnabar-forge/eslint-plugin' to 0.7.2 ([9ee6f16])
+- update npm package '@types/chai' to 5.0.0 ([0b054ab])
+- update npm package '@types/mocha' to 10.0.8 ([0b054ab])
+- update npm package '@types/node' to 22.7.0 ([0b054ab])
+- update npm package '@types/node' to 22.7.1 ([9ee6f16])
+- update npm package 'clivo' to 0.5.2 ([0b054ab])
+- update npm package 'diff' to 7.0.0 ([0b054ab])
+- update npm package 'esbuild' to 0.24.0 ([0b054ab])
+- update npm package 'simple-git' to 3.27.0 ([0b054ab])
+- update npm package 'typescript' to 5.6.2 ([0b054ab])
+
+[9ee6f16]: https://github.com/cinnabar-forge/anca/commit/9ee6f16
+[3c1cd5e]: https://github.com/cinnabar-forge/anca/commit/3c1cd5e
+[359c873]: https://github.com/cinnabar-forge/anca/commit/359c873
+[0b054ab]: https://github.com/cinnabar-forge/anca/commit/0b054ab
+[28d37a9]: https://github.com/cinnabar-forge/anca/commit/28d37a9
+[8e91e03]: https://github.com/cinnabar-forge/anca/commit/8e91e03
+[8129f23]: https://github.com/cinnabar-forge/anca/commit/8129f23
+[159ee15]: https://github.com/cinnabar-forge/anca/commit/159ee15
+[860a8cf]: https://github.com/cinnabar-forge/anca/commit/860a8cf
+[fa23407]: https://github.com/cinnabar-forge/anca/commit/fa23407
+[8ee803b]: https://github.com/cinnabar-forge/anca/commit/8ee803b
+
+
 ## [0.1.0-dev.3](https://github.com/cinnabar-forge/anca/releases/tag/v0.1.0-dev.3) — 2024-09-18
 
 - add author support ([34ad351])
@@ -163,4 +199,4 @@ Visit the link above to see all unreleased changes.
 [506c697]: https://github.com/cinnabar-forge/anca/commit/506c697
 
 
-[unreleased]: https://github.com/cinnabar-forge/anca/compare/v0.1.0-dev.3...HEAD
+[unreleased]: https://github.com/cinnabar-forge/anca/compare/v0.1.0-dev.4...HEAD
