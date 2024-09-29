@@ -24,12 +24,12 @@ export async function checkLicenseMd(development: AncaDevelopment) {
  * @param development
  */
 export async function fixLicenseMd(development: AncaDevelopment) {
-  if (development.state == null || development.state.files[FILE_PATH] == null) {
+  if (development.state == null) {
     return;
   }
   await writeFolderFile(
     development.fullPath,
     FILE_PATH,
-    development.state.files[FILE_PATH],
+    development.state.files[FILE_PATH] || "There is nothing we can do",
   );
 }
