@@ -239,7 +239,7 @@ async function addFileToPack(development: AncaDevelopment, file: string) {
     return;
   }
   development.state.files[file] =
-    (await readFolderFile(development.fullPath, file)) || "";
+    (await readFolderFile(development.fullPath, file)) || null;
 }
 
 /**
@@ -252,7 +252,7 @@ async function addJsonFileToPack(development: AncaDevelopment, file: string) {
     return;
   }
   development.state.files[file] =
-    (await readFolderFile(development.fullPath, file)) || "";
+    (await readFolderFile(development.fullPath, file)) || null;
   development.state.jsonFiles[file] =
     (await readFolderJsonFile(development.fullPath, file)) || {};
 }

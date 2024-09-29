@@ -317,3 +317,47 @@ export function formatAuthorLine(author: AncaConfigAuthor): string {
   }
   return authorLine;
 }
+
+export class IndentationBuilder {
+  indentation: number;
+  lines: string[];
+  size: number;
+  tabs: boolean;
+
+  constructor(initialIndentation?: number, size?: number, tabs?: boolean) {
+    this.indentation = initialIndentation || 0;
+    this.size = size || 0;
+    this.tabs = tabs || false;
+    this.lines = [];
+  }
+
+  down() {
+    this.indentation--;
+    if (this.indentation < 0) {
+      this.indentation = 0;
+    }
+    return this;
+  }
+
+  isEmpty() {
+    return this.lines.length === 0;
+  }
+
+  line(text: boolean | null | number | string | undefined) {
+    this.lines.push("  ".repeat(this.indentation) + text);
+  }
+
+  newline() {
+    this.lines.push("");
+    return this;
+  }
+
+  toString() {
+    return this.lines.join("\n");
+  }
+
+  up() {
+    this.indentation++;
+    return this;
+  }
+}
