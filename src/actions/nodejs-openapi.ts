@@ -16,6 +16,7 @@ import {
 interface ModelData {
   isArray?: boolean;
   isDefault?: boolean;
+  isPrimitive?: boolean;
   isRedirect?: boolean;
   name: string;
   noContent?: boolean;
@@ -174,6 +175,10 @@ function getContentTypeResponse(
 ) {
   if (type === "application/json") {
     return responsesServiceTypesCodePart.includes("[]") ? [] : {};
+  } else if (type === "application/xml") {
+    return "<xml></xml>";
+  } else if (type === "text/html") {
+    return "<html></html>";
   }
   return null;
 }
@@ -223,7 +228,6 @@ async function processPaths(development: AncaDevelopment, openapi: any) {
   const schemaComponents = openapi.components?.schemas || {};
   const models: Record<string, string> = {};
   const operations: Record<string, Operation> = {};
-  const modelsByArray: Record<string, string> = {};
 
   const pathsMethods: {
     apiPath: string;
@@ -273,27 +277,39 @@ async function processPaths(development: AncaDevelopment, openapi: any) {
   const processReferableSchema = function (
     schema: any,
     fallbackName: string,
-  ): false | string {
+  ): {
+    isArray?: boolean;
+    isPrimitive?: boolean;
+    isRef?: boolean;
+    name?: string;
+  } {
     if (schema.$ref) {
       const refParts = schema.$ref.split("/");
       console.log("ref", refParts);
-      return refParts[refParts.length - 1];
+      return { isRef: true, name: refParts[refParts.length - 1] };
     }
     if (schema.type === "array" && schema.items && schema.items.$ref) {
       const refParts = schema.items.$ref.split("/");
-      modelsByArray[fallbackName] = refParts[refParts.length - 1];
       console.log("ref in array", refParts);
-      return refParts[refParts.length - 1];
+      return {
+        isArray: true,
+        isRef: true,
+        name: refParts[refParts.length - 1],
+      };
     }
     if (schema.type === "object") {
       const name = fallbackName || `Generic${count++}`;
       console.log("object", name);
       if (processSchema(schema, name)) {
-        return name;
+        return { name };
       }
     }
-    console.log("no schema, only", schema.type);
-    return false;
+    const propertyType = getPropertyType(schema);
+    if (propertyType) {
+      return { isPrimitive: true, name: propertyType };
+    }
+    console.log("no schema, only", schema?.type);
+    return {};
   };
 
   console.log("\n", "predefined models");
@@ -338,15 +354,16 @@ async function processPaths(development: AncaDevelopment, openapi: any) {
         if (requestBody && requestBody.content) {
           Object.keys(requestBody.content).forEach((contentType) => {
             const sanitizedContentType = camelCaseText(contentType, true);
-            const name = processReferableSchema(
+            const processedSchema = processReferableSchema(
               requestBody.content[contentType].schema,
               capitalize(fileName + sanitizedContentType + "Request"),
             );
-            console.log("requestBody", (name && modelsByArray[name]) || name);
-            if (name) {
+            console.log("requestBody", processedSchema);
+            if (processedSchema.name) {
               operations[fileName].request = {
-                isArray: modelsByArray[name] ? true : false,
-                name: modelsByArray[name] || name,
+                isArray: processedSchema.isArray,
+                isPrimitive: processedSchema.isPrimitive,
+                name: processedSchema.name,
               };
             }
           });
@@ -406,7 +423,7 @@ async function processPaths(development: AncaDevelopment, openapi: any) {
             if (response.content) {
               Object.keys(response.content).forEach((contentType) => {
                 const sanitizedContentType = camelCaseText(contentType, true);
-                const name = processReferableSchema(
+                const processedSchema = processReferableSchema(
                   response.content[contentType].schema,
                   capitalize(
                     fileName +
@@ -417,21 +434,18 @@ async function processPaths(development: AncaDevelopment, openapi: any) {
                       "Response",
                   ),
                 );
-                console.log(
-                  "responseModel",
-                  responseStatus,
-                  (name && modelsByArray[name]) || name,
-                );
-                if (name) {
+                console.log("responseModel", responseStatus, processedSchema);
+                if (processedSchema.name) {
                   if (operations[fileName].responses == null) {
                     operations[fileName].responses = [];
                   }
                   const responseStatusNumber = parseInt(responseStatus) || 200;
                   operations[fileName].responses.push({
-                    isArray: modelsByArray[name] ? true : false,
+                    isArray: processedSchema.isArray,
                     isDefault: responseStatus === "default",
+                    isPrimitive: processedSchema.isPrimitive,
                     isRedirect: isCodeRedirect(responseStatusNumber),
-                    name: modelsByArray[name] || name,
+                    name: processedSchema.name,
                   });
                 }
               });
@@ -448,10 +462,10 @@ async function processPaths(development: AncaDevelopment, openapi: any) {
               }
               const responseStatusNumber = parseInt(responseStatus) || 200;
               operations[fileName].responses.push({
-                isArray: modelsByArray[name] ? true : false,
+                isArray: false,
                 isDefault: responseStatus === "default",
                 isRedirect: isCodeRedirect(responseStatusNumber),
-                name: modelsByArray[name] || name,
+                name,
                 noContent: true,
               });
             }
@@ -537,7 +551,7 @@ function getPropertyType(propertySchema: any): string {
     return "any";
   }
   if (propertySchema.type === "array") {
-    return `Array<${getPropertyType(propertySchema.items)}> `;
+    return `${getPropertyType(propertySchema.items)}[]`;
   } else if (propertySchema.type === "object") {
     return getPropertyType(propertySchema.properties);
   } else if (propertySchema.type === "string") {
@@ -722,7 +736,7 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
       }
 
       operationParsed?.responses
-        ?.filter((value) => !value.noContent)
+        ?.filter((value) => !value.noContent && !value.isPrimitive)
         ?.map((value) => value.name)
         .filter(filterDuplicates)
         .forEach((responseModelDataName) => {
@@ -738,7 +752,10 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
           );
         });
       operationParsed?.responses
-        ?.filter((value) => value.isDefault !== true && !value.noContent)
+        ?.filter(
+          (value) =>
+            value.isDefault !== true && !value.noContent && !value.isPrimitive,
+        )
         .map((value) => value.name)
         .filter(filterDuplicates)
         .forEach((responseModelDataName) => {
