@@ -1051,8 +1051,8 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
         );
         if (isRedirect) {
           controllerContent.line(`res.redirect(result);`);
-        } else {
-          switch (responseServiceContentTypesTypeCodePart) {
+        } else if (responseContentTypes[0]) {
+          switch (responseContentTypes[0]) {
             case "application/json":
               controllerContent.line(
                 `res.status(${responseCodesTypeCodePart}).json(result);`,
@@ -1065,9 +1065,13 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
               break;
             default:
               controllerContent.line(
-                `res.status(${responseCodesTypeCodePart}).send(result);`,
+                `res.status(${responseCodesTypeCodePart}).contentType("${responseContentTypes[0]}").send(result);`,
               );
           }
+        } else {
+          controllerContent.line(
+            `res.sendStatus(${responseCodesTypeCodePart});`,
+          );
         }
       }
 
