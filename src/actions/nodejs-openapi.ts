@@ -8,6 +8,7 @@ import prettier from "prettier/standalone";
 import { AncaDevelopment } from "../schema.js";
 import {
   capitalize,
+  checkExistence,
   getHttpCodeFunctionText,
   IndentationBuilder,
   readFolderJsonFile,
@@ -882,9 +883,7 @@ export async function generateNodejsOpenapiFiles(development: AncaDevelopment) {
         );
       }
 
-      // eslint-disable-next-line sonarjs/no-gratuitous-expressions, no-constant-condition
-      if (true) {
-        // !fs.existsSync(serviceFile)
+      if (!(await checkExistence(serviceFile))) {
         const serviceContent = new IndentationBuilder();
 
         if (responsesServiceImport) {
