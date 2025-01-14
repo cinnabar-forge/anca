@@ -12,9 +12,8 @@
   "cinnabarMeta": {
     "dataVersion": 0,
     "version": {
-      "latest": "0.1.0-dev.4",
-      "latestNext": "0.1.0-dev.4+next.20240929_124324",
-      "timestamp": 1727613804
+      "latest": "0.1.0-dev.5",
+      "timestamp": 1736853211
     },
     "files": [
       {

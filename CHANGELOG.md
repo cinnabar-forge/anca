@@ -8,6 +8,26 @@ Visit the link above to see all unreleased changes.
 
 [comment]: # (Insert new version after this line)
 
+## [0.1.0-dev.5](https://github.com/cinnabar-forge/anca/releases/tag/v0.1.0-dev.5) — 2025-01-14
+
+- add IndentationBuilder to utils ([5a80447])
+- add nodejs 23 support ([25c561b])
+- enhance nodejs-openapi action ([29df388], [5a80447], [78e29c9], [a43362d])
+- fix addFileToPack and addJsonFileToPack ([5a80447])
+- fix checkOpenapiJson ([5a80447])
+- fix fixLicenseMd ([6cffcd3])
+- update nodejs-npm api to use npm registry ([082c5b6])
+- update npm versions ([25c561b])
+
+[082c5b6]: https://github.com/cinnabar-forge/anca/commit/082c5b6
+[25c561b]: https://github.com/cinnabar-forge/anca/commit/25c561b
+[29df388]: https://github.com/cinnabar-forge/anca/commit/29df388
+[78e29c9]: https://github.com/cinnabar-forge/anca/commit/78e29c9
+[a43362d]: https://github.com/cinnabar-forge/anca/commit/a43362d
+[6cffcd3]: https://github.com/cinnabar-forge/anca/commit/6cffcd3
+[5a80447]: https://github.com/cinnabar-forge/anca/commit/5a80447
+
+
 ## [0.1.0-dev.4](https://github.com/cinnabar-forge/anca/releases/tag/v0.1.0-dev.4) — 2024-09-25
 
 - add ability to launch current working folder if anca.json is presented ([359c873])
@@ -199,4 +219,4 @@ Visit the link above to see all unreleased changes.
 [506c697]: https://github.com/cinnabar-forge/anca/commit/506c697
 
 
-[unreleased]: https://github.com/cinnabar-forge/anca/compare/v0.1.0-dev.4...HEAD
+[unreleased]: https://github.com/cinnabar-forge/anca/compare/v0.1.0-dev.5...HEAD
