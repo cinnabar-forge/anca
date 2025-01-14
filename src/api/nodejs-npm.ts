@@ -10,23 +10,25 @@ export async function fetchNpmPackagesVersion(
   if (packagesName.length === 0) {
     return {};
   }
-  const baseUrl = "https://npm-versions.cinnabar.ru/versions";
-  const query = `?packages=${packagesName.join(",")}`;
-  const url = `${baseUrl}${query}`;
 
-  console.log("Requesting from Cinnabar Forge NPM Cache:", url);
+  const records: Record<string, string> = {};
 
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+  for (const packageName of packagesName) {
+    const url = `https://registry.npmjs.org/${packageName}/latest/`;
+    console.log("Requesting from NPM Registry:", url);
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = (await response.json()) as {
+        version: string;
+      };
+      records[packageName] = data.version;
+    } catch (error) {
+      console.error(`Error fetching package ${packageName} version:`, error);
     }
-    const data = (await response.json()) as {
-      response: Record<string, string>;
-    };
-    return data.response;
-  } catch (error) {
-    console.error("Error fetching package versions:", error);
   }
-  return {};
+
+  return records;
 }

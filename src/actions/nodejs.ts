@@ -1200,6 +1200,8 @@ export async function updateNodejsPackageJsonDependencies(
           `${updateVersions ? "Updating" : "Adding"} dep '${pkg}' from ${contents.dependencies[pkg]} to ${fetchedVersions[pkg]}`,
         );
         updatedPackages.push({ name: pkg, version: fetchedVersions[pkg] });
+      } else {
+        console.log(`Keeping dep '${pkg}' at ${contents.dependencies[pkg]}`);
       }
       if (!changePackages || !FORBIDDEN_DEPENDENCIES[pkg]) {
         rebuildFile.dependencies[pkg] =
@@ -1274,9 +1276,13 @@ export async function updateNodejsPackageJsonDevDependencies(
         fetchedVersions[pkg]
       ) {
         console.log(
-          `${updateVersions ? "Updating" : "Adding"} dep '${pkg}' from ${contents.devDependencies[pkg]} to ${fetchedVersions[pkg]}`,
+          `${updateVersions ? "Updating" : "Adding"} dev dep '${pkg}' from ${contents.devDependencies[pkg]} to ${fetchedVersions[pkg]}`,
         );
         updatedPackages.push({ name: pkg, version: fetchedVersions[pkg] });
+      } else {
+        console.log(
+          `Keeping dev dep '${pkg}' at ${contents.devDependencies[pkg]}`,
+        );
       }
       if (!changePackages || !FORBIDDEN_DEPENDENCIES[pkg]) {
         rebuildFile.devDependencies[pkg] =
