@@ -29,12 +29,11 @@
     "build:bundle": "node esbuild.js full",
     "build:dev": "tsc",
     "build:sea": "node sea.build.js",
+    "check": "biome check ./src",
     "dev": "node esbuild.js watch '-p .'",
-    "fix": "prettier . --write && eslint --fix .",
-    "format": "prettier . --write",
-    "lint": "eslint --fix .",
+    "fix": "biome check --fix --unsafe ./src",
     "prepack": "npm run build",
-    "test": "prettier . -c && eslint --max-warnings 0 . && tsc && mocha './build/dev/test'"
+    "test": "npm run check && tsc && mocha './build/dev/test'"
   },
   "dependencies": {
     "ajv": "8.17.1",
@@ -47,8 +46,7 @@
     "simple-git": "3.27.0"
   },
   "devDependencies": {
-    "@cinnabar-forge/eslint-plugin": "0.7.2",
-    "@cinnabar-forge/meta": "0.3.1",
+    "@biomejs/biome": "1.9.4",
     "@types/chai": "5.0.0",
     "@types/diff": "5.2.2",
     "@types/mocha": "10.0.8",
@@ -56,13 +54,9 @@
     "chai": "5.1.1",
     "esbuild": "0.24.0",
     "mocha": "10.7.3",
-    "pre-commit": "1.2.2",
     "typescript": "5.6.2"
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "pre-commit": [
-    "test"
-  ]
+  }
 }
