@@ -1,7 +1,7 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
-import { AncaDevelopment } from "../schema.js";
+import type { AncaDevelopment } from "../schema.js";
 import { stringifyJson, writeFolderJsonFile } from "../utils.js";
 import { NODEJS_22_VERSION, NODEJS_22_VERSION_SHA } from "./utils/variables.js";
 

@@ -1,7 +1,7 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
-import { AncaDevelopment } from "../schema.js";
+import type { AncaDevelopment } from "../schema.js";
 import { writeFolderFile } from "../utils.js";
 
 const SRC_FILE_PATH = "./src/index.ts";

@@ -1,6 +1,6 @@
-import fs from "fs";
-import path from "path";
-import simpleGit, { SimpleGit } from "simple-git";
+import fs from "node:fs";
+import path from "node:path";
+import simpleGit, { type SimpleGit } from "simple-git";
 
 const git = simpleGit();
 

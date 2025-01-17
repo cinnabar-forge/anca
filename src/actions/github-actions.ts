@@ -1,7 +1,7 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
-import { AncaDevelopment } from "../schema.js";
+import type { AncaDevelopment } from "../schema.js";
 import {
   NODEJS_18_VERSION,
   NODEJS_20_VERSION,
@@ -9,8 +9,8 @@ import {
   NODEJS_23_VERSION,
 } from "./utils/variables.js";
 
-const NAME_RELEASE = `name: Release`;
-const NAME_TEST = `name: Test`;
+const NAME_RELEASE = "name: Release";
+const NAME_TEST = "name: Test";
 
 const ON_RELEASE = `on:
   release:
@@ -20,7 +20,7 @@ const ON_PUSH = `on:
   push:
     branches: ["**"]`;
 
-const JOBS = `jobs:`;
+const JOBS = "jobs:";
 
 const JOBS_PUBLISH_NPM = `  publish-npm:
     runs-on: ubuntu-latest
@@ -281,9 +281,9 @@ export async function fixGithubActionsOtherFiles(development: AncaDevelopment) {
   const files = fs.readdirSync(
     path.join(development.fullPath, ".github", "workflows"),
   );
-  files.forEach(async (file) => {
+  for (const file of files) {
     if (filterGithubActionsFile(development, file)) {
       fs.rmSync(path.join(development.fullPath, ".github", "workflows", file));
     }
-  });
+  }
 }

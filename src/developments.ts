@@ -1,5 +1,5 @@
+import path from "node:path";
 import { mergician } from "mergician";
-import path from "path";
 import pc from "picocolors";
 
 import { getAction } from "./action.js";
@@ -16,7 +16,6 @@ import {
   checkGithubActionsTest,
 } from "./actions/github-actions.js";
 import { checkLicenseMd } from "./actions/license.js";
-import { checkNodejsPackageJson } from "./actions/nodejs.js";
 import { checkNodejsEsbuildJs } from "./actions/nodejs-esbuild.js";
 import { checkNodejsEslintConfigJs } from "./actions/nodejs-eslint.js";
 import {
@@ -30,16 +29,17 @@ import {
 import { checkNodejsSrc, checkNodejsTest } from "./actions/nodejs-src.js";
 import { checkNodejsTsconfigJson } from "./actions/nodejs-tsconfig.js";
 import { checkNodejsTsupConfigJs } from "./actions/nodejs-tsup.js";
+import { checkNodejsPackageJson } from "./actions/nodejs.js";
 import { checkOpenapiJson } from "./actions/openapi.js";
 import { checkReadmeMd } from "./actions/readme.js";
 import { checkForGit, getGit } from "./git.js";
 import { getDevelopmentMeta } from "./meta.js";
 import {
   ANCA_ACTIONS,
-  AncaAction,
-  AncaConfig,
-  AncaDevelopment,
-  AncaDevelopmentState,
+  type AncaAction,
+  type AncaConfig,
+  type AncaDevelopment,
+  type AncaDevelopmentState,
 } from "./schema.js";
 import { checkExistence, readFolderFile, readFolderJsonFile } from "./utils.js";
 
@@ -102,7 +102,7 @@ export async function getDevelopmentStatus(development: AncaDevelopment) {
     development.state.issues != null &&
     development.state.issues.length > 0
   ) {
-    statuses.push(pc.bgRed("issues: " + development.state.issues.length));
+    statuses.push(pc.bgRed(`issues: ${development.state.issues.length}`));
   }
 
   if (
@@ -153,7 +153,7 @@ export async function syncDevelopment(development: AncaDevelopment) {
 export function getDevelopmentDisplayName(
   development: AncaDevelopment,
 ): string {
-  return `${development.state?.config.namings?.text || development.data?.name || development.fullPath.split("/").pop()}${pc.dim(" (" + (development.data?.owner || development.fullPath) + ")")}`;
+  return `${development.state?.config.namings?.text || development.data?.name || development.fullPath.split("/").pop()}${pc.dim(` (${development.data?.owner || development.fullPath})`)}`;
 }
 
 /**

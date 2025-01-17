@@ -1,4 +1,4 @@
-import { AncaDevelopment } from "../schema.js";
+import type { AncaDevelopment } from "../schema.js";
 import { writeFolderFile } from "../utils.js";
 import {
   CUSTOM_CONTENT_ANCHOR_END,

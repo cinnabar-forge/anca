@@ -1,4 +1,4 @@
-import { AncaDevelopment, AncaNodejsSeaModules } from "../schema.js";
+import type { AncaDevelopment, AncaNodejsSeaModules } from "../schema.js";
 import {
   stringifyJson,
   writeFolderFile,

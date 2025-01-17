@@ -9,7 +9,7 @@ import {
   getDevelopmentStatus,
   refreshDevelopmentState,
 } from "./developments.js";
-import { AncaAction, AncaDevelopment } from "./schema.js";
+import type { AncaAction, AncaDevelopment } from "./schema.js";
 import { checkExistence } from "./utils.js";
 
 const APP_NAME_AND_VERSION = `ANCA v${CINNABAR_PROJECT_VERSION}`;
@@ -47,18 +47,22 @@ export async function showDevelopmentActions(
           await mapping.action(development);
           await backHere();
         },
-        label: isIssue ? pc.bgRed("[!]") + " " + mapping.label : mapping.label,
+        label: isIssue ? `${pc.bgRed("[!]")} ${mapping.label}` : mapping.label,
       });
     } else {
       menu.push({
         action: backHere,
-        label: "THE ACTION IS NOT IMPLEMENTED: " + code,
+        label: `THE ACTION IS NOT IMPLEMENTED: ${code}`,
       });
     }
   };
 
-  state.issues.forEach((code) => map(code, true));
-  state.actions.forEach((code) => map(code, false));
+  for (const code of state.issues) {
+    map(code, true);
+  }
+  for (const code of state.actions) {
+    map(code, false);
+  }
 
   await promptMenu(
     development.data?.name && development.data?.owner

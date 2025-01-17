@@ -1,4 +1,4 @@
-import { AncaDevelopment } from "../schema.js";
+import type { AncaDevelopment } from "../schema.js";
 import { writeFolderFile } from "../utils.js";
 
 const TSUP = `import { defineConfig } from "tsup";

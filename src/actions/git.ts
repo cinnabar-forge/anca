@@ -1,4 +1,4 @@
-import { AncaDevelopment } from "../schema.js";
+import type { AncaDevelopment } from "../schema.js";
 import { writeFolderFile } from "../utils.js";
 
 const IGNORE_ALL = `# Editor directories and files
@@ -71,7 +71,7 @@ function getContents(development: AncaDevelopment) {
     return "";
   }
   if (development.state.config.stack === "nodejs") {
-    return IGNORE_ALL + "\n" + IGNORE_NODEJS;
+    return `${IGNORE_ALL}\n${IGNORE_NODEJS}`;
   }
 
   return IGNORE_ALL;

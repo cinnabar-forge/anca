@@ -1,4 +1,4 @@
-import { AncaDevelopment, AncaMeta } from "./schema.js";
+import type { AncaDevelopment, AncaMeta } from "./schema.js";
 
 interface CinnabarJson {
   description?: string;
@@ -31,11 +31,11 @@ export function parseSemver(version: string) {
   const regex = /^(\d+)\.(\d+)\.(\d+)(?:-(\w+)(?:\.(\d+))?)?$/;
   const match = version.match(regex);
   if (match) {
-    const major = parseInt(match[1]);
-    const minor = parseInt(match[2]);
-    const patch = parseInt(match[3]);
+    const major = Number.parseInt(match[1]);
+    const minor = Number.parseInt(match[2]);
+    const patch = Number.parseInt(match[3]);
     const preRelease = match[4];
-    const preReleaseNumber = match[5] ? parseInt(match[5]) : undefined;
+    const preReleaseNumber = match[5] ? Number.parseInt(match[5]) : undefined;
     return {
       major,
       minor,
@@ -43,9 +43,8 @@ export function parseSemver(version: string) {
       preRelease,
       preReleaseNumber,
     };
-  } else {
-    return false;
   }
+  return false;
 }
 
 /**

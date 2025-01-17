@@ -1,8 +1,8 @@
-import Ajv, { AnySchema } from "ajv";
-import fs from "fs/promises";
-import path from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
+import Ajv, { type AnySchema } from "ajv";
 
-import { AncaConfigAuthor } from "./schema.js";
+import type { AncaConfigAuthor } from "./schema.js";
 
 const HTTP_CODES: Record<number | string, string> = {
   100: "Continue", // Informational
@@ -150,7 +150,7 @@ export async function writeFolderFile(
  * @param data
  */
 export function stringifyJson(data: object) {
-  return JSON.stringify(data, null, 2) + "\n";
+  return `${JSON.stringify(data, null, 2)}\n`;
 }
 
 /**
@@ -207,14 +207,17 @@ export async function readFolderJsonFile(
  * @param first
  * @param second
  */
-export function isSubset(first: any, second: any): boolean {
-  for (const key of Object.keys(first)) {
-    if (typeof first[key] === "object" && first[key] !== null) {
-      if (!isSubset(first[key], second[key])) {
+export function isSubset<T extends object>(first: T, second: T): boolean {
+  for (const key of Object.keys(first) as Array<keyof T>) {
+    const firstValue = first[key];
+    const secondValue = second[key];
+
+    if (typeof firstValue === "object" && firstValue !== null) {
+      if (!isSubset(firstValue, secondValue as typeof firstValue)) {
         return false;
       }
     } else {
-      if (!(key in second) || first[key] !== second[key]) {
+      if (!(key in second) || firstValue !== secondValue) {
         return false;
       }
     }

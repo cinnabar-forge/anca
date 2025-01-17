@@ -1,7 +1,7 @@
-import { AncaDevelopment } from "../schema.js";
+import type { AncaDevelopment } from "../schema.js";
 import { writeFolderFile } from "../utils.js";
 
-const RC = `{}\n`;
+const RC = "{}\n";
 
 const IGNORE = `# General
 **/.git

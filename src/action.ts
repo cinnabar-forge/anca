@@ -11,16 +11,6 @@ import {
   fixGithubActionsTest,
 } from "./actions/github-actions.js";
 import { fixLicenseMd } from "./actions/license.js";
-import {
-  fixNodejsPackageJson,
-  getUpdatedPackagesCommitMessage,
-  installNodejsDependencies,
-  NodejsPackageJson,
-  NpmUpdate,
-  updateNodejsPackageJsonDependencies,
-  updateNodejsPackageJsonDevDependencies,
-  writeNodejsPackageJson,
-} from "./actions/nodejs.js";
 import { fixNodejsEsbuildJs } from "./actions/nodejs-esbuild.js";
 import { fixNodejsEslintConfigJs } from "./actions/nodejs-eslint.js";
 import { generateNodejsOpenapiFiles } from "./actions/nodejs-openapi.js";
@@ -35,10 +25,20 @@ import {
 import { fixNodejsSrc, fixNodejsTest } from "./actions/nodejs-src.js";
 import { fixNodejsTsconfigJson } from "./actions/nodejs-tsconfig.js";
 import { fixNodejsTsupConfigJs } from "./actions/nodejs-tsup.js";
+import {
+  type NodejsPackageJson,
+  type NpmUpdate,
+  fixNodejsPackageJson,
+  getUpdatedPackagesCommitMessage,
+  installNodejsDependencies,
+  updateNodejsPackageJsonDependencies,
+  updateNodejsPackageJsonDevDependencies,
+  writeNodejsPackageJson,
+} from "./actions/nodejs.js";
 import { fixOpenapiJson } from "./actions/openapi.js";
 import { fixReadmeMd } from "./actions/readme.js";
 import { syncDevelopment } from "./developments.js";
-import { AncaAction, AncaDevelopment } from "./schema.js";
+import type { AncaAction, AncaDevelopment } from "./schema.js";
 
 const actionMappings: Record<
   AncaAction,

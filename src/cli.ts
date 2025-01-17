@@ -1,5 +1,5 @@
+import fs from "node:fs";
 import { parseCli } from "clivo";
-import fs from "fs";
 
 /**
  * Parses cli arguments

@@ -160,6 +160,7 @@ export interface AncaConfigMonorepo {
 
 export interface AncaConfig {
   authors?: AncaConfigAuthor[];
+  // biome-ignore lint/suspicious/noExplicitAny: Cinnabar Meta types will be imported directly from package later
   cinnabarMeta?: any;
   deployment?: AncaDeploymentConfig;
   development?: AncaDevelopmentConfig;

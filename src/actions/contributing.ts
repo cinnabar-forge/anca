@@ -1,4 +1,4 @@
-import { AncaConfigAuthor, AncaDevelopment } from "../schema.js";
+import type { AncaConfigAuthor, AncaDevelopment } from "../schema.js";
 import { formatAuthorLine, writeFolderFile } from "../utils.js";
 
 const COMMON_PART = `# Contributing
@@ -36,7 +36,7 @@ function getContents(development: AncaDevelopment) {
   }
 
   if (development.state.config.authors) {
-    lines.push(`## Authors`);
+    lines.push("## Authors");
 
     const groupedAuthors: Record<string, AncaConfigAuthor[]> = {
       authors: [],
@@ -45,7 +45,7 @@ function getContents(development: AncaDevelopment) {
       specials: [],
     };
 
-    development.state.config.authors.forEach((author) => {
+    for (const author of development.state.config.authors) {
       if (author.type === "author") {
         groupedAuthors.authors.push(author);
       } else if (author.type === "maintainer") {
@@ -55,41 +55,41 @@ function getContents(development: AncaDevelopment) {
       } else {
         groupedAuthors.specials.push(author);
       }
-    });
+    }
 
-    Object.keys(groupedAuthors).forEach((key) => {
+    for (const key of Object.keys(groupedAuthors)) {
       groupedAuthors[key].sort((a, b) => a.name.localeCompare(b.name));
-    });
+    }
 
     if (groupedAuthors.authors.length > 0) {
-      groupedAuthors.authors.forEach((author) => {
+      for (const author of groupedAuthors.authors) {
         lines.push(formatAuthorLine(author));
-      });
+      }
     }
 
     if (groupedAuthors.maintainers.length > 0) {
-      lines.push(`### Maintainers`);
-      groupedAuthors.maintainers.forEach((author) => {
+      lines.push("### Maintainers");
+      for (const author of groupedAuthors.maintainers) {
         lines.push(formatAuthorLine(author));
-      });
+      }
     }
 
     if (groupedAuthors.contributors.length > 0) {
-      lines.push(`### Contributors`);
-      groupedAuthors.contributors.forEach((author) => {
+      lines.push("### Contributors");
+      for (const author of groupedAuthors.contributors) {
         lines.push(formatAuthorLine(author));
-      });
+      }
     }
 
     if (groupedAuthors.specials.length > 0) {
-      lines.push(`### Special Thanks`);
-      groupedAuthors.specials.forEach((author) => {
+      lines.push("### Special Thanks");
+      for (const author of groupedAuthors.specials) {
         lines.push(formatAuthorLine(author));
-      });
+      }
     }
   }
 
-  return lines.join("\n\n") + "\n";
+  return `${lines.join("\n\n")}\n`;
 }
 
 /**

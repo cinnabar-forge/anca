@@ -1,13 +1,13 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
 import {
-  Anca,
   ANCA_WORKFOLDER_SCHEMA,
-  AncaConfig,
-  AncaDeployment,
-  AncaDevelopment,
-  AncaWorkfolder,
+  type Anca,
+  type AncaConfig,
+  type AncaDeployment,
+  type AncaDevelopment,
+  type AncaWorkfolder,
 } from "./schema.js";
 import { checkExistence, verifyAjv } from "./utils.js";
 

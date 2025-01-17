@@ -8,7 +8,7 @@ import {
   readConfigFile,
 } from "./config.js";
 import { doActionsOnDevelopments } from "./developments.js";
-import { Anca, AncaAction } from "./schema.js";
+import type { Anca, AncaAction } from "./schema.js";
 import { showDevelopmentActions, showMainMenu } from "./tui.js";
 
 /**
@@ -57,8 +57,10 @@ async function main() {
     } else {
       console.error("No config file provided");
     }
-  } catch (error: any) {
-    console.error(`Failed to start Anca: ${error.message}`);
+  } catch (error) {
+    console.error(
+      `Failed to start Anca: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 

@@ -1,10 +1,10 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { exec } from "child_process";
+import { exec } from "node:child_process";
+import { isDeepStrictEqual } from "node:util";
 import { promptText } from "clivo";
-import { isDeepStrictEqual } from "util";
 
 import { fetchNpmPackagesVersion } from "../api/nodejs-npm.js";
-import { AncaConfig, AncaDevelopment } from "../schema.js";
+import type { AncaConfig, AncaDevelopment } from "../schema.js";
 import { writeFolderJsonFile } from "../utils.js";
 
 export interface NodeJsPackageAuthor {
@@ -42,8 +42,8 @@ export interface NodejsPackageJson {
 
 export type NpmUpdate = { name: string; version: string }[];
 
-// eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
 interface NodejsPackageJson2 extends NodejsPackageJson {
+  // biome-ignore lint/suspicious/noExplicitAny: Node.js package.json types will be imported later
   [key: string]: any;
 }
 
@@ -376,7 +376,8 @@ function hasFunding(contents: NodejsPackageJson, full: boolean) {
 function hasFiles(contents: NodejsPackageJson, config: AncaConfig) {
   if (config.type === "app") {
     return contents.files?.[0] === "bin" && contents.files?.[1] === "dist";
-  } else if (config.type === "library") {
+  }
+  if (config.type === "library") {
     return contents.files?.[0] === "dist";
   }
   return true;
@@ -1087,7 +1088,7 @@ async function fixPackageRepository(
   if (full && contents.repository == null) {
     rebuildFile.repository = {
       type: "git",
-      url: "git+" + (await promptText("\nRepository URL")),
+      url: `git+${await promptText("\nRepository URL")}`,
     };
   } else {
     rebuildFile.repository = contents.repository;

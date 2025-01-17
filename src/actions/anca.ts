@@ -4,7 +4,7 @@ import {
   ANCA_CONFIG_SCHEMA,
   AncaConfigStack,
   AncaConfigType,
-  AncaDevelopment,
+  type AncaDevelopment,
 } from "../schema.js";
 import { isAjvValid, writeFolderJsonFile } from "../utils.js";
 
