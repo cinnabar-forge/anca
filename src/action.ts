@@ -31,7 +31,6 @@ import {
   type NodejsPackageJson,
   type NpmUpdate,
   fixNodejsPackageJson,
-  getUpdatedPackagesCommitMessage,
   installNodejsDependencies,
   updateNodejsPackageJsonDependencies,
   updateNodejsPackageJsonDevDependencies,
@@ -157,11 +156,6 @@ const actionMappings: Record<
             true,
           )),
         );
-        if (npmUpdate.length > 0) {
-          console.log("\nAdd to commit message: \n");
-          console.log(getUpdatedPackagesCommitMessage(npmUpdate));
-          console.log();
-        }
         fileContents.dependencies = rebuildFile.dependencies;
         fileContents.devDependencies = rebuildFile.devDependencies;
         await writeNodejsPackageJson(development);

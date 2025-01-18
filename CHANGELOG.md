@@ -40,16 +40,7 @@ Visit the link above to see all unreleased changes.
 - enhance utils file ([8ee803b])
 - refactor actions to separate file ([3c1cd5e])
 - remove unused npm packages ([8e91e03])
-- update npm package '@cinnabar-forge/eslint-plugin' to 0.7.2 ([9ee6f16])
-- update npm package '@types/chai' to 5.0.0 ([0b054ab])
-- update npm package '@types/mocha' to 10.0.8 ([0b054ab])
-- update npm package '@types/node' to 22.7.0 ([0b054ab])
-- update npm package '@types/node' to 22.7.1 ([9ee6f16])
-- update npm package 'clivo' to 0.5.2 ([0b054ab])
-- update npm package 'diff' to 7.0.0 ([0b054ab])
-- update npm package 'esbuild' to 0.24.0 ([0b054ab])
-- update npm package 'simple-git' to 3.27.0 ([0b054ab])
-- update npm package 'typescript' to 5.6.2 ([0b054ab])
+- update npm packages ([0b054ab], [9ee6f16])
 
 [9ee6f16]: https://github.com/cinnabar-forge/anca/commit/9ee6f16
 [3c1cd5e]: https://github.com/cinnabar-forge/anca/commit/3c1cd5e
@@ -107,8 +98,7 @@ Visit the link above to see all unreleased changes.
 - update nodejs action ([c622d86])
 - update nodejs versions ([3ac4fd7], [f032267])
 - update nodejs-prettier action ([c622d86])
-- update npm package '@cinnabar-forge/eslint-plugin' to 0.7.1 ([07d084e])
-- update npm packages ([0849688], [1ffa30d], [4f2dfba], [509943e], [71b77eb], [9ed6c0c])
+- update npm packages ([0849688], [1ffa30d], [4f2dfba], [509943e], [71b77eb], [9ed6c0c], [07d084e])
 
 [4d66224]: https://github.com/cinnabar-forge/anca/commit/4d66224
 [7e10412]: https://github.com/cinnabar-forge/anca/commit/7e10412

@@ -775,19 +775,7 @@ export async function fixNodejsPackageJson(
  * @param development
  */
 export async function installNodejsDependencies(development: AncaDevelopment) {
-  // eslint-disable-next-line security/detect-child-process
-  exec(`cd ${development.fullPath} && npm i`, (error, stdout, stderr) => {
-    if (error) {
-      console.log(
-        `package.json has been updated, but can't use 'npm i', please use it in ${development.fullPath} to install dependencies manually`,
-      );
-      return;
-    }
-    console.log(`npm install output: ${stdout}`);
-    if (stderr) {
-      console.error(`npm install errors: ${stderr}`);
-    }
-  });
+  console.log("Update your dependencies with 'npm i'");
 }
 
 /**
@@ -1294,22 +1282,6 @@ export async function updateNodejsPackageJsonDevDependencies(
     console.error("Error updating devDependencies:", error);
   }
   return updatedPackages;
-}
-
-/**
- * Get the commit message for the updated packages
- * @param npmUpdate
- */
-export function getUpdatedPackagesCommitMessage(npmUpdate: NpmUpdate) {
-  if (!npmUpdate) {
-    return null;
-  }
-  let text = "";
-  const sorted = npmUpdate.sort();
-  for (const pkg of sorted) {
-    text += `update npm package '${pkg.name}' to ${pkg.version}\n`;
-  }
-  return text;
 }
 
 /**
