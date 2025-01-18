@@ -133,7 +133,19 @@ const JOBS_RUN_CINNABAR_META = `  run-cinnabar-meta:
           fetch-depth: 0
           fetch-tags: true
           submodules: recursive
+      - name: Check if update.cinnabarmeta exists
+        id: check-file
+        run: |
+          if [ -f "update.cinnabarmeta" ]; then
+            echo "::set-output name=file_exists::true"
+          else
+            echo "::set-output name=file_exists::false"
+          fi
+      - name: Exit if update.cinnabarmeta does not exist
+        if: steps.check-file.outputs.file_exists == 'false'
+        run: exit 0
       - name: Collect pull requests
+        if: steps.check-file.outputs.file_exists == 'true'
         id: collect-prs
         uses: actions/github-script@v6
         with:
@@ -159,22 +171,28 @@ const JOBS_RUN_CINNABAR_META = `  run-cinnabar-meta:
             fs.writeFileSync('.cinnabar-meta-pull-requests.md', prList);
             console.log(\`Collected PRs:\\n\${prList}\`);
       - name: Install Cinnabar Meta
+        if: steps.check-file.outputs.file_exists == 'true'
         run: npm i -g @cinnabar-forge/meta
       - name: Set up Git user
+        if: steps.check-file.outputs.file_exists == 'true'
         run: |
           git config --global user.name \${{ vars.TECHNICAL_USER_NAME }}
           git config --global user.email \${{ vars.TECHNICAL_USER_EMAIL }}
       - name: Run cinnabar-meta command
+        if: steps.check-file.outputs.file_exists == 'true'
         run: cinnabar-meta --file
       - name: Push changes and tags
+        if: steps.check-file.outputs.file_exists == 'true'
         run: |
           git push origin --atomic HEAD:master --tags
       - name: Read version from ./tmp/version
         id: read-version
+        if: steps.check-file.outputs.file_exists == 'true'
         run: |
           VERSION=$(cat ./tmp/version)
           echo "::set-output name=version::$VERSION"
       - name: Create release
+        if: steps.check-file.outputs.file_exists == 'true'
         uses: actions/create-release@v1
         with:
           tag_name: v\${{ steps.read-version.outputs.version }}
