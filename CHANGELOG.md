@@ -8,6 +8,31 @@ Visit the link above to see all unreleased changes.
 
 [comment]: # (Insert new version after this line)
 
+## [0.1.0](https://github.com/cinnabar-forge/anca/releases/tag/v0.1.0) — 2025-01-18
+
+- add cinnabar meta workflows ([4cb2750])
+- fix format ([d72aec0])
+- lint and format code ([45704cb])
+- remove automated 'npm install' ([32f23dd])
+- remove eslint and prettier configs ([778918e])
+- remove pre-commit ([6215517])
+- switch to biomejs ([6215517])
+- update actions ([78a8af8])
+- update cinnabar meta action ([1e69379])
+- update nodejs versions ([78a8af8])
+- update npm packages ([89969a8])
+
+[32f23dd](https://github.com/cinnabar-forge/anca/commit/32f23dd)
+[d72aec0](https://github.com/cinnabar-forge/anca/commit/d72aec0)
+[78a8af8](https://github.com/cinnabar-forge/anca/commit/78a8af8)
+[1e69379](https://github.com/cinnabar-forge/anca/commit/1e69379)
+[778918e](https://github.com/cinnabar-forge/anca/commit/778918e)
+[89969a8](https://github.com/cinnabar-forge/anca/commit/89969a8)
+[45704cb](https://github.com/cinnabar-forge/anca/commit/45704cb)
+[6215517](https://github.com/cinnabar-forge/anca/commit/6215517)
+[4cb2750](https://github.com/cinnabar-forge/anca/commit/4cb2750)
+
+
 ## [0.1.0-dev.5](https://github.com/cinnabar-forge/anca/releases/tag/v0.1.0-dev.5) — 2025-01-14
 
 - add IndentationBuilder to utils ([5a80447])
@@ -209,4 +234,4 @@ Visit the link above to see all unreleased changes.
 [506c697]: https://github.com/cinnabar-forge/anca/commit/506c697
 
 
-[unreleased]: https://github.com/cinnabar-forge/anca/compare/v0.1.0-dev.5...HEAD
+[unreleased]: https://github.com/cinnabar-forge/anca/compare/v0.1.0...HEAD
