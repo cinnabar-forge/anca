@@ -373,8 +373,14 @@ async function addGithubActionsToDevelopmentPack(development: AncaDevelopment) {
     return;
   }
 
-  await addFileToPack(development, ".github/workflows/cinnabar-meta-master.yml");
-  await addFileToPack(development, ".github/workflows/cinnabar-meta-pull-requests.yml");
+  await addFileToPack(
+    development,
+    ".github/workflows/cinnabar-meta-master.yml",
+  );
+  await addFileToPack(
+    development,
+    ".github/workflows/cinnabar-meta-pull-requests.yml",
+  );
 
   if (development.state.config.stack !== "nodejs") {
     return;
@@ -399,11 +405,15 @@ async function checkGithubActionsToDevelopmentPack(
   }
 
   if (!(await checkGithubActionsCinnabarMetaMaster(development))) {
-    development.state.issues.push("githubActionsCinnabarMetaMasterSetToDefault");
+    development.state.issues.push(
+      "githubActionsCinnabarMetaMasterSetToDefault",
+    );
   }
 
   if (!(await checkGithubActionsCinnabarMetaPullRequests(development))) {
-    development.state.issues.push("githubActionsCinnabarMetaPullRequestsSetToDefault");
+    development.state.issues.push(
+      "githubActionsCinnabarMetaPullRequestsSetToDefault",
+    );
   }
 
   if (development.state.config.stack !== "nodejs") {
