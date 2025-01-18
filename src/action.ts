@@ -6,6 +6,8 @@ import {
 } from "./actions/devcontainers.js";
 import { fixGitIgnore } from "./actions/git.js";
 import {
+  fixGithubActionsCinnabarMetaMaster,
+  fixGithubActionsCinnabarMetaPullRequests,
   fixGithubActionsOtherFiles,
   fixGithubActionsRelease,
   fixGithubActionsTest,
@@ -73,6 +75,18 @@ const actionMappings: Record<
       await syncDevelopment(development);
     },
     label: "[git] Clone",
+  },
+  githubActionsCinnabarMetaMasterSetToDefault: {
+    action: async (development: AncaDevelopment) => {
+      await fixGithubActionsCinnabarMetaMaster(development);
+    },
+    label: "[.github/workflows/cinnabar-meta-master.yml] Set to default",
+  },
+  githubActionsCinnabarMetaPullRequestsSetToDefault: {
+    action: async (development: AncaDevelopment) => {
+      await fixGithubActionsCinnabarMetaPullRequests(development);
+    },
+    label: "[.github/workflows/cinnabar-meta-pull-requests.yml] Set to default",
   },
   githubActionsOtherFilesRemove: {
     action: async (development: AncaDevelopment) => {

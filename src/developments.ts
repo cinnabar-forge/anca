@@ -11,6 +11,8 @@ import {
 } from "./actions/devcontainers.js";
 import { checkGitIgnore } from "./actions/git.js";
 import {
+  checkGithubActionsCinnabarMetaMaster,
+  checkGithubActionsCinnabarMetaPullRequests,
   checkGithubActionsOtherFiles,
   checkGithubActionsRelease,
   checkGithubActionsTest,
@@ -370,6 +372,10 @@ async function addGithubActionsToDevelopmentPack(development: AncaDevelopment) {
   if (development.monorepoPart != null) {
     return;
   }
+
+  await addFileToPack(development, ".github/workflows/cinnabar-meta-master.yml");
+  await addFileToPack(development, ".github/workflows/cinnabar-meta-pull-requests.yml");
+
   if (development.state.config.stack !== "nodejs") {
     return;
   }
@@ -391,6 +397,15 @@ async function checkGithubActionsToDevelopmentPack(
   if (development.monorepoPart != null) {
     return;
   }
+
+  if (!(await checkGithubActionsCinnabarMetaMaster(development))) {
+    development.state.issues.push("githubActionsCinnabarMetaMasterSetToDefault");
+  }
+
+  if (!(await checkGithubActionsCinnabarMetaPullRequests(development))) {
+    development.state.issues.push("githubActionsCinnabarMetaPullRequestsSetToDefault");
+  }
+
   if (development.state.config.stack !== "nodejs") {
     return;
   }

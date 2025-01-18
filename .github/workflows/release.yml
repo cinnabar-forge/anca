@@ -15,7 +15,7 @@ jobs:
         name: "Checkout repo"
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.8.0
+          node-version: 22.13.0
           registry-url: https://registry.npmjs.org/
         name: "Install Node.js"
       - run: npm ci
@@ -37,7 +37,7 @@ jobs:
         name: Checkout repo
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.8.0
+          node-version: 22.13.0
         name: Install Node.js
       - run: npm ci
         name: Install dependencies
@@ -68,7 +68,7 @@ jobs:
         name: Checkout repo
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.8.0
+          node-version: 22.13.0
         name: Install Node.js
       - run: npm ci
         name: Install dependencies

@@ -22,6 +22,8 @@ export type AncaAction =
   | "devcontainerDockerfileSetToDefault"
   | "devcontainerJsonSetToDefault"
   | "gitClone"
+  | "githubActionsCinnabarMetaMasterSetToDefault"
+  | "githubActionsCinnabarMetaPullRequestsSetToDefault"
   | "githubActionsOtherFilesRemove"
   | "githubActionsReleaseSetToDefault"
   | "githubActionsTestSetToDefault"
@@ -50,6 +52,8 @@ export const ANCA_ACTIONS: AncaAction[] = [
   "devcontainerDockerfileSetToDefault",
   "devcontainerJsonSetToDefault",
   "gitClone",
+  "githubActionsCinnabarMetaMasterSetToDefault",
+  "githubActionsCinnabarMetaPullRequestsSetToDefault",
   "githubActionsOtherFilesRemove",
   "githubActionsReleaseSetToDefault",
   "githubActionsTestSetToDefault",
