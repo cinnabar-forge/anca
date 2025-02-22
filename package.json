@@ -12,13 +12,12 @@
     "url": "https://timurrin.github.io/"
   },
   "files": [
-    "bin",
     "dist"
   ],
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "anca": "bin/anca.js"
+    "anca": "dist/index.js"
   },
   "repository": {
     "type": "git",
