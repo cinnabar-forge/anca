@@ -1,0 +1,84 @@
+body {
+  margin: 0;
+}
+
+a {
+  text-decoration: none;
+}
+
+ul {
+  /* list-style-type: "- "; */
+  margin: 0;
+  padding: 0 0 0 1em;
+}
+
+.clickableText {
+  cursor: pointer;
+  border: none;
+  border-bottom: 0.1em dotted black;
+  user-select: none;
+}
+
+.local-link {
+  cursor: pointer;
+  padding: 0px;
+  margin: 0px;
+  margin-left: 0.75em;
+}
+
+.local-link:hover {
+  box-shadow: 0 0.2em #76a022;
+  transition: box-shadow 0.2s;
+}
+
+.smooth {
+  transition: 0.2s;
+}
+
+.loading {
+  text-align: center;
+  /* margin: 0px; */
+  /* padding: 0px; */
+  opacity: 0.5;
+  height: auto;
+  width: auto;
+  cursor: wait;
+  overflow: y;
+  background: white;
+  /* position: absolute; */
+  /* left: 50%; */
+  z-index: 10;
+}
+
+.loading div {
+  pointer-events: none;
+}
+
+.inputs {
+  display: flex;
+  flex-direction: column;
+}
+
+.bordered {
+  border: 1px #a2a9b1 solid;
+  padding: 1em;
+  max-width: 40em;
+}
+
+.space-bottom {
+  margin: 0 0 1em 0;
+}
+
+.armaz-assets-image {
+  max-width: 128px;
+  max-height: 128px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .loading {
+    background: black;
+  }
+  .clickableText {
+    border-bottom-color: white;
+  }
+}

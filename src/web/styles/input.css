@@ -1,0 +1,61 @@
+button,
+input,
+textarea,
+select {
+  outline: none;
+  border: 0.12em solid transparent;
+  padding: 0.35em 0.35em;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.linput {
+  width: 15em;
+  padding: 0.9em 0.35em 0.35em;
+}
+
+textarea,
+textarea.linput {
+  resize: none;
+  width: 100%;
+  height: 5em;
+}
+
+input {
+  border: none;
+  outline: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+  cursor: not-allowed;
+}
+
+.labeled-input {
+  font-family: "oswald-regular", Inter, Avenir, Helvetica, Arial, sans-serif !important;
+  margin: 0.75em 0 0;
+  position: relative;
+  display: inline-block;
+}
+
+.labeled-input .placeholder {
+  padding: 0.5em 0.5em;
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0.5;
+}
+
+.labeled-input .linput:focus + .placeholder,
+.labeled-input .linput:not(:placeholder-shown) + .placeholder {
+  opacity: 1;
+  padding: 0.1em 0.3em;
+  transform: scale(0.75) translateY(-60%) translateX(-16.67%);
+}

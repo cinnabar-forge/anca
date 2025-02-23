@@ -13,7 +13,8 @@
     "dataVersion": 0,
     "version": {
       "latest": "0.1.0",
-      "timestamp": 1737236236
+      "latestNext": "0.1.0+next.20250223_002106",
+      "timestamp": 1740270066
     },
     "files": [
       {
@@ -25,7 +26,7 @@
         "type": "nodejs-package-lock-json"
       },
       {
-        "path": "./src/cinnabar.ts",
+        "path": "./src/shared/cinnabar.ts",
         "type": "typescript",
         "updateBuild": true
       }

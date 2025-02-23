@@ -1,0 +1,40 @@
+@font-face {
+  font-family: "oswald-regular";
+  font-style: normal;
+  src: url("/oswald-regular.ttf");
+}
+
+@font-face {
+  font-family: "source-sans-pro";
+  font-style: normal;
+  src: url("/source-sans-pro.ttf");
+}
+
+:root {
+  font-family: "source-sans-pro", Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+h1,
+h2,
+h3,
+h4,
+button,
+input,
+label,
+select,
+th,
+table td:first-child,
+.font-oswald {
+  font-family: "oswald-regular", Inter, Avenir, Helvetica, Arial, sans-serif !important;
+}
+
+.bold {
+  font-weight: bold;
+}

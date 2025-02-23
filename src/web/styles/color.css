@@ -1,0 +1,199 @@
+:root {
+  color-scheme: only light;
+  color: #222;
+  background-color: #fff;
+}
+
+a,
+.local-link {
+  color: #54701b;
+}
+
+a:hover,
+.local-link:hover {
+  color: #76a022;
+}
+
+input,
+textarea,
+select,
+button {
+  color: #222;
+  background-color: #e8e8e8;
+}
+
+button.cl-button {
+  color: #000000;
+}
+
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+  background-color: rgba(128, 128, 128, 0.87);
+  color: rgba(204, 204, 204, 0.87);
+}
+
+button:hover {
+  border-color: #9acd32;
+}
+
+button:disabled:hover {
+  border-color: #cd3266;
+}
+
+button.highlight.good {
+  background-color: #9acd32;
+}
+
+button.highlight.warning {
+  border-color: #161616;
+  background-color: #f8f546;
+  color: #161616;
+}
+
+button.highlight.revert {
+  border-color: #ff8000;
+}
+
+button.highlight.bad {
+  border-color: #cd3266;
+}
+
+button.highlight.warning:hover {
+  border-color: #f8f546;
+  background-color: #161616;
+  color: #f8f546;
+}
+
+button.highlight.revert:hover {
+  background-color: #ff8000;
+  color: #ffffff;
+}
+
+button.highlight.bad:hover {
+  background-color: #cd3266;
+  color: #eee;
+}
+
+button.highlight.good:hover,
+button.highlight.revert:hover,
+button.highlight.bad:hover {
+  border-color: #161616;
+}
+
+table {
+  color: black;
+  border: 0.12em solid #c2ceb0;
+}
+
+table tr:nth-child(even) {
+  background: #f2f2f2;
+}
+
+table tr:nth-child(odd) {
+  background: #dddddd;
+}
+
+table th {
+  background-color: #9acd32;
+  color: #222;
+}
+
+table td:first-child {
+  background-color: #cce2a1;
+}
+
+table td {
+  border: 0.12em solid #c2ceb0;
+}
+
+.labeled-input .linput:focus + .placeholder,
+.labeled-input .linput:not(:placeholder-shown) + .placeholder {
+  background-color: #76a022;
+  color: white;
+}
+
+.labeled-input .linput:focus + .placeholder.disabled,
+.labeled-input .linput:not(:placeholder-shown) + .placeholder.disabled,
+.reference.disabled {
+  text-decoration: line-through;
+  background-color: #cd3266;
+  color: white;
+  cursor: not-allowed;
+}
+
+.labeled-input .linput.error {
+  background-color: #cd3266;
+  color: white;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: only dark;
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #222;
+  }
+
+  a,
+  .local-link {
+    color: #9acd32;
+  }
+
+  a:hover,
+  .local-link:hover {
+    color: #adff2f;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #303030;
+  }
+
+  button:disabled,
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    background-color: #000;
+    color: #888;
+  }
+
+  button.highlight.good {
+    color: #000;
+  }
+
+  table,
+  table td {
+    border-color: #2d4105;
+  }
+
+  table tr th,
+  table tr td {
+    color: whitesmoke;
+  }
+
+  table tr:nth-child(even) {
+    background: #222;
+  }
+
+  table tr:nth-child(odd) {
+    background: #333;
+  }
+
+  table th {
+    background-color: #2d4105;
+    color: #222;
+  }
+
+  table td:first-child {
+    background-color: #2a311c;
+  }
+
+  .labeled-input .linput:focus + .placeholder,
+  .labeled-input .linput:not(:placeholder-shown) + .placeholder {
+    color: #000;
+  }
+}
