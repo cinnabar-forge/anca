@@ -8,6 +8,20 @@ Visit the link above to see all unreleased changes.
 
 [comment]: # (Insert new version after this line)
 
+## [0.1.1](https://github.com/cinnabar-forge/anca/releases/tag/v0.1.1) — 2025-03-07
+
+- add intro ([a422cd0])
+- fix cinnabar meta master action ([10c144a])
+- update nodejs versions ([cf6fdef])
+- update npm packages ([2d9b334])
+- update workflows ([a422cd0])
+
+[a422cd0]: https://github.com/cinnabar-forge/anca/commit/a422cd0
+[cf6fdef]: https://github.com/cinnabar-forge/anca/commit/cf6fdef
+[2d9b334]: https://github.com/cinnabar-forge/anca/commit/2d9b334
+[10c144a]: https://github.com/cinnabar-forge/anca/commit/10c144a
+
+
 ## [0.1.0](https://github.com/cinnabar-forge/anca/releases/tag/v0.1.0) — 2025-01-18
 
 - add cinnabar meta workflows ([4cb2750])
@@ -234,4 +248,4 @@ Visit the link above to see all unreleased changes.
 [506c697]: https://github.com/cinnabar-forge/anca/commit/506c697
 
 
-[unreleased]: https://github.com/cinnabar-forge/anca/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/cinnabar-forge/anca/compare/v0.1.1...HEAD
