@@ -2,7 +2,6 @@ import { promptMenu } from "clivo";
 import pc from "picocolors";
 
 import { getAction } from "./action.js";
-import { CINNABAR_PROJECT_VERSION } from "./cinnabar.js";
 import { getInstance } from "./config.js";
 import {
   getDevelopmentDisplayName,
@@ -11,8 +10,6 @@ import {
 } from "./developments.js";
 import type { AncaAction, AncaDevelopment } from "./schema.js";
 import { checkExistence } from "./utils.js";
-
-const APP_NAME_AND_VERSION = `ANCA v${CINNABAR_PROJECT_VERSION}`;
 
 /**
  *
@@ -161,7 +158,7 @@ async function showDevelopmentsMenu() {
  *
  */
 export async function showMainMenu() {
-  await promptMenu(`\n[${APP_NAME_AND_VERSION}]`, [
+  await promptMenu("\n[Main menu]", [
     {
       action: async () => {
         console.log("Bye.");

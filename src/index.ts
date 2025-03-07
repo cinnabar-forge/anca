@@ -1,3 +1,4 @@
+import { CINNABAR_PROJECT_VERSION } from "./cinnabar.js";
 import { setupCli } from "./cli.js";
 import {
   createFolders,
@@ -15,6 +16,13 @@ import { showDevelopmentActions, showMainMenu } from "./tui.js";
  *
  */
 async function main() {
+  const printIntro = () => {
+    const design1 = "=".repeat(4);
+    const text = `${design1} Anca v${CINNABAR_PROJECT_VERSION} ${design1}`;
+    const design2 = "=".repeat(text.length);
+    console.log(`\n${design2}\n${text}\n${design2}`);
+  };
+  printIntro();
   try {
     let projects: Anca | null = null;
     const options = setupCli();
