@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [18.20.5, 20.18.1, 22.13.0, 23.6.0]
+        node: [18.20.7, 20.18.3, 22.14.0, 23.9.0]
     name: Test repo on Node.js ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v4

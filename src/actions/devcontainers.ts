@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type { AncaDevelopment } from "../schema.js";
 import { stringifyJson, writeFolderJsonFile } from "../utils.js";
-import { NODEJS_22_VERSION, NODEJS_22_VERSION_SHA } from "./utils/variables.js";
+import { NODEJS_22_VERSION } from "./utils/variables.js";
 
 const JSON_FALLBACK = {
   build: {
@@ -55,8 +55,7 @@ USER node
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DOCKERFILE_NODEJS_INSTALL = `# Install Node.js
 ENV NODE_VERSION ${NODEJS_22_VERSION}
-ENV NODE_CHECKSUM sha256:${NODEJS_22_VERSION_SHA}
-ADD --checksum=$NODE_CHECKSUM https://nodejs.org/dist/v\${NODE_VERSION}/node-v\${NODE_VERSION}-linux-x64.tar.gz /node.tar.gz
+ADD https://nodejs.org/dist/v\${NODE_VERSION}/node-v\${NODE_VERSION}-linux-x64.tar.gz /node.tar.gz
 RUN tar -xz -f /node.tar.gz -C /usr/local --remove-files --strip-components=1
 `;
 
