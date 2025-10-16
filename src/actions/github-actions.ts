@@ -3,10 +3,10 @@ import path from "node:path";
 
 import type { AncaDevelopment } from "../schema.js";
 import {
-  NODEJS_18_VERSION,
   NODEJS_20_VERSION,
   NODEJS_22_VERSION,
-  NODEJS_23_VERSION,
+  NODEJS_24_VERSION,
+  NODEJS_25_VERSION,
 } from "./utils/variables.js";
 
 const ON_RELEASE = `on:
@@ -108,7 +108,7 @@ const JOBS_TEST_COMMIT = `  test-commit:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [${NODEJS_18_VERSION}, ${NODEJS_20_VERSION}, ${NODEJS_22_VERSION}, ${NODEJS_23_VERSION}]
+        node: [${NODEJS_20_VERSION}, ${NODEJS_22_VERSION}, ${NODEJS_24_VERSION}, ${NODEJS_25_VERSION}]
     name: Test repo on Node.js \${{ matrix.node }}
     steps:
       - uses: actions/checkout@v4
