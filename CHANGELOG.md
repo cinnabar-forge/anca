@@ -8,6 +8,19 @@ Visit the link above to see all unreleased changes.
 
 [comment]: # (Insert new version after this line)
 
+## [0.1.2](https://github.com/cinnabar-forge/anca/releases/tag/v0.1.2) — 2025-10-16
+
+- add update.cinnabarmeta ([0e0e201])
+- apply anca ([8a48de2])
+- update nodejs versions ([05bc34c])
+- update npm packages ([d546541])
+
+[0e0e201]: https://github.com/cinnabar-forge/anca/commit/0e0e201
+[8a48de2]: https://github.com/cinnabar-forge/anca/commit/8a48de2
+[d546541]: https://github.com/cinnabar-forge/anca/commit/d546541
+[05bc34c]: https://github.com/cinnabar-forge/anca/commit/05bc34c
+
+
 ## [0.1.1](https://github.com/cinnabar-forge/anca/releases/tag/v0.1.1) — 2025-03-07
 
 - add intro ([a422cd0])
@@ -248,4 +261,4 @@ Visit the link above to see all unreleased changes.
 [506c697]: https://github.com/cinnabar-forge/anca/commit/506c697
 
 
-[unreleased]: https://github.com/cinnabar-forge/anca/compare/v0.1.1...HEAD
+[unreleased]: https://github.com/cinnabar-forge/anca/compare/v0.1.2...HEAD
